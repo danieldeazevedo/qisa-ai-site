@@ -14,17 +14,31 @@ export function useAuth() {
       const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
         if (firebaseUser) {
           try {
-            // Store user in global context for API requests
-            (window as any).currentUser = firebaseUser;
+            // Get fresh token
+            const token = await firebaseUser.getIdToken();
+            console.log('Firebase user logged in:', firebaseUser.uid);
+            
+            // Store user with token in global context for API requests
+            (window as any).currentUser = {
+              ...firebaseUser,
+              accessToken: token
+            };
             
             // Send user data to backend
-            await apiRequest("POST", "/api/auth/sync", {
+            const response = await apiRequest("POST", "/api/auth/sync", {
               firebaseId: firebaseUser.uid,
               email: firebaseUser.email,
               displayName: firebaseUser.displayName,
               photoURL: firebaseUser.photoURL,
             });
+            
+            console.log('User sync response:', response.status);
             setUser(firebaseUser);
+            
+            // Force refresh chat session after login
+            setTimeout(() => {
+              window.location.reload();
+            }, 1000);
             
             toast({
               title: "Login realizado",
@@ -33,11 +47,23 @@ export function useAuth() {
           } catch (error) {
             console.error("Error syncing user:", error);
             // Still set user even if sync fails
+            const token = await firebaseUser.getIdToken().catch(() => null);
             setUser(firebaseUser);
-            (window as any).currentUser = firebaseUser;
+            (window as any).currentUser = {
+              ...firebaseUser,
+              accessToken: token
+            };
+            
+            // Show toast even if sync fails
+            toast({
+              title: "Login parcial",
+              description: "Conectado, mas houve problema na sincronização.",
+              variant: "destructive",
+            });
           }
         } else {
           setUser(null);
+          (window as any).currentUser = null;
         }
         setLoading(false);
       });

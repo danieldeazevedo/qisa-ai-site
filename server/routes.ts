@@ -9,6 +9,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth sync endpoint
   app.post("/api/auth/sync", async (req, res) => {
     try {
+      console.log('Auth sync request:', req.body);
       const userData = insertUserSchema.parse(req.body);
       
       // Check if user already exists
@@ -17,12 +18,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!user) {
         // Create new user
         user = await storage.createUser(userData);
+        console.log('Created new user:', user.id, user.firebaseId);
+      } else {
+        console.log('User already exists:', user.id, user.firebaseId);
       }
       
-      res.json(user);
+      res.json({ success: true, user });
     } catch (error) {
       console.error("Error syncing user:", error);
-      res.status(400).json({ message: "Invalid user data" });
+      res.status(500).json({ message: "Internal server error" });
     }
   });
 
@@ -36,14 +40,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let displayName = "Usuário Anônimo";
       
       if (authHeader && authHeader.startsWith('Bearer ')) {
-        // In production, verify Firebase token here
-        // For now, accept any bearer token as authenticated
-        firebaseId = "authenticated-user";
-        const userAgent = req.headers['user-agent'] || '';
+        // For now, just create a consistent ID for authenticated users
+        // In production, this would decode and verify the Firebase JWT token
+        firebaseId = "authenticated-firebase-user";
         email = "usuario.autenticado@qisa.ai";
         displayName = "Usuário Autenticado";
-        
-        console.log('Authenticated user accessing chat');
+        console.log('Authenticated user accessing chat with token');
+      } else {
+        console.log('Anonymous user accessing chat');
       }
       
       // Ensure user exists in storage
