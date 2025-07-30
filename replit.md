@@ -10,14 +10,16 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-**2024-07-30**: 
+**2025-07-30**: 
 - **Implemented Firebase Google Authentication system**
-- **Added Redis Upstash integration for database**
+- **Added Redis Upstash integration for database** ✅ RESOLVIDO
 - **Created authenticated chat sessions per user**
 - **Each authenticated user gets unique secure chat history**
 - **Complete Google OAuth login/logout functionality**
 - **Firebase user sync with Redis backend storage**
 - **Enhanced UI with user profile display and auth controls**
+- **Redis Upstash configurado com biblioteca @upstash/redis**
+- **Interface mostra foto do usuário quando logado**
 - All core features working: authentication, chat, image generation, persistent secure storage
 
 ## System Architecture
