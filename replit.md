@@ -8,6 +8,14 @@ Qisa is a modern AI-powered chat application built with a React frontend and Exp
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes
+
+**2024-07-30**: 
+- Fixed Firebase authentication with user-provided API keys
+- Removed demo mode, now using proper Firebase authentication
+- Updated chat system to work with authenticated users
+- All core features working: chat, image generation, user authentication
+
 ## System Architecture
 
 ### Frontend Architecture

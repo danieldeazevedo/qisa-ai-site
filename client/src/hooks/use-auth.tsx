@@ -10,25 +10,6 @@ export function useAuth() {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!auth) {
-      // If Firebase is not available, create a mock user for demo purposes
-      const mockUser = {
-        uid: "demo-user-id",
-        email: "demo@qisa.ai",
-        displayName: "Usuario Demo",
-        photoURL: null,
-      } as User;
-      
-      setUser(mockUser);
-      setLoading(false);
-      
-      toast({
-        title: "Modo Demo",
-        description: "Firebase não configurado. Usando modo demonstração.",
-      });
-      return;
-    }
-    
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         try {
@@ -64,23 +45,11 @@ export function useAuth() {
       });
     });
 
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
-    };
+    return () => unsubscribe();
   }, [toast]);
 
   const login = async () => {
     try {
-      if (!auth) {
-        toast({
-          title: "Firebase não configurado",
-          description: "Configure as chaves do Firebase para usar autenticação.",
-          variant: "destructive",
-        });
-        return;
-      }
       await signInWithGoogle();
     } catch (error) {
       console.error("Login error:", error);
@@ -94,15 +63,6 @@ export function useAuth() {
 
   const logout = async () => {
     try {
-      if (!auth) {
-        // In demo mode, just clear the user
-        setUser(null);
-        toast({
-          title: "Logout realizado",
-          description: "Você foi desconectado com sucesso.",
-        });
-        return;
-      }
       await signOut(auth);
       toast({
         title: "Logout realizado",

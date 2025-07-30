@@ -29,16 +29,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get current chat session
   app.get("/api/chat/current-session", async (req, res) => {
     try {
-      // Using demo user for now
-      const demoUserId = "demo-user-id";
+      // For now, use a simple user ID - in production you'd get this from auth token
+      // This allows the chat to work while maintaining user sessions
+      const userId = req.headers['user-id'] || 'default-user';
       
-      // Ensure demo user exists
-      let user = await storage.getUser(demoUserId);
+      // Ensure user exists
+      let user = await storage.getUser(userId as string);
       if (!user) {
         user = await storage.createUser({
-          firebaseId: "demo-user-id",
-          email: "demo@qisa.ai",
-          displayName: "Usuario Demo",
+          firebaseId: userId as string,
+          email: "user@qisa.ai",
+          displayName: "Usuario",
           photoURL: null,
         });
       }
