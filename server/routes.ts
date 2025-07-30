@@ -33,23 +33,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get current chat session
   app.get("/api/chat/current-session", async (req, res) => {
     try {
-      // Generate unique user ID per browser session
-      const sessionUserId = req.headers['x-user-session'] as string || 
-                           req.headers['user-agent']?.slice(0, 20) + '-' + Date.now();
+      // Check for authenticated Firebase user first
+      const firebaseUserId = req.headers['x-firebase-uid'] as string;
+      let user;
       
-      const firebaseId = `user-${sessionUserId}`;
-      const email = "usuario@qisa.ai";
-      const displayName = "Usuário";
-      
-      // Ensure user exists in storage
-      let user = await storage.getUserByFirebaseId(firebaseId);
-      if (!user) {
-        user = await storage.createUser({
-          firebaseId,
-          email,
-          displayName,
-          photoURL: null,
-        });
+      if (firebaseUserId) {
+        // User is authenticated with Firebase
+        console.log('Getting session for authenticated user:', firebaseUserId);
+        user = await storage.getUserByFirebaseId(firebaseUserId);
+        
+        if (!user) {
+          // This shouldn't happen if auth sync worked, but create fallback
+          user = await storage.createUser({
+            firebaseId: firebaseUserId,
+            email: "usuario@qisa.ai",
+            displayName: "Usuário Autenticado",
+            photoURL: null,
+          });
+          console.log('Created fallback user for Firebase ID:', firebaseUserId);
+        }
+      } else {
+        // Anonymous user - generate browser session ID
+        const sessionUserId = req.headers['x-user-session'] as string || 
+                             req.headers['user-agent']?.slice(0, 20) + '-' + Date.now();
+        
+        const firebaseId = `anonymous-${sessionUserId}`;
+        console.log('Getting session for anonymous user:', firebaseId);
+        
+        user = await storage.getUserByFirebaseId(firebaseId);
+        if (!user) {
+          user = await storage.createUser({
+            firebaseId,
+            email: "anonimo@qisa.ai",
+            displayName: "Usuário Anônimo",
+            photoURL: null,
+          });
+          console.log('Created anonymous user:', firebaseId);
+        }
       }
       
       const session = await storage.getCurrentSession(user.id);

@@ -66,17 +66,26 @@ export default function Home() {
               {loading ? (
                 <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
               ) : user ? (
-                <div className="flex items-center space-x-3">
-                  {user.photoURL && (
+                <div className="flex items-center space-x-3 bg-gray-50 rounded-lg px-3 py-2">
+                  {user.photoURL ? (
                     <img 
                       src={user.photoURL} 
                       alt={user.displayName || 'Usuário'} 
                       className="w-8 h-8 rounded-full border-2 border-primary/20"
                     />
+                  ) : (
+                    <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                      <User className="w-4 h-4 text-white" />
+                    </div>
                   )}
-                  <span className="text-sm text-gray-700 hidden sm:block">
-                    Olá, {user.displayName || user.email}
-                  </span>
+                  <div className="hidden sm:block">
+                    <p className="text-sm font-medium text-gray-900">
+                      {user.displayName || 'Usuário'}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {user.email}
+                    </p>
+                  </div>
                   <Button
                     variant="outline"
                     size="sm"
@@ -84,8 +93,8 @@ export default function Home() {
                     className="text-gray-600 border-gray-300 hover:bg-gray-50"
                     data-testid="button-logout"
                   >
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Sair
+                    <LogOut className="w-4 h-4 mr-1" />
+                    <span className="hidden sm:inline">Sair</span>
                   </Button>
                 </div>
               ) : hasFirebaseConfig ? (

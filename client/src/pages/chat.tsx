@@ -71,32 +71,51 @@ export default function Chat() {
               <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center">
                 <Bot className="text-white" />
               </div>
-              <div>
+              <div className="flex-1">
                 <h1 className="text-lg font-semibold text-gray-900">Qisa</h1>
-                {user && (
-                  <p className="text-xs text-gray-500">
-                    Logado como {user.displayName || user.email}
-                  </p>
-                )}
-
+                <p className="text-sm text-gray-500">Seu Chat Pessoal</p>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-sm text-gray-600">Online</span>
-              </div>
-              {user && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={logout}
-                  className="p-2 text-gray-600 hover:text-red-500 transition-colors rounded-lg hover:bg-gray-100"
-                  data-testid="button-logout-chat"
-                >
-                  <LogOut className="w-4 h-4" />
-                </Button>
+            <div className="flex items-center space-x-3">
+              {/* User Profile Section */}
+              {user ? (
+                <div className="flex items-center space-x-2 bg-gray-50 rounded-lg px-3 py-2">
+                  {user.photoURL ? (
+                    <img 
+                      src={user.photoURL} 
+                      alt={user.displayName || 'Usuário'} 
+                      className="w-8 h-8 rounded-full border-2 border-primary/20"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                      <User className="w-4 h-4 text-white" />
+                    </div>
+                  )}
+                  <div className="hidden sm:block">
+                    <p className="text-sm font-medium text-gray-900">
+                      {user.displayName || 'Usuário'}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {user.email}
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={logout}
+                    className="p-1 text-gray-600 hover:text-red-500 transition-colors rounded-lg hover:bg-gray-100"
+                    data-testid="button-logout-chat"
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-2 text-gray-600">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="text-sm">Modo Anônimo</span>
+                </div>
               )}
+              
               <Button
                 variant="ghost"
                 size="sm"
