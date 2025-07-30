@@ -24,18 +24,16 @@ export class RedisStorage implements IStorage {
   private fallbackStorage: Map<string, any> = new Map();
 
   constructor() {
-    connectRedis().catch((error) => {
-      console.log('Redis not available, using in-memory fallback storage');
-    });
+    console.log('Storage initialized with Redis fallback support');
   }
 
-  private async withFallback<T>(redisOperation: () => Promise<T>, fallbackOperation: () => T): Promise<T> {
+  private async withFallback<T>(redisOperation: () => Promise<T>, fallbackOperation: () => T | Promise<T>): Promise<T> {
     try {
       await connectRedis();
       return await redisOperation();
     } catch (error) {
-      console.log('Using fallback storage for operation');
-      return fallbackOperation();
+      // Use fallback silently
+      return await Promise.resolve(fallbackOperation());
     }
   }
 
@@ -58,9 +56,9 @@ export class RedisStorage implements IStorage {
         const userId = await client.get(`firebase:${firebaseId}`);
         return userId ? this.getUser(userId) : undefined;
       },
-      () => {
+      async () => {
         const userId = this.fallbackStorage.get(`firebase:${firebaseId}`);
-        return userId ? this.getUser(userId) : undefined;
+        return userId ? await this.getUser(userId) : undefined;
       }
     );
   }
@@ -206,7 +204,7 @@ export class RedisStorage implements IStorage {
         
         const results = await pipeline.exec();
         const messages: Message[] = results
-          ?.map(result => result ? JSON.parse(result as string) : null)
+          ?.map(result => result ? JSON.parse(String(result)) : null)
           .filter(Boolean)
           .sort((a, b) => (a.createdAt?.getTime() || 0) - (b.createdAt?.getTime() || 0)) || [];
         
