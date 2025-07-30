@@ -204,7 +204,15 @@ export class RedisStorage implements IStorage {
         
         const results = await pipeline.exec();
         const messages: Message[] = results
-          ?.map(result => result ? JSON.parse(String(result)) : null)
+          ?.map(result => {
+            if (!result) return null;
+            const parsed = JSON.parse(String(result));
+            // Convert string dates back to Date objects
+            if (parsed.createdAt) {
+              parsed.createdAt = new Date(parsed.createdAt);
+            }
+            return parsed;
+          })
           .filter(Boolean)
           .sort((a, b) => (a.createdAt?.getTime() || 0) - (b.createdAt?.getTime() || 0)) || [];
         
@@ -213,6 +221,12 @@ export class RedisStorage implements IStorage {
       () => {
         const messagesJson = this.fallbackStorage.get(`session:${sessionId}:messages`) || '[]';
         const messages: Message[] = JSON.parse(messagesJson);
+        // Ensure dates are Date objects
+        messages.forEach(msg => {
+          if (msg.createdAt && typeof msg.createdAt === 'string') {
+            msg.createdAt = new Date(msg.createdAt);
+          }
+        });
         return messages.sort((a, b) => (a.createdAt?.getTime() || 0) - (b.createdAt?.getTime() || 0));
       }
     );
