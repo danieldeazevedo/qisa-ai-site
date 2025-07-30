@@ -24,7 +24,8 @@ export class RedisStorage implements IStorage {
   private fallbackStorage: Map<string, any> = new Map();
 
   constructor() {
-    console.log('Storage initialized with Redis fallback support');
+    console.log('🚀 Storage initialized with Redis fallback support');
+    console.log('🔗 Redis URL configured:', process.env.REDIS_URL ? 'Yes' : 'No');
   }
 
   private async withFallback<T>(redisOperation: () => Promise<T>, fallbackOperation: () => T | Promise<T>): Promise<T> {
