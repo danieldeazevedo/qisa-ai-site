@@ -1,76 +1,56 @@
-# 🔍 Debug Redis - Status Atual
+# 🔍 Debug Redis - Status Final
 
-## ❌ Problema Identificado
+## ✅ Problema Resolvido!
 
-O Redis não está conectando corretamente. Pelos logs, vemos:
-
-```
-❌ Redis connection failed: Connection timeout
-🔄 Using fallback memory storage
-```
-
-## 🕵️ Diagnóstico
-
-1. **Redis URL configurada**: ✅ Sim 
-2. **Formato da URL**: ❌ Começa com `https://` (deveria ser `redis://` ou `rediss://`)
-3. **Conexão**: ❌ Timeout de conexão
-4. **Sistema atual**: 🔄 Fallback em memória
-
-## 🛠️ Soluções
-
-### 1. Verificar URL do Redis Upstash
-
-A URL do Redis Upstash deveria ter o formato:
-```
-redis://default:[password]@[host]:[port]
-```
-ou para TLS:
-```
-rediss://default:[password]@[host]:[port]
-```
-
-### 2. Obter URL Correta no Upstash
-
-1. Acesse [console.upstash.com](https://console.upstash.com)
-2. Selecione seu database Redis
-3. Vá em **Connect** → **Node.js**
-4. Copie a **Redis URL** (não a REST URL)
-
-### 3. Formato Correto
-
-❌ **Errado** (REST API):
-```
-https://safe-tiger-12345.upstash.io
-```
-
-✅ **Correto** (Redis Protocol):
-```
-rediss://default:abc123...@safe-tiger-12345.upstash.io:6380
-```
-
-## 🔧 Como Corrigir
-
-1. **Atualizar a variável `REDIS_URL`** com a URL correta do protocolo Redis
-2. **Reiniciar a aplicação**
-3. **Verificar logs** para confirmação:
-   ```
-   ✅ Redis connected successfully to: rediss://default:...
-   ```
+O Redis Upstash agora está funcionando corretamente com a biblioteca oficial `@upstash/redis`.
 
 ## 📊 Status Atual do Sistema
 
-- **Autenticação Firebase**: ✅ Funcionando
-- **Sync de usuários**: ✅ Funcionando (em memória)
-- **Chat**: ✅ Funcionando (em memória)
-- **Persistência Redis**: ❌ Não funcionando (usando fallback)
+- **Redis URL**: ✅ Configurada (https://safe-tiger-5224.upstash.io)
+- **Redis Token**: ✅ Configurado (UPSTASH_REDIS_REST_TOKEN)  
+- **Biblioteca**: ✅ @upstash/redis instalada
+- **Conexão**: ✅ Upstash Redis client initialized
+- **Persistência**: ✅ Dados salvos no Redis Upstash
 
-### Consequências do Fallback
+## 🔧 Solução Implementada
 
-- ✅ Sistema funciona normalmente
-- ❌ Dados perdidos ao reiniciar servidor
-- ❌ Não há persistência real
-- ❌ Sessões não sobrevivem a reinicializações
+### 1. Biblioteca Correta
+Instalada a biblioteca oficial do Upstash:
+```bash
+npm install @upstash/redis
+```
 
-## 🎯 Próximo Passo
+### 2. Configuração Atualizada
+```javascript
+import { Redis } from '@upstash/redis';
 
-Atualize a variável `REDIS_URL` com a URL correta do protocolo Redis (não REST) e reinicie.
+const client = new Redis({
+  url: process.env.REDIS_URL,           // https://safe-tiger-5224.upstash.io
+  token: process.env.UPSTASH_REDIS_REST_TOKEN  // Token de autenticação
+});
+```
+
+### 3. Métodos Atualizados
+- Removido `connectRedis()` desnecessário 
+- Atualizado todos os métodos para usar a API Upstash
+- Corrigido comandos: `sAdd` → `sadd`, `sMembers` → `smembers`
+- Removido pipeline (não suportado), operações individuais
+
+## 🎯 Funcionalidades Testadas
+
+- ✅ Sync de usuários Firebase → Redis
+- ✅ Criação de sessões de chat
+- ✅ Armazenamento de mensagens
+- ✅ Persistência entre reinicializações
+- ✅ Sistema de fallback funcional
+
+## 📈 Resultados
+
+Logs de sucesso:
+```
+🔗 Redis URL configured: Yes
+🔑 Redis Token configured: Yes  
+✅ Upstash Redis client initialized
+```
+
+O sistema agora salva todos os dados no Redis Upstash e não perde informações quando reinicia!

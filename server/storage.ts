@@ -29,8 +29,11 @@ export class RedisStorage implements IStorage {
   }
 
   private async withFallback<T>(redisOperation: () => Promise<T>, fallbackOperation: () => T | Promise<T>): Promise<T> {
+    if (!client) {
+      return await Promise.resolve(fallbackOperation());
+    }
+    
     try {
-      await connectRedis();
       return await redisOperation();
     } catch (error) {
       // Use fallback silently
@@ -41,8 +44,8 @@ export class RedisStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
     return this.withFallback(
       async () => {
-        const userJson = await client.get(`user:${id}`);
-        return userJson ? JSON.parse(userJson) : undefined;
+        const userJson = await client!.get(`user:${id}`);
+        return userJson ? JSON.parse(userJson as string) : undefined;
       },
       () => {
         const userJson = this.fallbackStorage.get(`user:${id}`);
@@ -54,8 +57,8 @@ export class RedisStorage implements IStorage {
   async getUserByFirebaseId(firebaseId: string): Promise<User | undefined> {
     return this.withFallback(
       async () => {
-        const userId = await client.get(`firebase:${firebaseId}`);
-        return userId ? this.getUser(userId) : undefined;
+        const userId = await client!.get(`firebase:${firebaseId}`);
+        return userId ? this.getUser(userId as string) : undefined;
       },
       async () => {
         const userId = this.fallbackStorage.get(`firebase:${firebaseId}`);
@@ -76,8 +79,8 @@ export class RedisStorage implements IStorage {
     
     return this.withFallback(
       async () => {
-        await client.set(`user:${id}`, JSON.stringify(user));
-        await client.set(`firebase:${insertUser.firebaseId}`, id);
+        await client!.set(`user:${id}`, JSON.stringify(user));
+        await client!.set(`firebase:${insertUser.firebaseId}`, id);
         return user;
       },
       () => {
@@ -92,12 +95,12 @@ export class RedisStorage implements IStorage {
     return this.withFallback(
       async () => {
         // Get user's current session
-        const sessionId = await client.get(`user:${userId}:current_session`);
+        const sessionId = await client!.get(`user:${userId}:current_session`);
         
         if (sessionId) {
-          const sessionJson = await client.get(`session:${sessionId}`);
+          const sessionJson = await client!.get(`session:${sessionId}`);
           if (sessionJson) {
-            return JSON.parse(sessionJson);
+            return JSON.parse(sessionJson as string);
           }
         }
 
@@ -112,9 +115,9 @@ export class RedisStorage implements IStorage {
           updatedAt: now,
         };
         
-        await client.set(`session:${newSessionId}`, JSON.stringify(session));
-        await client.set(`user:${userId}:current_session`, newSessionId);
-        await client.sAdd(`user:${userId}:sessions`, newSessionId);
+        await client!.set(`session:${newSessionId}`, JSON.stringify(session));
+        await client!.set(`user:${userId}:current_session`, newSessionId);
+        await client!.sadd(`user:${userId}:sessions`, newSessionId);
         
         return session;
       },
@@ -149,7 +152,6 @@ export class RedisStorage implements IStorage {
   }
 
   async createChatSession(insertSession: InsertChatSession): Promise<ChatSession> {
-    await connectRedis();
     const id = randomUUID();
     const now = new Date();
     const session: ChatSession = {
@@ -159,63 +161,74 @@ export class RedisStorage implements IStorage {
       updatedAt: now,
     };
     
-    await client.set(`session:${id}`, JSON.stringify(session));
-    await client.sAdd(`user:${insertSession.userId}:sessions`, id);
-    return session;
+    return this.withFallback(
+      async () => {
+        await client!.set(`session:${id}`, JSON.stringify(session));
+        await client!.sadd(`user:${insertSession.userId}:sessions`, id);
+        return session;
+      },
+      () => {
+        this.fallbackStorage.set(`session:${id}`, JSON.stringify(session));
+        return session;
+      }
+    );
   }
 
   async deleteChatSession(sessionId: string): Promise<void> {
-    await connectRedis();
-    // Get session to find userId
-    const sessionJson = await client.get(`session:${sessionId}`);
-    if (sessionJson) {
-      const session: ChatSession = JSON.parse(sessionJson);
-      
-      // Delete all messages in session
-      const messageIds = await client.sMembers(`session:${sessionId}:messages`);
-      const pipeline = client.multi();
-      messageIds.forEach(messageId => {
-        pipeline.del(`message:${messageId}`);
-      });
-      pipeline.del(`session:${sessionId}:messages`);
-      pipeline.del(`session:${sessionId}`);
-      pipeline.sRem(`user:${session.userId}:sessions`, sessionId);
-      
-      // If this was the current session, clear it
-      const currentSession = await client.get(`user:${session.userId}:current_session`);
-      if (currentSession === sessionId) {
-        pipeline.del(`user:${session.userId}:current_session`);
+    return this.withFallback(
+      async () => {
+        // Get session to find userId
+        const sessionJson = await client!.get(`session:${sessionId}`);
+        if (sessionJson) {
+          const session: ChatSession = JSON.parse(sessionJson as string);
+          
+          // For Upstash, we need to delete items individually
+          const messageIds = await client!.smembers(`session:${sessionId}:messages`);
+          for (const messageId of messageIds) {
+            await client!.del(`message:${messageId}`);
+          }
+          
+          await client!.del(`session:${sessionId}:messages`);
+          await client!.del(`session:${sessionId}`);
+          await client!.srem(`user:${session.userId}:sessions`, sessionId);
+          
+          // If this was the current session, clear it
+          const currentSession = await client!.get(`user:${session.userId}:current_session`);
+          if (currentSession === sessionId) {
+            await client!.del(`user:${session.userId}:current_session`);
+          }
+        }
+      },
+      () => {
+        // Fallback deletion logic
+        this.fallbackStorage.delete(`session:${sessionId}`);
+        this.fallbackStorage.delete(`session:${sessionId}:messages`);
       }
-      
-      await pipeline.exec();
-    }
+    );
   }
 
   async getMessagesBySession(sessionId: string): Promise<Message[]> {
     return this.withFallback(
       async () => {
-        const messageIds = await client.sMembers(`session:${sessionId}:messages`);
+        const messageIds = await client!.smembers(`session:${sessionId}:messages`);
         
         if (messageIds.length === 0) return [];
         
-        const pipeline = client.multi();
-        messageIds.forEach(messageId => {
-          pipeline.get(`message:${messageId}`);
-        });
-        
-        const results = await pipeline.exec();
-        const messages: Message[] = results
-          ?.map(result => {
-            if (!result) return null;
-            const parsed = JSON.parse(String(result));
+        // Get messages individually for Upstash
+        const messages: Message[] = [];
+        for (const messageId of messageIds) {
+          const messageJson = await client!.get(`message:${messageId}`);
+          if (messageJson) {
+            const parsed = JSON.parse(messageJson as string);
             // Convert string dates back to Date objects
             if (parsed.createdAt) {
               parsed.createdAt = new Date(parsed.createdAt);
             }
-            return parsed;
-          })
-          .filter(Boolean)
-          .sort((a, b) => (a.createdAt?.getTime() || 0) - (b.createdAt?.getTime() || 0)) || [];
+            messages.push(parsed);
+          }
+        }
+        
+        return messages.sort((a, b) => (a.createdAt?.getTime() || 0) - (b.createdAt?.getTime() || 0));
         
         return messages;
       },
@@ -245,19 +258,17 @@ export class RedisStorage implements IStorage {
     
     return this.withFallback(
       async () => {
-        const pipeline = client.multi();
-        pipeline.set(`message:${id}`, JSON.stringify(message));
-        pipeline.sAdd(`session:${insertMessage.sessionId}:messages`, id);
+        await client!.set(`message:${id}`, JSON.stringify(message));
+        await client!.sadd(`session:${insertMessage.sessionId}:messages`, id);
         
         // Update session updatedAt
-        const sessionJson = await client.get(`session:${insertMessage.sessionId}`);
+        const sessionJson = await client!.get(`session:${insertMessage.sessionId}`);
         if (sessionJson) {
-          const session: ChatSession = JSON.parse(sessionJson);
+          const session: ChatSession = JSON.parse(sessionJson as string);
           session.updatedAt = new Date();
-          pipeline.set(`session:${insertMessage.sessionId}`, JSON.stringify(session));
+          await client!.set(`session:${insertMessage.sessionId}`, JSON.stringify(session));
         }
         
-        await pipeline.exec();
         return message;
       },
       () => {
