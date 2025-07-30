@@ -14,6 +14,9 @@ export function useAuth() {
       const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
         if (firebaseUser) {
           try {
+            // Store user in global context for API requests
+            (window as any).currentUser = firebaseUser;
+            
             // Send user data to backend
             await apiRequest("POST", "/api/auth/sync", {
               firebaseId: firebaseUser.uid,
@@ -22,13 +25,16 @@ export function useAuth() {
               photoURL: firebaseUser.photoURL,
             });
             setUser(firebaseUser);
+            
+            toast({
+              title: "Login realizado",
+              description: `Bem-vindo, ${firebaseUser.displayName || firebaseUser.email}!`,
+            });
           } catch (error) {
             console.error("Error syncing user:", error);
-            toast({
-              title: "Erro de autenticação",
-              description: "Não foi possível sincronizar seus dados.",
-              variant: "destructive",
-            });
+            // Still set user even if sync fails
+            setUser(firebaseUser);
+            (window as any).currentUser = firebaseUser;
           }
         } else {
           setUser(null);
@@ -51,19 +57,7 @@ export function useAuth() {
       return () => unsubscribe();
     } catch (error) {
       console.error("Firebase initialization error:", error);
-      // Create a demo user to allow the app to work
-      setUser({
-        uid: "demo-user",
-        email: "demo@qisa.ai",
-        displayName: "Usuario Demo",
-        photoURL: null,
-      } as User);
       setLoading(false);
-      
-      toast({
-        title: "Modo Demo",
-        description: "Firebase não configurado corretamente. Use o modo demonstração.",
-      });
     }
   }, [toast]);
 

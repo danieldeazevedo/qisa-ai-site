@@ -29,17 +29,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get current chat session
   app.get("/api/chat/current-session", async (req, res) => {
     try {
-      // For authenticated users, get Firebase ID from auth sync
-      // For now, we'll use a default user to ensure the chat works
-      const defaultUserId = "default-user";
+      // Check if user is authenticated via Firebase
+      const authHeader = req.headers.authorization;
+      let firebaseId = "anonymous-user"; // Default for unauthenticated users
+      let email = "anonimo@qisa.ai";
+      let displayName = "Usuário Anônimo";
       
-      // Ensure default user exists in database
-      let user = await storage.getUserByFirebaseId(defaultUserId);
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        // In production, verify Firebase token here
+        // For now, accept any bearer token as authenticated
+        firebaseId = "authenticated-user";
+        const userAgent = req.headers['user-agent'] || '';
+        email = "usuario.autenticado@qisa.ai";
+        displayName = "Usuário Autenticado";
+        
+        console.log('Authenticated user accessing chat');
+      }
+      
+      // Ensure user exists in storage
+      let user = await storage.getUserByFirebaseId(firebaseId);
       if (!user) {
         user = await storage.createUser({
-          firebaseId: defaultUserId,
-          email: "user@qisa.ai",
-          displayName: "Usuario",
+          firebaseId,
+          email,
+          displayName,
           photoURL: null,
         });
       }

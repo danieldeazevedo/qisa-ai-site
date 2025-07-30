@@ -75,9 +75,9 @@ export default function Chat() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-4">
           <Bot className="w-16 h-16 text-primary mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Acesso Necessário</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Login Necessário</h1>
           <p className="text-gray-600 mb-6">
-            Para configurar o Firebase corretamente, adicione este domínio aos domínios autorizados no Firebase Console.
+            Faça login com sua conta Google para conversar com a Qisa e ter suas conversas salvas.
           </p>
           <Link href="/">
             <Button className="bg-gradient-to-r from-primary to-secondary text-white">
