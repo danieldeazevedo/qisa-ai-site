@@ -17,6 +17,7 @@ Preferred communication style: Simple, everyday language.
 - Chat works without login, but conversations are personal
 - **Added Redis database for fast chat storage**
 - **Migrated from PostgreSQL to Redis for real-time performance**
+- **Created comprehensive README.md with VS Code setup instructions**
 - All core features working: chat, image generation, persistent personal storage
 
 ## System Architecture
