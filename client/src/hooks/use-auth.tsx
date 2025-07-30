@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { User, onAuthStateChanged, signOut } from "firebase/auth";
-import { auth, signInWithGoogle, handleRedirectResult } from "@/lib/firebase";
+import { auth, signInWithGoogle, handleRedirectResult, hasFirebaseConfig } from "@/lib/firebase";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -10,6 +10,11 @@ export function useAuth() {
   const { toast } = useToast();
 
   useEffect(() => {
+    if (!auth || !hasFirebaseConfig) {
+      setLoading(false);
+      return;
+    }
+
     try {
       const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
         if (firebaseUser) {
@@ -88,6 +93,15 @@ export function useAuth() {
   }, [toast]);
 
   const login = async () => {
+    if (!hasFirebaseConfig) {
+      toast({
+        title: "Firebase não configurado",
+        description: "As credenciais do Firebase não foram fornecidas. Configure VITE_FIREBASE_API_KEY, VITE_FIREBASE_PROJECT_ID e VITE_FIREBASE_APP_ID.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       await signInWithGoogle();
     } catch (error: any) {
@@ -99,10 +113,16 @@ export function useAuth() {
           description: "Adicione este domínio aos domínios autorizados no Firebase Console em Authentication > Settings > Authorized domains.",
           variant: "destructive",
         });
+      } else if (error.code === 'auth/invalid-api-key') {
+        toast({
+          title: "Chave da API inválida",
+          description: "Verifique se a VITE_FIREBASE_API_KEY está correta no painel do Firebase.",
+          variant: "destructive",
+        });
       } else {
         toast({
           title: "Erro no login",
-          description: "Não foi possível fazer login. Verifique as configurações do Firebase.",
+          description: error.message || "Não foi possível fazer login. Verifique as configurações do Firebase.",
           variant: "destructive",
         });
       }
@@ -110,6 +130,10 @@ export function useAuth() {
   };
 
   const logout = async () => {
+    if (!auth) {
+      return;
+    }
+
     try {
       await signOut(auth);
       toast({
@@ -131,5 +155,6 @@ export function useAuth() {
     loading,
     login,
     logout,
+    hasFirebaseConfig,
   };
 }

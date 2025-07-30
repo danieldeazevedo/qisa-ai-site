@@ -5,13 +5,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Switch } from "@/components/ui/switch";
 import { ChatMessage } from "@/components/chat-message";
 import { ChatInput } from "@/components/chat-input";
-// import { useAuth } from "@/hooks/use-auth"; // Removed authentication
+import { useAuth } from "@/hooks/use-auth";
 import { useChat } from "@/hooks/use-chat";
-import { ArrowLeft, Bot, Settings, Download, Trash2 } from "lucide-react";
+import { ArrowLeft, Bot, Settings, Download, Trash2, User, LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Chat() {
-  // const { user, loading: authLoading } = useAuth(); // Removed authentication
+  const { user, loading: authLoading, logout } = useAuth();
   const { messages, loading: chatLoading, sendMessage, clearHistory, isSending } = useChat();
   const [showSettings, setShowSettings] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
@@ -73,7 +73,12 @@ export default function Chat() {
               </div>
               <div>
                 <h1 className="text-lg font-semibold text-gray-900">Qisa</h1>
-                <p className="text-sm text-gray-500">Seu Chat Pessoal</p>
+                {user && (
+                  <p className="text-xs text-gray-500">
+                    Logado como {user.displayName || user.email}
+                  </p>
+                )}
+
               </div>
             </div>
             <div className="flex items-center space-x-2">
@@ -81,11 +86,23 @@ export default function Chat() {
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                 <span className="text-sm text-gray-600">Online</span>
               </div>
+              {user && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={logout}
+                  className="p-2 text-gray-600 hover:text-red-500 transition-colors rounded-lg hover:bg-gray-100"
+                  data-testid="button-logout-chat"
+                >
+                  <LogOut className="w-4 h-4" />
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowSettings(true)}
                 className="p-2 text-gray-600 hover:text-primary transition-colors rounded-lg hover:bg-gray-100"
+                data-testid="button-settings"
               >
                 <Settings className="w-4 h-4" />
               </Button>

@@ -1,8 +1,9 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Bot, MessageCircle, Image, Shield } from "lucide-react";
+import { Bot, MessageCircle, Image, Shield, LogIn, LogOut, User } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/use-auth";
 
 // Componente de texto animado com efeito de digitação
 function TypewriterText({ text, delay = 50, className = "" }: { text: string; delay?: number; className?: string }) {
@@ -43,6 +44,8 @@ function FadeInUp({ children, delay = 0, className = "" }: { children: React.Rea
 }
 
 export default function Home() {
+  const { user, loading, login, logout, hasFirebaseConfig } = useAuth();
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
@@ -56,6 +59,56 @@ export default function Home() {
               <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                 Qisa
               </h1>
+            </div>
+            
+            {/* Auth Section */}
+            <div className="flex items-center space-x-3">
+              {loading ? (
+                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+              ) : user ? (
+                <div className="flex items-center space-x-3">
+                  {user.photoURL && (
+                    <img 
+                      src={user.photoURL} 
+                      alt={user.displayName || 'Usuário'} 
+                      className="w-8 h-8 rounded-full border-2 border-primary/20"
+                    />
+                  )}
+                  <span className="text-sm text-gray-700 hidden sm:block">
+                    Olá, {user.displayName || user.email}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={logout}
+                    className="text-gray-600 border-gray-300 hover:bg-gray-50"
+                    data-testid="button-logout"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sair
+                  </Button>
+                </div>
+              ) : hasFirebaseConfig ? (
+                <Button
+                  onClick={login}
+                  variant="outline"
+                  size="sm"
+                  className="text-primary border-primary hover:bg-primary hover:text-white transition-colors"
+                  data-testid="button-login"
+                >
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Login com Google
+                </Button>
+              ) : (
+                <div className="text-center">
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm">
+                    <p className="text-yellow-800 font-medium">⚠️ Firebase não configurado</p>
+                    <p className="text-yellow-700 text-xs mt-1">
+                      Configure as credenciais do Firebase para usar a autenticação
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -126,15 +179,23 @@ export default function Home() {
                 <Button
                   size="lg"
                   className="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-primary to-secondary text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 text-lg animate-gradient bg-gradient-to-r from-primary via-secondary to-primary bg-size-200 hover:bg-right-bottom"
+                  data-testid="button-start-chat"
                 >
                   <MessageCircle className="mr-3 animate-bounce" />
                   Conversar com a Qisa
                 </Button>
               </Link>
-              <p className="text-sm text-gray-500 animate-fade-in">
-                <Shield className="inline w-4 h-4 mr-1" />
-                Suas conversas são seguras e privadas
-              </p>
+              <div className="space-y-2">
+                <p className="text-sm text-gray-500 animate-fade-in">
+                  <Shield className="inline w-4 h-4 mr-1" />
+                  Suas conversas são seguras e privadas
+                </p>
+                {!hasFirebaseConfig && (
+                  <p className="text-xs text-yellow-600 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2">
+                    💡 O chat funciona sem login! Para usar autenticação, configure as credenciais do Firebase.
+                  </p>
+                )}
+              </div>
             </div>
           </FadeInUp>
         </div>

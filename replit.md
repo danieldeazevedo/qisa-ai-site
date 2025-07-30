@@ -11,14 +11,14 @@ Preferred communication style: Simple, everyday language.
 ## Recent Changes
 
 **2024-07-30**: 
-- **Removed Firebase authentication system completely** 
-- **Implemented personal chat sessions per browser**
-- **Each user gets unique private chat history**
-- Chat works without login, but conversations are personal
-- **Added Redis database for fast chat storage**
-- **Migrated from PostgreSQL to Redis for real-time performance**
-- **Created comprehensive README.md with VS Code setup instructions**
-- All core features working: chat, image generation, persistent personal storage
+- **Implemented Firebase Google Authentication system**
+- **Added Redis Upstash integration for database**
+- **Created authenticated chat sessions per user**
+- **Each authenticated user gets unique secure chat history**
+- **Complete Google OAuth login/logout functionality**
+- **Firebase user sync with Redis backend storage**
+- **Enhanced UI with user profile display and auth controls**
+- All core features working: authentication, chat, image generation, persistent secure storage
 
 ## System Architecture
 
@@ -46,9 +46,10 @@ Preferred communication style: Simple, everyday language.
 
 ### Authentication System
 - **Provider**: Firebase Authentication with Google OAuth
-- **Flow**: Firebase handles authentication, backend syncs user data
-- **Storage**: User profiles stored in PostgreSQL with Firebase ID mapping
-- **Security**: Firebase Admin SDK for token verification (configured but not fully implemented)
+- **Flow**: Firebase handles authentication, backend syncs user data to Redis
+- **Storage**: User profiles stored in Redis Upstash with Firebase ID mapping
+- **Security**: Firebase tokens handled client-side, user sync with backend
+- **Features**: Complete login/logout flow with user profile display
 
 ### AI Integration
 - **Provider**: Google Gemini AI via `@google/genai` package
@@ -65,17 +66,18 @@ Preferred communication style: Simple, everyday language.
 - **Storage**: All chat data persisted in PostgreSQL
 
 ### Data Storage
-- **Database**: Redis for high-performance chat storage and caching
+- **Database**: Redis Upstash for cloud-hosted high-performance storage
 - **Structure**: Key-value pairs with sets and hashes for relationships
-- **Persistence**: All chat history, user profiles, and session data stored in Redis
-- **Performance**: Optimized for real-time chat operations with sub-millisecond response times
+- **Persistence**: All chat history, user profiles, and session data stored in Redis Upstash
+- **Performance**: Optimized for real-time chat operations with global CDN
+- **Scalability**: Serverless Redis with automatic scaling and high availability
 
 ## Data Flow
 
-1. **User Authentication**: Firebase → Backend sync → PostgreSQL user record
-2. **Chat Initiation**: Get/create current session → Load message history
-3. **Message Flow**: User input → Gemini API → Store response → Update UI
-4. **Image Requests**: Detected by keywords → Gemini image generation → Store with URL
+1. **User Authentication**: Google OAuth → Firebase → Backend sync → Redis user record
+2. **Chat Initiation**: Authenticated user → Get/create current session → Load message history from Redis
+3. **Message Flow**: User input → Gemini API → Store response in Redis → Update UI
+4. **Image Requests**: Detected by keywords → Gemini image generation → Store with URL in Redis
 
 ## External Dependencies
 
@@ -105,9 +107,9 @@ Preferred communication style: Simple, everyday language.
 ### Environment Configuration
 - **Development**: Uses Vite dev server with API proxy
 - **Production**: Express serves both API and static files
-- **Database**: Requires `DATABASE_URL` environment variable
+- **Database**: Requires `REDIS_URL` environment variable for Upstash connection
 - **AI**: Requires `GEMINI_API_KEY` for Gemini integration
-- **Auth**: Firebase configuration via environment variables
+- **Auth**: Firebase configuration via `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_PROJECT_ID`, `VITE_FIREBASE_APP_ID`
 
 ### Scalability Considerations
 - **Database**: Uses connection pooling via Neon serverless
