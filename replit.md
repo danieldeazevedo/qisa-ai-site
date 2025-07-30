@@ -14,9 +14,9 @@ Preferred communication style: Simple, everyday language.
 - Fixed Firebase authentication with user-provided API keys
 - Removed demo mode, now using proper Firebase authentication
 - Updated chat system to work with authenticated users
-- **Added PostgreSQL database with Drizzle ORM**
-- **Migrated from in-memory storage to persistent database storage**
-- **All chat history and user data now persisted in database**
+- **Added Redis database for fast chat storage**
+- **Migrated from PostgreSQL to Redis for real-time performance**
+- **All chat history and user data persisted in Redis**
 - All core features working: chat, image generation, user authentication, persistent storage
 
 ## System Architecture
@@ -36,10 +36,10 @@ Preferred communication style: Simple, everyday language.
 - **Middleware**: JSON parsing and request logging with timing
 
 ### Database Layer
-- **ORM**: Drizzle ORM with PostgreSQL dialect
-- **Database**: PostgreSQL (configured for Neon Database)
-- **Migrations**: Drizzle Kit for schema management
-- **Connection**: Uses `@neondatabase/serverless` for serverless deployment
+- **Database**: Redis for high-performance data storage
+- **Client**: Node Redis client with connection pooling
+- **Structure**: Optimized key-value storage for chat data
+- **Connection**: Direct Redis connection with automatic reconnection
 
 ## Key Components
 
@@ -64,10 +64,10 @@ Preferred communication style: Simple, everyday language.
 - **Storage**: All chat data persisted in PostgreSQL
 
 ### Data Storage
-- **Database**: PostgreSQL with Drizzle ORM for type-safe database operations
-- **Schema**: Users, chat sessions, and messages with proper foreign key relationships and constraints
-- **Persistence**: All chat history, user profiles, and session data stored permanently
-- **Relations**: Proper foreign key relationships between users, sessions, and messages
+- **Database**: Redis for high-performance chat storage and caching
+- **Structure**: Key-value pairs with sets and hashes for relationships
+- **Persistence**: All chat history, user profiles, and session data stored in Redis
+- **Performance**: Optimized for real-time chat operations with sub-millisecond response times
 
 ## Data Flow
 
