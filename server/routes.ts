@@ -33,8 +33,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get current chat session
   app.get("/api/chat/current-session", async (req, res) => {
     try {
-      // Simple user system - everyone gets the same default user
-      const firebaseId = "default-user";
+      // Generate unique user ID per browser session
+      const sessionUserId = req.headers['x-user-session'] as string || 
+                           req.headers['user-agent']?.slice(0, 20) + '-' + Date.now();
+      
+      const firebaseId = `user-${sessionUserId}`;
       const email = "usuario@qisa.ai";
       const displayName = "Usuário";
       

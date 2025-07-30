@@ -11,13 +11,13 @@ Preferred communication style: Simple, everyday language.
 ## Recent Changes
 
 **2024-07-30**: 
-- Fixed Firebase authentication with user-provided API keys
-- Removed demo mode, now using proper Firebase authentication
-- Updated chat system to work with authenticated users
+- **Removed Firebase authentication system completely** 
+- **Implemented personal chat sessions per browser**
+- **Each user gets unique private chat history**
+- Chat works without login, but conversations are personal
 - **Added Redis database for fast chat storage**
 - **Migrated from PostgreSQL to Redis for real-time performance**
-- **All chat history and user data persisted in Redis**
-- All core features working: chat, image generation, user authentication, persistent storage
+- All core features working: chat, image generation, persistent personal storage
 
 ## System Architecture
 

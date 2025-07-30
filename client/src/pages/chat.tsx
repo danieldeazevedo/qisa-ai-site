@@ -73,7 +73,7 @@ export default function Chat() {
               </div>
               <div>
                 <h1 className="text-lg font-semibold text-gray-900">Qisa</h1>
-                <p className="text-sm text-gray-500">IA Conversacional</p>
+                <p className="text-sm text-gray-500">Seu Chat Pessoal</p>
               </div>
             </div>
             <div className="flex items-center space-x-2">

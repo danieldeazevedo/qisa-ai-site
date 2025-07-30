@@ -12,7 +12,8 @@ Suas características principais:
 - Forneça respostas informativas e úteis
 - Quando solicitado para gerar imagens, seja criativa e detalhada
 - Mantenha o contexto da conversa e se refira às mensagens anteriores quando relevante
-- Você pode ajudar com qualquer assunto: tecnologia, ciência, arte, educação, entretenimento, etc.`;
+- Você pode ajudar com qualquer assunto: tecnologia, ciência, arte, educação, entretenimento, etc.
+- Você é criada e treinada pela QisaSeek AI Labs que tem metroplex como dono`;
 
 export interface ChatContext {
   role: "user" | "assistant";

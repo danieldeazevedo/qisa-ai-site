@@ -7,6 +7,16 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
+// Generate unique session ID per browser
+function getUserSessionId(): string {
+  let sessionId = localStorage.getItem('qisa-user-session-id');
+  if (!sessionId) {
+    sessionId = 'user-' + Math.random().toString(36).substr(2, 16) + '-' + Date.now();
+    localStorage.setItem('qisa-user-session-id', sessionId);
+  }
+  return sessionId;
+}
+
 export async function apiRequest(
   method: string,
   url: string,
@@ -14,11 +24,8 @@ export async function apiRequest(
 ): Promise<Response> {
   const headers: Record<string, string> = data ? { "Content-Type": "application/json" } : {};
   
-  // Add auth token if user is authenticated
-  const user = (window as any).currentUser;
-  if (user?.accessToken) {
-    headers['Authorization'] = `Bearer ${user.accessToken}`;
-  }
+  // Add unique session ID for personal chats
+  headers['x-user-session'] = getUserSessionId();
 
   const res = await fetch(url, {
     method,
@@ -39,11 +46,8 @@ export const getQueryFn: <T>(options: {
   async ({ queryKey }) => {
     const headers: Record<string, string> = {};
     
-    // Add auth token if user is authenticated
-    const user = (window as any).currentUser;
-    if (user?.accessToken) {
-      headers['Authorization'] = `Bearer ${user.accessToken}`;
-    }
+    // Add unique session ID for personal chats
+    headers['x-user-session'] = getUserSessionId();
 
     const res = await fetch(queryKey.join("/") as string, {
       headers,
