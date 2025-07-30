@@ -5,13 +5,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Switch } from "@/components/ui/switch";
 import { ChatMessage } from "@/components/chat-message";
 import { ChatInput } from "@/components/chat-input";
-import { useAuth } from "@/hooks/use-auth";
+// import { useAuth } from "@/hooks/use-auth"; // Removed authentication
 import { useChat } from "@/hooks/use-chat";
 import { ArrowLeft, Bot, Settings, Download, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Chat() {
-  const { user, loading: authLoading } = useAuth();
+  // const { user, loading: authLoading } = useAuth(); // Removed authentication
   const { messages, loading: chatLoading, sendMessage, clearHistory, isSending } = useChat();
   const [showSettings, setShowSettings] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
@@ -23,16 +23,7 @@ export default function Chat() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Check if user is authenticated - allow demo users
-  useEffect(() => {
-    if (!authLoading && !user) {
-      toast({
-        title: "Login necessário",
-        description: "Você precisa fazer login para usar o chat.",
-        variant: "destructive",
-      });
-    }
-  }, [user, authLoading, toast]);
+  // No authentication required - chat is open to everyone
 
   const handleExportHistory = () => {
     const exportData = {
@@ -59,35 +50,7 @@ export default function Chat() {
     });
   };
 
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <Bot className="w-12 h-12 text-primary mx-auto mb-4 animate-pulse" />
-          <p className="text-gray-600">Carregando...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto px-4">
-          <Bot className="w-16 h-16 text-primary mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Login Necessário</h1>
-          <p className="text-gray-600 mb-6">
-            Faça login com sua conta Google para conversar com a Qisa e ter suas conversas salvas.
-          </p>
-          <Link href="/">
-            <Button className="bg-gradient-to-r from-primary to-secondary text-white">
-              Voltar ao Início
-            </Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  // No authentication checks - everyone can use the chat
 
   return (
     <div className="min-h-screen flex flex-col">

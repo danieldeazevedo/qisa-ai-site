@@ -33,22 +33,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get current chat session
   app.get("/api/chat/current-session", async (req, res) => {
     try {
-      // Check if user is authenticated via Firebase
-      const authHeader = req.headers.authorization;
-      let firebaseId = "anonymous-user"; // Default for unauthenticated users
-      let email = "anonimo@qisa.ai";
-      let displayName = "Usuário Anônimo";
-      
-      if (authHeader && authHeader.startsWith('Bearer ')) {
-        // For now, just create a consistent ID for authenticated users
-        // In production, this would decode and verify the Firebase JWT token
-        firebaseId = "authenticated-firebase-user";
-        email = "usuario.autenticado@qisa.ai";
-        displayName = "Usuário Autenticado";
-        console.log('Authenticated user accessing chat with token');
-      } else {
-        console.log('Anonymous user accessing chat');
-      }
+      // Simple user system - everyone gets the same default user
+      const firebaseId = "default-user";
+      const email = "usuario@qisa.ai";
+      const displayName = "Usuário";
       
       // Ensure user exists in storage
       let user = await storage.getUserByFirebaseId(firebaseId);

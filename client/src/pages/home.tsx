@@ -1,18 +1,15 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { useAuth } from "@/hooks/use-auth";
-import { Bot, MessageCircle, Image, Shield, User } from "lucide-react";
+import { Bot, MessageCircle, Image, Shield } from "lucide-react";
 
 export default function Home() {
-  const { user, login, logout, loading } = useAuth();
-
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+      <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex justify-between items-center h-16 px-4 sm:px-6 lg:px-8">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center">
                 <Bot className="text-white text-lg" />
@@ -20,44 +17,6 @@ export default function Home() {
               <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                 Qisa
               </h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              {loading ? (
-                <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse" />
-              ) : user ? (
-                <div className="flex items-center space-x-2">
-                  {user.photoURL ? (
-                    <img
-                      src={user.photoURL}
-                      alt="Profile"
-                      className="w-8 h-8 rounded-full"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                      <User className="w-4 h-4 text-white" />
-                    </div>
-                  )}
-                  <span className="text-sm text-gray-600">{user.displayName || user.email}</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={logout}
-                    className="text-gray-600 hover:text-primary"
-                  >
-                    Sair
-                  </Button>
-                </div>
-              ) : (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={login}
-                  className="text-gray-600 hover:text-primary"
-                >
-                  <User className="w-4 h-4 mr-2" />
-                  Entrar
-                </Button>
-              )}
             </div>
           </div>
         </div>
@@ -138,7 +97,7 @@ export default function Home() {
       <footer className="bg-white border-t border-gray-200 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <p className="text-gray-600">
-            © 2024 Qisa. Powered by Google Gemini AI & Firebase.
+            © 2024 Qisa. Powered by Google Gemini AI.
           </p>
         </div>
       </footer>
