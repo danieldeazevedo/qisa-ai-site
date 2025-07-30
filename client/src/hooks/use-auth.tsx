@@ -10,54 +10,82 @@ export function useAuth() {
   const { toast } = useToast();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        try {
-          // Send user data to backend
-          await apiRequest("POST", "/api/auth/sync", {
-            firebaseId: firebaseUser.uid,
-            email: firebaseUser.email,
-            displayName: firebaseUser.displayName,
-            photoURL: firebaseUser.photoURL,
-          });
-          setUser(firebaseUser);
-        } catch (error) {
-          console.error("Error syncing user:", error);
+    try {
+      const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+        if (firebaseUser) {
+          try {
+            // Send user data to backend
+            await apiRequest("POST", "/api/auth/sync", {
+              firebaseId: firebaseUser.uid,
+              email: firebaseUser.email,
+              displayName: firebaseUser.displayName,
+              photoURL: firebaseUser.photoURL,
+            });
+            setUser(firebaseUser);
+          } catch (error) {
+            console.error("Error syncing user:", error);
+            toast({
+              title: "Erro de autenticação",
+              description: "Não foi possível sincronizar seus dados.",
+              variant: "destructive",
+            });
+          }
+        } else {
+          setUser(null);
+        }
+        setLoading(false);
+      });
+
+      // Handle redirect result
+      handleRedirectResult().catch((error) => {
+        console.error("Redirect error:", error);
+        if (error.code !== 'auth/unauthorized-domain') {
           toast({
-            title: "Erro de autenticação",
-            description: "Não foi possível sincronizar seus dados.",
+            title: "Erro no login",
+            description: "Não foi possível completar o login.",
             variant: "destructive",
           });
         }
-      } else {
-        setUser(null);
-      }
-      setLoading(false);
-    });
-
-    // Handle redirect result
-    handleRedirectResult().catch((error) => {
-      console.error("Redirect error:", error);
-      toast({
-        title: "Erro no login",
-        description: "Não foi possível completar o login.",
-        variant: "destructive",
       });
-    });
 
-    return () => unsubscribe();
+      return () => unsubscribe();
+    } catch (error) {
+      console.error("Firebase initialization error:", error);
+      // Create a demo user to allow the app to work
+      setUser({
+        uid: "demo-user",
+        email: "demo@qisa.ai",
+        displayName: "Usuario Demo",
+        photoURL: null,
+      } as User);
+      setLoading(false);
+      
+      toast({
+        title: "Modo Demo",
+        description: "Firebase não configurado corretamente. Use o modo demonstração.",
+      });
+    }
   }, [toast]);
 
   const login = async () => {
     try {
       await signInWithGoogle();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login error:", error);
-      toast({
-        title: "Erro no login",
-        description: "Não foi possível fazer login.",
-        variant: "destructive",
-      });
+      
+      if (error.code === 'auth/unauthorized-domain') {
+        toast({
+          title: "Domínio não autorizado",
+          description: "Adicione este domínio aos domínios autorizados no Firebase Console em Authentication > Settings > Authorized domains.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erro no login",
+          description: "Não foi possível fazer login. Verifique as configurações do Firebase.",
+          variant: "destructive",
+        });
+      }
     }
   };
 

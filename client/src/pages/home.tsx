@@ -33,8 +33,11 @@ export default function Home() {
                       className="w-8 h-8 rounded-full"
                     />
                   ) : (
-                    <User className="w-8 h-8 text-gray-600" />
+                    <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                      <User className="w-4 h-4 text-white" />
+                    </div>
                   )}
+                  <span className="text-sm text-gray-600">{user.displayName || user.email}</span>
                   <Button
                     variant="ghost"
                     size="sm"
