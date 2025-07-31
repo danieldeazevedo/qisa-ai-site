@@ -8,6 +8,8 @@ import { ChatInput } from "@/components/chat-input";
 import { useAuth } from "@/hooks/use-auth";
 import { useChat } from "@/hooks/use-chat";
 import { useTheme } from "@/hooks/use-theme";
+import { useQkoins } from "@/hooks/use-qkoins";
+import { QkoinDisplay } from "@/components/qkoin-display";
 import { ArrowLeft, Bot, Settings, Download, Trash2, User, LogOut, Moon, Sun } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -15,6 +17,7 @@ export default function Chat() {
   const { user, loading: authLoading, logout } = useAuth();
   const { messages, loading: chatLoading, sendMessage, clearHistory, isSending, isClearing } = useChat();
   const { theme, toggleTheme } = useTheme();
+  const { canGenerateImage } = useQkoins();
   const [showSettings, setShowSettings] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -93,6 +96,9 @@ export default function Chat() {
                   Sobre
                 </Button>
               </Link>
+              
+              {/* QKoin Display */}
+              <QkoinDisplay compact={true} />
               
               {/* Theme Toggle */}
               <Button
@@ -176,7 +182,7 @@ export default function Chat() {
                     <>
                       Bem-vindo à Qisa, <strong>{user.displayName || user.username}</strong>! 
                       Eu sou sua assistente de IA pessoal. Como posso ajudá-lo hoje? 
-                      Posso conversar sobre qualquer assunto ou gerar imagens a partir de suas descrições!
+                      Posso conversar sobre qualquer assunto ou gerar imagens usando seus QKoins (1 QKoin = 1 imagem)!
                     </>
                   ) : (
                     <>
@@ -295,6 +301,13 @@ export default function Chat() {
                 Exportar
               </Button>
             </div>
+            
+            {/* QKoins Section */}
+            {user && !user.username?.includes('anonymous') && (
+              <div className="mt-6 animate-slide-in" style={{ animationDelay: "0.3s" }}>
+                <QkoinDisplay compact={false} />
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>

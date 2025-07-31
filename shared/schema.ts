@@ -27,6 +27,13 @@ export const insertMessageSchema = z.object({
   metadata: z.any().nullable().optional(),
 });
 
+export const qkoinTransactionSchema = z.object({
+  userId: z.string(),
+  amount: z.number(),
+  type: z.enum(['earned', 'spent', 'daily_reward']),
+  description: z.string(),
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type LoginUser = z.infer<typeof loginUserSchema>;
@@ -36,6 +43,8 @@ export type User = {
   email: string;
   displayName: string | null;
   photoURL: string | null;
+  qkoins: number;
+  lastDailyReward: Date | null;
   createdAt: Date;
 };
 
@@ -58,3 +67,14 @@ export type Message = {
   metadata: any | null;
   createdAt: Date;
 };
+
+export type QkoinTransaction = {
+  id: string;
+  userId: string;
+  amount: number;
+  type: 'earned' | 'spent' | 'daily_reward';
+  description: string;
+  createdAt: Date;
+};
+
+export type InsertQkoinTransaction = z.infer<typeof qkoinTransactionSchema>;

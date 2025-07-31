@@ -204,6 +204,56 @@ export default function About() {
             </Card>
           </div>
 
+          {/* Sistema QKoins */}
+          <div className="mb-16 animate-fade-in">
+            <h2 className="text-3xl font-bold text-foreground mb-8 text-center">Sistema QKoins</h2>
+            <Card className="border border-border bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-950 dark:to-orange-950">
+              <CardContent className="p-8">
+                <div className="flex items-center justify-center mb-6">
+                  <div className="w-16 h-16 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-2xl flex items-center justify-center">
+                    <span className="text-white text-2xl">💰</span>
+                  </div>
+                </div>
+                <h3 className="text-2xl font-bold text-foreground text-center mb-4">
+                  Moeda Virtual para Geração de Imagens
+                </h3>
+                <p className="text-muted-foreground text-center mb-6 text-lg leading-relaxed">
+                  O <strong>QKoins</strong> é nosso sistema de moeda virtual que garante uso equilibrado dos recursos de geração de imagens. 
+                  Cada usuário autenticado recebe <strong>10 QKoins diários</strong> automaticamente, e cada imagem gerada custa <strong>1 QKoin</strong>.
+                </p>
+                <div className="grid md:grid-cols-3 gap-6 mt-8">
+                  <div className="text-center">
+                    <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center mx-auto mb-3">
+                      <span className="text-green-500 text-lg">🎁</span>
+                    </div>
+                    <h4 className="font-semibold text-foreground mb-2">10 QKoins Diários</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Renovação automática todos os dias
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center mx-auto mb-3">
+                      <span className="text-blue-500 text-lg">🎨</span>
+                    </div>
+                    <h4 className="font-semibold text-foreground mb-2">1 QKoin = 1 Imagem</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Sistema simples e transparente
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center mx-auto mb-3">
+                      <span className="text-purple-500 text-lg">📊</span>
+                    </div>
+                    <h4 className="font-semibold text-foreground mb-2">Histórico Completo</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Acompanhe suas transações e saldo
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
           {/* Por que escolher a Qisa */}
           <div className="mb-16 animate-fade-in">
             <h2 className="text-3xl font-bold text-foreground mb-8 text-center">Por que escolher a Qisa?</h2>

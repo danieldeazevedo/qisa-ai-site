@@ -205,11 +205,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let imageUrl: string | null = null;
 
       if (isImageRequest) {
-        try {
-          imageUrl = await generateImage(content);
-          response = "Aqui está a imagem que você solicitou:";
-        } catch (error) {
-          response = "Desculpe, não consegui gerar a imagem. Tente novamente com uma descrição diferente.";
+        // Check if user has enough QKoins for image generation
+        if (username && !username.includes('anonymous')) {
+          const userQkoins = await storage.getUserQkoins(userId);
+          if (userQkoins < 1) {
+            response = "❌ QKoins insuficientes! Você precisa de 1 QKoin para gerar uma imagem. Colete sua recompensa diária ou aguarde até amanhã.";
+          } else {
+            try {
+              // Spend 1 QKoin for image generation
+              const spent = await storage.spendQkoins(userId, 1, `Geração de imagem: ${content.substring(0, 50)}...`);
+              if (spent) {
+                imageUrl = await generateImage(content);
+                response = "Aqui está a imagem que você solicitou:";
+              } else {
+                response = "❌ Erro ao processar QKoins. Tente novamente.";
+              }
+            } catch (error) {
+              // Refund the QKoin if image generation fails
+              await storage.addQkoins(userId, 1, 'earned', 'Reembolso: falha na geração de imagem');
+              response = "Desculpe, não consegui gerar a imagem. Tente novamente com uma descrição diferente. Seu QKoin foi reembolsado.";
+            }
+          }
+        } else {
+          response = "❌ Para gerar imagens, você precisa fazer login e ter QKoins. Faça login e colete sua recompensa diária!";
         }
       } else {
         // Pass username to AI for personalization
@@ -337,7 +355,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // QKoin Routes
+  
+  // Get user QKoins balance
+  app.get("/api/qkoins/balance", async (req, res) => {
+    try {
+      const username = req.headers['x-username'] as string;
+      
+      if (!username || username.includes('anonymous')) {
+        return res.json({ qkoins: 0, message: "Login necessário para usar QKoins" });
+      }
 
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
+        return res.status(401).json({ error: "Usuário não encontrado" });
+      }
+
+      const qkoins = await storage.getUserQkoins(user.id);
+      const canClaimDaily = await storage.checkDailyReward(user.id);
+      
+      res.json({ 
+        qkoins, 
+        canClaimDaily,
+        userId: user.id 
+      });
+    } catch (error) {
+      console.error("Error getting QKoins balance:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Claim daily reward
+  app.post("/api/qkoins/daily-reward", async (req, res) => {
+    try {
+      const username = req.headers['x-username'] as string;
+      
+      if (!username || username.includes('anonymous')) {
+        return res.status(401).json({ error: "Login necessário para receber recompensas" });
+      }
+
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
+        return res.status(401).json({ error: "Usuário não encontrado" });
+      }
+
+      const claimed = await storage.claimDailyReward(user.id);
+      
+      if (claimed) {
+        const newBalance = await storage.getUserQkoins(user.id);
+        res.json({ 
+          success: true, 
+          message: "Recompensa diária coletada! +10 QKoins",
+          qkoins: newBalance
+        });
+      } else {
+        res.status(400).json({ error: "Recompensa diária já foi coletada hoje" });
+      }
+    } catch (error) {
+      console.error("Error claiming daily reward:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get QKoin transactions
+  app.get("/api/qkoins/transactions", async (req, res) => {
+    try {
+      const username = req.headers['x-username'] as string;
+      
+      if (!username || username.includes('anonymous')) {
+        return res.json([]);
+      }
+
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
+        return res.status(401).json({ error: "Usuário não encontrado" });
+      }
+
+      const transactions = await storage.getQkoinTransactions(user.id);
+      res.json(transactions);
+    } catch (error) {
+      console.error("Error getting QKoin transactions:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
 
   // Health check endpoint
   app.get("/api/health", (req, res) => {

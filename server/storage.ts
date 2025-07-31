@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type ChatSession, type InsertChatSession, type Message, type InsertMessage } from "@shared/schema";
+import { type User, type InsertUser, type ChatSession, type InsertChatSession, type Message, type InsertMessage, type QkoinTransaction, type InsertQkoinTransaction } from "@shared/schema";
 import { client, connectRedis } from "./db";
 import { randomUUID } from "crypto";
 
@@ -21,6 +21,14 @@ export interface IStorage {
   saveMessageToHistory(userId: string, sessionId: string, message: InsertMessage): Promise<Message>;
   getChatHistory(userId: string, sessionId: string): Promise<Message[]>;
   clearChatHistory(userId: string, sessionId: string): Promise<void>;
+  
+  // QKoin methods
+  getUserQkoins(userId: string): Promise<number>;
+  addQkoins(userId: string, amount: number, type: 'earned' | 'spent' | 'daily_reward', description: string): Promise<void>;
+  spendQkoins(userId: string, amount: number, description: string): Promise<boolean>;
+  checkDailyReward(userId: string): Promise<boolean>;
+  claimDailyReward(userId: string): Promise<boolean>;
+  getQkoinTransactions(userId: string): Promise<QkoinTransaction[]>;
 }
 
 
@@ -172,6 +180,8 @@ export class RedisStorage implements IStorage {
       email: insertUser.email,
       displayName: insertUser.displayName || null,
       photoURL: insertUser.photoURL || null,
+      qkoins: 10, // Usuários começam com 10 QKoins
+      lastDailyReward: null,
       createdAt: new Date(),
     };
     
@@ -521,6 +531,211 @@ export class RedisStorage implements IStorage {
         
         // Clear the history
         this.fallbackStorage.delete(historyKey);
+      }
+    );
+  }
+
+  // QKoin Methods
+  async getUserQkoins(userId: string): Promise<number> {
+    return this.withFallback(
+      async () => {
+        const qkoins = await client!.get(`user:${userId}:qkoins`);
+        return qkoins ? parseInt(qkoins as string) : 0;
+      },
+      () => {
+        const qkoins = this.fallbackStorage.get(`user:${userId}:qkoins`);
+        return qkoins ? parseInt(qkoins) : 0;
+      }
+    );
+  }
+
+  async addQkoins(userId: string, amount: number, type: 'earned' | 'spent' | 'daily_reward', description: string): Promise<void> {
+    return this.withFallback(
+      async () => {
+        // Get current qkoins
+        const currentQkoins = await this.getUserQkoins(userId);
+        const newQkoins = currentQkoins + amount;
+        
+        // Update user qkoins
+        await client!.set(`user:${userId}:qkoins`, newQkoins.toString());
+        
+        // Update user object
+        const userJson = await client!.get(`user:${userId}`);
+        if (userJson) {
+          const userData = typeof userJson === 'string' ? JSON.parse(userJson) : userJson;
+          userData.qkoins = newQkoins;
+          await client!.set(`user:${userId}`, JSON.stringify(userData));
+        }
+        
+        // Log transaction
+        const transactionId = randomUUID();
+        const transaction: QkoinTransaction = {
+          id: transactionId,
+          userId,
+          amount,
+          type,
+          description,
+          createdAt: new Date(),
+        };
+        
+        await client!.set(`transaction:${transactionId}`, JSON.stringify(transaction));
+        await client!.lpush(`user:${userId}:transactions`, transactionId);
+      },
+      () => {
+        // Fallback logic
+        const currentQkoins = this.getUserQkoins(userId);
+        const newQkoins = (currentQkoins || 0) + amount;
+        
+        this.fallbackStorage.set(`user:${userId}:qkoins`, newQkoins.toString());
+        
+        // Update user object
+        const userJson = this.fallbackStorage.get(`user:${userId}`);
+        if (userJson) {
+          const userData = typeof userJson === 'string' ? JSON.parse(userJson) : userJson;
+          userData.qkoins = newQkoins;
+          this.fallbackStorage.set(`user:${userId}`, JSON.stringify(userData));
+        }
+        
+        // Log transaction
+        const transactionId = randomUUID();
+        const transaction: QkoinTransaction = {
+          id: transactionId,
+          userId,
+          amount,
+          type,
+          description,
+          createdAt: new Date(),
+        };
+        
+        this.fallbackStorage.set(`transaction:${transactionId}`, JSON.stringify(transaction));
+        
+        const transactionsJson = this.fallbackStorage.get(`user:${userId}:transactions`) || '[]';
+        const transactions: string[] = JSON.parse(transactionsJson);
+        transactions.unshift(transactionId);
+        this.fallbackStorage.set(`user:${userId}:transactions`, JSON.stringify(transactions));
+      }
+    );
+  }
+
+  async spendQkoins(userId: string, amount: number, description: string): Promise<boolean> {
+    const currentQkoins = await this.getUserQkoins(userId);
+    
+    if (currentQkoins < amount) {
+      return false; // Insufficient funds
+    }
+    
+    await this.addQkoins(userId, -amount, 'spent', description);
+    return true;
+  }
+
+  async checkDailyReward(userId: string): Promise<boolean> {
+    return this.withFallback(
+      async () => {
+        const userJson = await client!.get(`user:${userId}`);
+        if (!userJson) return false;
+        
+        const userData = typeof userJson === 'string' ? JSON.parse(userJson) : userJson;
+        const lastReward = userData.lastDailyReward ? new Date(userData.lastDailyReward) : null;
+        
+        if (!lastReward) return true; // Never claimed
+        
+        const now = new Date();
+        const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        
+        return lastReward < oneDayAgo;
+      },
+      () => {
+        const userJson = this.fallbackStorage.get(`user:${userId}`);
+        if (!userJson) return false;
+        
+        const userData = typeof userJson === 'string' ? JSON.parse(userJson) : userJson;
+        const lastReward = userData.lastDailyReward ? new Date(userData.lastDailyReward) : null;
+        
+        if (!lastReward) return true;
+        
+        const now = new Date();
+        const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        
+        return lastReward < oneDayAgo;
+      }
+    );
+  }
+
+  async claimDailyReward(userId: string): Promise<boolean> {
+    const canClaim = await this.checkDailyReward(userId);
+    
+    if (!canClaim) return false;
+    
+    return this.withFallback(
+      async () => {
+        // Add 10 QKoins daily reward
+        await this.addQkoins(userId, 10, 'daily_reward', 'Recompensa diária');
+        
+        // Update lastDailyReward
+        const userJson = await client!.get(`user:${userId}`);
+        if (userJson) {
+          const userData = typeof userJson === 'string' ? JSON.parse(userJson) : userJson;
+          userData.lastDailyReward = new Date();
+          await client!.set(`user:${userId}`, JSON.stringify(userData));
+        }
+        
+        return true;
+      },
+      () => {
+        // Fallback logic
+        const currentQkoins = this.getUserQkoins(userId);
+        this.fallbackStorage.set(`user:${userId}:qkoins`, (currentQkoins + 10).toString());
+        
+        // Update user object
+        const userJson = this.fallbackStorage.get(`user:${userId}`);
+        if (userJson) {
+          const userData = typeof userJson === 'string' ? JSON.parse(userJson) : userJson;
+          userData.qkoins = currentQkoins + 10;
+          userData.lastDailyReward = new Date();
+          this.fallbackStorage.set(`user:${userId}`, JSON.stringify(userData));
+        }
+        
+        return true;
+      }
+    );
+  }
+
+  async getQkoinTransactions(userId: string): Promise<QkoinTransaction[]> {
+    return this.withFallback(
+      async () => {
+        const transactionIds = await client!.lrange(`user:${userId}:transactions`, 0, 49); // Last 50 transactions
+        
+        const transactions: QkoinTransaction[] = [];
+        for (const transactionId of transactionIds) {
+          const transactionJson = await client!.get(`transaction:${transactionId}`);
+          if (transactionJson) {
+            const parsed = typeof transactionJson === 'string' ? JSON.parse(transactionJson) : transactionJson;
+            if (parsed.createdAt) {
+              parsed.createdAt = new Date(parsed.createdAt);
+            }
+            transactions.push(parsed);
+          }
+        }
+        
+        return transactions;
+      },
+      () => {
+        const transactionsJson = this.fallbackStorage.get(`user:${userId}:transactions`) || '[]';
+        const transactionIds: string[] = JSON.parse(transactionsJson);
+        
+        const transactions: QkoinTransaction[] = [];
+        for (const transactionId of transactionIds.slice(0, 50)) { // Last 50 transactions
+          const transactionJson = this.fallbackStorage.get(`transaction:${transactionId}`);
+          if (transactionJson) {
+            const parsed = typeof transactionJson === 'string' ? JSON.parse(transactionJson) : transactionJson;
+            if (parsed.createdAt && typeof parsed.createdAt === 'string') {
+              parsed.createdAt = new Date(parsed.createdAt);
+            }
+            transactions.push(parsed);
+          }
+        }
+        
+        return transactions;
       }
     );
   }

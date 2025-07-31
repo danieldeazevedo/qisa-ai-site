@@ -1,10 +1,12 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Bot, MessageCircle, Image, Shield, LogIn, LogOut, User, Moon, Sun } from "lucide-react";
+import { Bot, MessageCircle, Image, Shield, LogIn, LogOut, User, Moon, Sun, Coins } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
+import { useQkoins } from "@/hooks/use-qkoins";
+import { QkoinDisplay } from "@/components/qkoin-display";
 
 // Componente de texto animado com efeito de digitação
 function TypewriterText({ text, delay = 50, className = "" }: { text: string; delay?: number; className?: string }) {
@@ -216,8 +218,8 @@ export default function Home() {
                     Geração de Imagens
                   </h3>
                   <p className="text-muted-foreground">
-                    Transforme suas ideias em imagens únicas. Descreva o que
-                    imagina e veja ganhar vida.
+                    Transforme suas ideias em imagens únicas usando QKoins. 
+                    Receba 10 QKoins diários e use 1 por imagem gerada.
                   </p>
                 </CardContent>
               </Card>
@@ -251,10 +253,10 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="flex items-center space-x-3 p-4 bg-gradient-to-r from-purple-50 to-secondary/5 dark:from-purple-950 dark:to-secondary/10 rounded-xl border border-purple-200 dark:border-purple-800">
-                  <div className="text-2xl">🎨</div>
+                  <div className="text-2xl">💰</div>
                   <div>
-                    <h4 className="font-semibold text-foreground">Criação Visual</h4>
-                    <p className="text-sm text-muted-foreground">Gera imagens únicas baseadas em texto</p>
+                    <h4 className="font-semibold text-foreground">Sistema QKoins</h4>
+                    <p className="text-sm text-muted-foreground">10 QKoins diários para gerar suas imagens</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3 p-4 bg-gradient-to-r from-green-50 to-green-500/5 dark:from-green-950 dark:to-green-500/10 rounded-xl border border-green-200 dark:border-green-800">
