@@ -63,8 +63,19 @@ export default function Home() {
               </h1>
             </div>
             
-            {/* Auth Section */}
+            {/* Navigation & Auth Section */}
             <div className="flex items-center space-x-3">
+              {/* About Button */}
+              <Link href="/about">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground hover:text-primary transition-all duration-300 rounded-lg hover:bg-muted animate-scale-in"
+                >
+                  Sobre
+                </Button>
+              </Link>
+              
               {/* Theme Toggle */}
               <Button
                 variant="ghost"

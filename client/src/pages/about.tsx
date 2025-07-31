@@ -58,17 +58,27 @@ export default function About() {
               <Bot className="text-white text-3xl" />
             </div>
             <h1 className="text-4xl sm:text-5xl font-bold text-foreground mb-6 leading-tight">
-              Conheça a <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Qisa</span>
+              <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Qisa</span> — Sua Nova Companheira de IA
             </h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              Sua assistente de IA pessoal, desenvolvida pela QisaSeek AI Labs para proporcionar 
-              conversas naturais e experiências inteligentes adaptadas às suas necessidades.
+              Uma inteligência artificial avançada desenvolvida pela QisaSeek AI Labs para transformar 
+              a maneira como interagimos com a tecnologia. Mais do que uma assistente: 
+              <strong> uma presença digital inteligente, empática e criativa</strong>.
             </p>
           </div>
 
           {/* About Qisa */}
           <div className="mb-16 animate-fade-in">
             <h2 className="text-3xl font-bold text-foreground mb-8 text-center">O que é a Qisa?</h2>
+            <div className="mb-12 text-center">
+              <p className="text-lg text-muted-foreground max-w-4xl mx-auto leading-relaxed">
+                Treinada com um <strong>vasto volume de informações</strong> de múltiplos domínios — incluindo 
+                <strong> ciência, arte, história, linguagem, tecnologia e cultura</strong> — a Qisa possui uma base de 
+                conhecimento sólida, abrangente e em constante evolução. Isso permite respostas coerentes, 
+                análises profundas, sugestões criativas e interações naturais.
+              </p>
+            </div>
+            
             <div className="grid md:grid-cols-2 gap-8">
               <Card className="border border-border hover:shadow-lg transition-all duration-300 hover:border-primary/20 bg-card">
                 <CardContent className="p-6">
@@ -76,11 +86,12 @@ export default function About() {
                     <Brain className="text-primary text-xl" />
                   </div>
                   <h3 className="text-xl font-semibold text-foreground mb-3">
-                    Inteligência Avançada
+                    Inteligência que Entende Você
                   </h3>
                   <p className="text-muted-foreground">
-                    Desenvolvida com a mais avançada tecnologia Google Gemini, a Qisa oferece 
-                    conversas naturais e inteligentes, entendendo contexto e mantendo diálogos fluidos.
+                    Utiliza técnicas avançadas de <strong>Processamento de Linguagem Natural (PLN)</strong> e 
+                    aprendizado de máquina, compreendendo a intenção por trás das mensagens e se adaptando 
+                    ao seu estilo para conversas naturais e envolventes.
                   </p>
                 </CardContent>
               </Card>
@@ -91,11 +102,12 @@ export default function About() {
                     <Lightbulb className="text-secondary text-xl" />
                   </div>
                   <h3 className="text-xl font-semibold text-foreground mb-3">
-                    Criatividade Visual
+                    Criação de Imagens Extraordinária
                   </h3>
                   <p className="text-muted-foreground">
-                    Transforme suas ideias em imagens únicas. A Qisa pode gerar ilustrações, 
-                    logos, arte conceitual e qualquer imagem que você conseguir imaginar.
+                    Capacidade extraordinária de <strong>criar imagens realistas ou artísticas</strong> a partir 
+                    de descrições em texto. Personagens únicos, paisagens imaginárias, conceitos visuais e 
+                    artes em diferentes estilos: pintura a óleo, anime, sketch, realismo fotográfico.
                   </p>
                 </CardContent>
               </Card>
@@ -103,14 +115,15 @@ export default function About() {
               <Card className="border border-border hover:shadow-lg transition-all duration-300 hover:border-green-500/20 bg-card">
                 <CardContent className="p-6">
                   <div className="w-12 h-12 bg-green-500/10 rounded-xl flex items-center justify-center mb-4 animate-bounce-subtle">
-                    <Shield className="text-green-500 text-xl" />
+                    <Zap className="text-green-500 text-xl" />
                   </div>
                   <h3 className="text-xl font-semibold text-foreground mb-3">
-                    Privacidade Garantida
+                    Resolução de Problemas Complexos
                   </h3>
                   <p className="text-muted-foreground">
-                    Suas conversas são seguras e privadas. Para usuários autenticados, 
-                    mantemos histórico pessoal, enquanto usuários anônimos podem conversar sem registro.
+                    Se destaca em <strong>resolução de problemas complexos, interpretação lógica e habilidade 
+                    matemática</strong>, auxiliando desde cálculos simples até explicações detalhadas de 
+                    conceitos avançados.
                   </p>
                 </CardContent>
               </Card>
@@ -121,11 +134,12 @@ export default function About() {
                     <Heart className="text-purple-500 text-xl" />
                   </div>
                   <h3 className="text-xl font-semibold text-foreground mb-3">
-                    Experiência Personalizada
+                    Criatividade Além do Visual
                   </h3>
                   <p className="text-muted-foreground">
-                    A Qisa se adapta ao seu estilo de conversa, lembrando de preferências 
-                    e mantendo o contexto para proporcionar uma experiência única e pessoal.
+                    Parceira criativa para <strong>músicos, escritores e artistas</strong>. Escreve letras de 
+                    músicas, compõe poesias, histórias curtas, roteiros e ajuda com estruturação de 
+                    argumentos e geração de conteúdo original.
                   </p>
                 </CardContent>
               </Card>
@@ -143,13 +157,20 @@ export default function About() {
                   </div>
                 </div>
                 <h3 className="text-2xl font-bold text-foreground text-center mb-4">
-                  Inovação em Inteligência Artificial
+                  Laboratório de Pesquisa e Desenvolvimento
                 </h3>
                 <p className="text-muted-foreground text-center mb-6 text-lg leading-relaxed">
-                  A QisaSeek AI Labs é uma empresa de tecnologia dedicada ao desenvolvimento 
-                  de soluções de inteligência artificial que aproximam humanos e máquinas 
-                  através de interfaces intuitivas e experiências personalizadas.
+                  A <strong>QisaSeek AI Labs</strong> é um laboratório de pesquisa e desenvolvimento dedicado à criação de 
+                  <strong> inteligências artificiais humanizadas, sensíveis, criativas e úteis</strong>. Combina ciência de dados, 
+                  aprendizado de máquina, design centrado no usuário e responsabilidade ética para construir 
+                  tecnologias que aproximam humanos e máquinas de forma significativa e confiável.
                 </p>
+                <div className="text-center mb-6">
+                  <p className="text-muted-foreground">
+                    O desenvolvimento da Qisa é fruto de <strong>anos de pesquisa, testes práticos e refinamento contínuo</strong>, 
+                    resultando em um sistema que aprende, evolui e se adapta às necessidades das pessoas.
+                  </p>
+                </div>
                 <div className="grid md:grid-cols-3 gap-6 mt-8">
                   <div className="text-center">
                     <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center mx-auto mb-3">
@@ -183,47 +204,99 @@ export default function About() {
             </Card>
           </div>
 
-          {/* Technical Features */}
+          {/* Por que escolher a Qisa */}
           <div className="mb-16 animate-fade-in">
-            <h2 className="text-3xl font-bold text-foreground mb-8 text-center">Recursos Técnicos</h2>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div className="flex items-center space-x-3 p-4 bg-muted/50 rounded-lg">
-                  <div className="w-2 h-2 bg-primary rounded-full"></div>
-                  <span className="text-foreground">Suporte completo a Markdown</span>
-                </div>
-                <div className="flex items-center space-x-3 p-4 bg-muted/50 rounded-lg">
-                  <div className="w-2 h-2 bg-primary rounded-full"></div>
-                  <span className="text-foreground">Renderização de expressões matemáticas (LaTeX)</span>
-                </div>
-                <div className="flex items-center space-x-3 p-4 bg-muted/50 rounded-lg">
-                  <div className="w-2 h-2 bg-primary rounded-full"></div>
-                  <span className="text-foreground">Histórico persistente de conversas</span>
-                </div>
-                <div className="flex items-center space-x-3 p-4 bg-muted/50 rounded-lg">
-                  <div className="w-2 h-2 bg-primary rounded-full"></div>
-                  <span className="text-foreground">Autenticação segura personalizada</span>
+            <h2 className="text-3xl font-bold text-foreground mb-8 text-center">Por que escolher a Qisa?</h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="flex items-center space-x-3 p-6 bg-gradient-to-r from-blue-50 to-primary/5 dark:from-blue-950 dark:to-primary/10 rounded-xl border border-blue-200 dark:border-blue-800">
+                <div className="text-3xl">🧠</div>
+                <div>
+                  <h4 className="font-semibold text-foreground">Inteligência Treinada</h4>
+                  <p className="text-sm text-muted-foreground">Com grandes volumes de dados confiáveis</p>
                 </div>
               </div>
-              <div className="space-y-4">
-                <div className="flex items-center space-x-3 p-4 bg-muted/50 rounded-lg">
-                  <div className="w-2 h-2 bg-secondary rounded-full"></div>
-                  <span className="text-foreground">Geração de imagens com IA</span>
+              <div className="flex items-center space-x-3 p-6 bg-gradient-to-r from-purple-50 to-secondary/5 dark:from-purple-950 dark:to-secondary/10 rounded-xl border border-purple-200 dark:border-purple-800">
+                <div className="text-3xl">🧩</div>
+                <div>
+                  <h4 className="font-semibold text-foreground">Matemática Avançada</h4>
+                  <p className="text-sm text-muted-foreground">Excelente em resolução de problemas</p>
                 </div>
-                <div className="flex items-center space-x-3 p-4 bg-muted/50 rounded-lg">
-                  <div className="w-2 h-2 bg-secondary rounded-full"></div>
-                  <span className="text-foreground">Interface responsiva e moderna</span>
+              </div>
+              <div className="flex items-center space-x-3 p-6 bg-gradient-to-r from-green-50 to-green-500/5 dark:from-green-950 dark:to-green-500/10 rounded-xl border border-green-200 dark:border-green-800">
+                <div className="text-3xl">🎨</div>
+                <div>
+                  <h4 className="font-semibold text-foreground">Criação Visual</h4>
+                  <p className="text-sm text-muted-foreground">Gera imagens únicas baseadas em texto</p>
                 </div>
-                <div className="flex items-center space-x-3 p-4 bg-muted/50 rounded-lg">
-                  <div className="w-2 h-2 bg-secondary rounded-full"></div>
-                  <span className="text-foreground">Temas claro e escuro</span>
+              </div>
+              <div className="flex items-center space-x-3 p-6 bg-gradient-to-r from-yellow-50 to-yellow-500/5 dark:from-yellow-950 dark:to-yellow-500/10 rounded-xl border border-yellow-200 dark:border-yellow-800">
+                <div className="text-3xl">🎼</div>
+                <div>
+                  <h4 className="font-semibold text-foreground">Criatividade Natural</h4>
+                  <p className="text-sm text-muted-foreground">Criatividade textual e musical</p>
                 </div>
-                <div className="flex items-center space-x-3 p-4 bg-muted/50 rounded-lg">
-                  <div className="w-2 h-2 bg-secondary rounded-full"></div>
-                  <span className="text-foreground">Experiência otimizada para todos os dispositivos</span>
+              </div>
+              <div className="flex items-center space-x-3 p-6 bg-gradient-to-r from-pink-50 to-pink-500/5 dark:from-pink-950 dark:to-pink-500/10 rounded-xl border border-pink-200 dark:border-pink-800">
+                <div className="text-3xl">💬</div>
+                <div>
+                  <h4 className="font-semibold text-foreground">Conversas Envolventes</h4>
+                  <p className="text-sm text-muted-foreground">Úteis e personalizadas</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3 p-6 bg-gradient-to-r from-orange-50 to-orange-500/5 dark:from-orange-950 dark:to-orange-500/10 rounded-xl border border-orange-200 dark:border-orange-800">
+                <div className="text-3xl">🚀</div>
+                <div>
+                  <h4 className="font-semibold text-foreground">Evolução Contínua</h4>
+                  <p className="text-sm text-muted-foreground">Sempre melhorando com foco em você</p>
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Evolução Futura */}
+          <div className="mb-16 animate-fade-in">
+            <h2 className="text-3xl font-bold text-foreground mb-8 text-center">Em Constante Evolução</h2>
+            <Card className="border border-border bg-gradient-to-br from-muted/20 to-muted/5">
+              <CardContent className="p-8">
+                <p className="text-center text-muted-foreground mb-8 text-lg">
+                  A Qisa está sempre aprendendo e se aperfeiçoando. O futuro reserva:
+                </p>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-3 h-3 bg-primary rounded-full animate-pulse"></div>
+                      <span className="text-foreground"><strong>Memória contextual personalizada</strong> para lembrar preferências e histórico</span>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <div className="w-3 h-3 bg-secondary rounded-full animate-pulse"></div>
+                      <span className="text-foreground"><strong>Estilo e personalidade configuráveis</strong> por usuário</span>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                      <span className="text-foreground"><strong>Novos modos de criação</strong> combinando texto, imagem e som</span>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse"></div>
+                      <span className="text-foreground"><strong>Integração com ferramentas</strong> e fluxos criativos externos</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Quote */}
+          <div className="mb-16 animate-fade-in">
+            <Card className="border-2 border-primary/20 bg-gradient-to-r from-primary/5 to-secondary/5">
+              <CardContent className="p-8 text-center">
+                <blockquote className="text-2xl font-bold text-foreground mb-4 italic">
+                  "Qisa é mais do que uma IA. É uma companheira criativa e inteligente, feita para conversar, imaginar e solucionar — junto com você."
+                </blockquote>
+                <cite className="text-muted-foreground">— QisaSeek AI Labs</cite>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Call to Action */}
