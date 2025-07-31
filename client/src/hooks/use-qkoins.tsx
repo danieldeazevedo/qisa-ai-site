@@ -26,13 +26,13 @@ export function useQkoins() {
 
   // Get QKoins balance
   const { data: balance, isLoading: isLoadingBalance } = useQuery<QkoinBalance>({
-    queryKey: ['qkoins', 'balance'],
+    queryKey: ['/api/qkoins/balance'],
     enabled: !!user && !user.username?.includes('anonymous'),
   });
 
   // Get QKoins transactions
   const { data: transactions, isLoading: isLoadingTransactions } = useQuery<QkoinTransaction[]>({
-    queryKey: ['qkoins', 'transactions'],
+    queryKey: ['/api/qkoins/transactions'],
     enabled: !!user && !user.username?.includes('anonymous'),
   });
 
@@ -49,7 +49,8 @@ export function useQkoins() {
       });
       
       // Invalidate and refetch balance
-      queryClient.invalidateQueries({ queryKey: ['qkoins'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/qkoins/balance'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/qkoins/transactions'] });
     },
     onError: (error: any) => {
       toast({
@@ -77,7 +78,8 @@ export function useQkoins() {
       });
       
       // Invalidate and refetch balance
-      queryClient.invalidateQueries({ queryKey: ['qkoins'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/qkoins/balance'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/qkoins/transactions'] });
     },
     onError: (error: any) => {
       toast({

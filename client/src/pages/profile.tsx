@@ -45,7 +45,8 @@ export default function Profile() {
       });
       
       // Invalidate and refetch balance
-      queryClient.invalidateQueries({ queryKey: ['qkoins'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/qkoins/balance'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/qkoins/transactions'] });
     },
     onError: (error: any) => {
       toast({
