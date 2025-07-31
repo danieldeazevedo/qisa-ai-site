@@ -138,7 +138,51 @@ NODE_ENV=production
 2. Aguarde o build completar (3-5 minutos)
 3. Sua aplicação estará disponível em `https://seu-projeto.vercel.app`
 
-## ⚠️ TROUBLESHOOTING - Login e Chat não funcionam
+## ⚠️ TROUBLESHOOTING
+
+### Problema: "Aparece apenas tela de código inscrito" ou página em branco
+
+**POSSÍVEIS CAUSAS**:
+1. Build falhou ou incompleto
+2. Variáveis de ambiente não configuradas
+3. Roteamento incorreto no vercel.json
+
+**SOLUÇÕES PASSO A PASSO**:
+
+#### 🔧 **Solução 1: Redeploy com configurações corretas**
+1. Na Vercel, vá em **Settings → General**
+2. Configure:
+   - **Framework Preset**: `Vite`
+   - **Root Directory**: `.` (ou vazio)
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `dist`
+3. Vá em **Deployments** → **Redeploy**
+
+#### 🔧 **Solução 2: Verificar logs de erro**
+1. Vá em **Functions** na Vercel
+2. Verifique se há erros no build
+3. Se houver erro de "Cannot find module", adicione variáveis:
+   ```env
+   NODE_ENV=production
+   ```
+
+#### 🔧 **Solução 3: Testar endpoints**
+- Teste: `https://seu-app.vercel.app/api/health`
+- Se retornar JSON, o backend funciona
+- Se não carregar, problema no build
+
+#### 🔧 **Solução 4: Problema específico da "tela de código"**
+Se aparece especificamente "código inscrito":
+1. **Problema**: Frontend não está sendo servido
+2. **Solução**: Confirme que o build gerou arquivos em `dist/public/`
+3. **Verificar**: Se `vite build` roda sem erro localmente
+4. **Última opção**: Delete projeto Vercel e recrie
+
+#### 🔧 **Solução 5: Rebuild completo**
+1. **Delete** temporariamente `vercel.json`
+2. **Redeploy** sem o arquivo
+3. **Adicione** `vercel.json` de volta
+4. **Redeploy** novamente
 
 ### Problema: "Login não funciona" ou "Chat sem resposta"
 
