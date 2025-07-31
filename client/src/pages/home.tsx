@@ -44,7 +44,7 @@ function FadeInUp({ children, delay = 0, className = "" }: { children: React.Rea
 }
 
 export default function Home() {
-  const { user, loading, login, logout, hasFirebaseConfig } = useAuth();
+  const { user, loading, logout } = useAuth();
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -97,29 +97,18 @@ export default function Home() {
                     <span className="hidden sm:inline">Sair</span>
                   </Button>
                 </div>
-              ) : hasFirebaseConfig ? (
-                <Button
-                  onClick={() => {
-                    console.log('Login button clicked');
-                    login();
-                  }}
-                  variant="outline"
-                  size="sm"
-                  className="text-primary border-primary hover:bg-primary hover:text-white transition-colors"
-                  data-testid="button-login"
-                >
-                  <LogIn className="w-4 h-4 mr-2" />
-                  Login com Google
-                </Button>
               ) : (
-                <div className="text-center">
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm">
-                    <p className="text-yellow-800 font-medium">⚠️ Firebase não configurado</p>
-                    <p className="text-yellow-700 text-xs mt-1">
-                      Configure as credenciais do Firebase para usar a autenticação
-                    </p>
-                  </div>
-                </div>
+                <Link href="/auth">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-primary border-primary hover:bg-primary hover:text-white transition-colors"
+                    data-testid="button-login"
+                  >
+                    <LogIn className="w-4 h-4 mr-2" />
+                    Entrar
+                  </Button>
+                </Link>
               )}
             </div>
           </div>
@@ -202,9 +191,9 @@ export default function Home() {
                   <Shield className="inline w-4 h-4 mr-1" />
                   Suas conversas são seguras e privadas
                 </p>
-                {!hasFirebaseConfig && (
-                  <p className="text-xs text-yellow-600 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2">
-                    💡 O chat funciona sem login! Para usar autenticação, configure as credenciais do Firebase.
+                {!user && (
+                  <p className="text-xs text-blue-600 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+                    💡 O chat funciona sem login! Faça login para salvar seu histórico.
                   </p>
                 )}
               </div>

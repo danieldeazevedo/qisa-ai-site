@@ -141,9 +141,19 @@ export default function Chat() {
               </div>
               <div className="bg-white rounded-2xl rounded-tl-md px-4 py-3 shadow-sm border border-gray-100 max-w-md">
                 <p className="text-gray-900">
-                  Olá! Eu sou a Qisa, sua assistente de IA. Como posso ajudá-lo
-                  hoje? Posso conversar sobre qualquer assunto ou gerar imagens
-                  a partir de suas descrições!
+                  {user ? (
+                    <>
+                      Bem-vindo à Qisa, <strong>{user.displayName || user.username}</strong>! 
+                      Eu sou sua assistente de IA pessoal. Como posso ajudá-lo hoje? 
+                      Posso conversar sobre qualquer assunto ou gerar imagens a partir de suas descrições!
+                    </>
+                  ) : (
+                    <>
+                      Olá! Eu sou a Qisa, sua assistente de IA. Como posso ajudá-lo
+                      hoje? Posso conversar sobre qualquer assunto ou gerar imagens
+                      a partir de suas descrições!
+                    </>
+                  )}
                 </p>
                 <span className="text-xs text-gray-500 mt-2 block">Agora</span>
               </div>

@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
-import { User, onAuthStateChanged, signOut } from "firebase/auth";
-import { auth, signInWithGoogle, handleRedirectResult, hasFirebaseConfig } from "@/lib/firebase";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { User, LoginUser, InsertUser } from "@shared/schema";
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -10,139 +9,80 @@ export function useAuth() {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!auth || !hasFirebaseConfig) {
-      setLoading(false);
-      return;
+    // Check if user is logged in from localStorage
+    const storedUser = localStorage.getItem('qisa_user');
+    if (storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+        console.log('User loaded from localStorage:', parsedUser.username);
+      } catch (error) {
+        console.error('Error parsing stored user:', error);
+        localStorage.removeItem('qisa_user');
+      }
     }
+    setLoading(false);
+  }, []);
 
+  const login = async (credentials: LoginUser) => {
+    setLoading(true);
     try {
-      const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-        if (firebaseUser) {
-          try {
-            // Get fresh token
-            const token = await firebaseUser.getIdToken();
-            console.log('Firebase user logged in:', firebaseUser.uid);
-            
-            // Store user with token in global context for API requests
-            (window as any).currentUser = {
-              ...firebaseUser,
-              accessToken: token
-            };
-            
-            // Send user data to backend
-            const response = await apiRequest("POST", "/api/auth/sync", {
-              firebaseId: firebaseUser.uid,
-              email: firebaseUser.email,
-              displayName: firebaseUser.displayName,
-              photoURL: firebaseUser.photoURL,
-            });
-            
-            console.log('User sync response:', response.status);
-            setUser(firebaseUser);
-            
-            // Force refresh chat session after login
-            setTimeout(() => {
-              window.location.reload();
-            }, 1000);
-            
-            toast({
-              title: "Login realizado",
-              description: `Bem-vindo, ${firebaseUser.displayName || firebaseUser.email}!`,
-            });
-          } catch (error) {
-            console.error("Error syncing user:", error);
-            // Still set user even if sync fails
-            const token = await firebaseUser.getIdToken().catch(() => null);
-            setUser(firebaseUser);
-            (window as any).currentUser = {
-              ...firebaseUser,
-              accessToken: token
-            };
-            
-            // Show toast even if sync fails
-            toast({
-              title: "Login parcial",
-              description: "Conectado, mas houve problema na sincronização.",
-              variant: "destructive",
-            });
-          }
-        } else {
-          setUser(null);
-          (window as any).currentUser = null;
-        }
-        setLoading(false);
-      });
+      const response = await apiRequest("POST", "/api/auth/login", credentials);
+      const data = await response.json();
 
-      // Handle redirect result
-      handleRedirectResult().catch((error) => {
-        console.error("Redirect error:", error);
-        if (error.code !== 'auth/unauthorized-domain') {
-          toast({
-            title: "Erro no login",
-            description: "Não foi possível completar o login.",
-            variant: "destructive",
-          });
-        }
-      });
-
-      return () => unsubscribe();
-    } catch (error) {
-      console.error("Firebase initialization error:", error);
-      setLoading(false);
-    }
-  }, [toast]);
-
-  const login = async () => {
-    console.log('Login function called');
-    console.log('hasFirebaseConfig:', hasFirebaseConfig);
-    console.log('auth object:', !!auth);
-    
-    if (!hasFirebaseConfig) {
-      console.log('Firebase config missing');
-      toast({
-        title: "Firebase não configurado",
-        description: "As credenciais do Firebase não foram fornecidas. Configure VITE_FIREBASE_API_KEY, VITE_FIREBASE_PROJECT_ID e VITE_FIREBASE_APP_ID.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      console.log('Attempting to sign in with Google...');
-      await signInWithGoogle();
-      console.log('signInWithGoogle completed');
+      if (data.success && data.user) {
+        setUser(data.user);
+        localStorage.setItem('qisa_user', JSON.stringify(data.user));
+        
+        toast({
+          title: "Login realizado",
+          description: `Bem-vindo à Qisa, ${data.user.displayName || data.user.username}!`,
+        });
+        
+        return data.user;
+      } else {
+        throw new Error(data.error || "Erro no login");
+      }
     } catch (error: any) {
       console.error("Login error:", error);
-      
-      if (error.code === 'auth/unauthorized-domain') {
+      throw new Error(error.message || "Não foi possível fazer login");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const register = async (userData: InsertUser) => {
+    setLoading(true);
+    try {
+      const response = await apiRequest("POST", "/api/auth/register", userData);
+      const data = await response.json();
+
+      if (data.success && data.user) {
+        setUser(data.user);
+        localStorage.setItem('qisa_user', JSON.stringify(data.user));
+        
         toast({
-          title: "Domínio não autorizado",
-          description: "Adicione este domínio aos domínios autorizados no Firebase Console em Authentication > Settings > Authorized domains.",
-          variant: "destructive",
+          title: "Conta criada",
+          description: `Bem-vindo à Qisa, ${data.user.displayName || data.user.username}!`,
         });
-      } else if (error.code === 'auth/invalid-api-key') {
-        toast({
-          title: "Chave da API inválida",
-          description: "Verifique se a VITE_FIREBASE_API_KEY está correta no painel do Firebase.",
-          variant: "destructive",
-        });
+        
+        return data.user;
       } else {
-        toast({
-          title: "Erro no login",
-          description: error.message || "Não foi possível fazer login. Verifique as configurações do Firebase.",
-          variant: "destructive",
-        });
+        throw new Error(data.error || "Erro ao criar conta");
       }
+    } catch (error: any) {
+      console.error("Register error:", error);
+      throw new Error(error.message || "Não foi possível criar a conta");
+    } finally {
+      setLoading(false);
     }
   };
 
   const logout = async () => {
-    if (!auth) {
-      return;
-    }
-
     try {
-      await signOut(auth);
+      setUser(null);
+      localStorage.removeItem('qisa_user');
+      
       toast({
         title: "Logout realizado",
         description: "Você foi desconectado com sucesso.",
@@ -161,7 +101,7 @@ export function useAuth() {
     user,
     loading,
     login,
+    register,
     logout,
-    hasFirebaseConfig,
   };
 }

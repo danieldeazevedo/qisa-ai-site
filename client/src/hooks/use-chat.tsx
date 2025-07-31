@@ -3,16 +3,34 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Message, ChatSession } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 
 export function useChat() {
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   // Get or create current session
   const { data: currentSession, isLoading: sessionLoading } = useQuery({
     queryKey: ["/api/chat/current-session"],
     enabled: true,
+    queryFn: async () => {
+      const headers: Record<string, string> = {};
+      if (user) {
+        headers['x-username'] = user.username;
+      }
+      
+      const response = await fetch('/api/chat/current-session', {
+        headers,
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to get session');
+      }
+      
+      return response.json();
+    },
   });
 
   // Get messages for current session
