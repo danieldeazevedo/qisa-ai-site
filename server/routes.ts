@@ -339,6 +339,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
 
+  // Ping endpoint for keep-alive (prevent Vercel hibernation)
+  app.get("/api/ping", (req, res) => {
+    res.json({ 
+      status: "alive", 
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      message: "Keep-alive ping successful"
+    });
+  });
+
+  // Health check endpoint
+  app.get("/api/health", (req, res) => {
+    res.json({ 
+      status: "ok", 
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime()
+    });
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

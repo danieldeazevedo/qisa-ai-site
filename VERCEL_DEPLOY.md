@@ -137,32 +137,52 @@ NODE_ENV=production
 2. Aguarde o build completar (3-5 minutos)
 3. Sua aplicação estará disponível em `https://seu-projeto.vercel.app`
 
-## Passo 5: Configurações Pós-Deploy
+## Passo 5: Sistema Anti-Hibernação
 
-### 5.1 Configurar domínio personalizado (opcional)
+A aplicação inclui um sistema automático para prevenir hibernação na Vercel:
+
+### 5.1 Como funciona
+- **Server-side**: Faz ping interno a cada 13 minutos
+- **Client-side**: Ping em atividade do usuário e intervalo de 14 minutos
+- **Endpoints**: `/api/ping` e `/api/health` para monitoramento
+
+### 5.2 Configuração automática
+O sistema é ativado automaticamente em produção. Não requer configuração adicional.
+
+### 5.3 Monitoramento
+Verifique os logs na Vercel em **Functions** para ver as mensagens:
+```
+🏓 Starting ping service to prevent hibernation
+🏓 Sending keep-alive ping...
+🏓 Keep-alive ping successful
+```
+
+## Passo 6: Configurações Pós-Deploy
+
+### 6.1 Configurar domínio personalizado (opcional)
 1. Na dashboard do projeto na Vercel
 2. Vá em **"Settings" > "Domains"**
 3. Adicione seu domínio personalizado
 4. Configure DNS conforme instruções
 
-### 5.2 Monitoramento
+### 6.2 Monitoramento
 1. Acesse **"Functions"** para ver logs do servidor
 2. Use **"Analytics"** para métricas de uso
 3. Configure **"Integrations"** se necessário
 
-## Passo 6: Atualizações Futuras
+## Passo 7: Atualizações Futuras
 
-### 6.1 Deploy automático
+### 7.1 Deploy automático
 Todo push na branch `main` fará deploy automático na Vercel.
 
-### 6.2 Deploy manual
+### 7.2 Deploy manual
 ```bash
 git add .
 git commit -m "Sua mensagem"
 git push origin main
 ```
 
-### 6.3 Rollback
+### 7.3 Rollback
 Na dashboard da Vercel:
 1. Vá em **"Deployments"**
 2. Encontre a versão anterior
