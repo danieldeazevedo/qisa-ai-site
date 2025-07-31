@@ -109,12 +109,12 @@ Na dashboard do banco criado, copie:
 - **Deixe VAZIO** ou coloque apenas `.` (ponto)
 
 #### Framework Preset: 
-- **Other**
+- **Vite** (reconhece automaticamente por causa do `vite.config.ts`)
 
 #### Build and Output Settings:
-- **Build Command**: `npm run build`
-- **Output Directory**: `dist`
-- **Install Command**: `npm install`
+- **Build Command**: `npm run build` (automático com Vite)
+- **Output Directory**: `dist` (automático com Vite)
+- **Install Command**: `npm install` (automático)
 
 ### 4.3 Variáveis de ambiente
 Na seção **"Environment Variables"**, adicione:
@@ -182,7 +182,7 @@ Se você receber este erro, significa que o `vercel.json` tem configuração de 
 3. **Adicione** o `vercel.json` de volta depois
 
 **Configuração alternativa** (caso necessário):
-- **Framework Preset**: `Other`
+- **Framework Preset**: `Vite` (recomendado) ou `Other`
 - **Build Command**: `npm run build`  
 - **Output Directory**: `dist`
 - **Root Directory**: `.` (ou vazio)
