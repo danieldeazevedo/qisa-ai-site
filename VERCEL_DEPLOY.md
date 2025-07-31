@@ -170,6 +170,23 @@ NODE_ENV=production
 
 **DICA**: O sistema funciona perfeitamente no Replit, os problemas na Vercel são sempre de configuração de variáveis.
 
+### Erro: "Function Runtimes must have a valid version"
+
+Se você receber este erro, significa que o `vercel.json` tem configuração de runtime inválida.
+
+**SOLUÇÃO**: O arquivo `vercel.json` foi corrigido para usar `@vercel/node` em vez de runtime específico.
+
+**Se ainda der erro**:
+1. **Delete** o arquivo `vercel.json` temporariamente
+2. **Refaça o deploy** sem o arquivo
+3. **Adicione** o `vercel.json` de volta depois
+
+**Configuração alternativa** (caso necessário):
+- **Framework Preset**: `Other`
+- **Build Command**: `npm run build`  
+- **Output Directory**: `dist`
+- **Root Directory**: `.` (ou vazio)
+
 ## Passo 5: Sistema Anti-Hibernação
 
 A aplicação inclui um sistema automático para prevenir hibernação na Vercel:
