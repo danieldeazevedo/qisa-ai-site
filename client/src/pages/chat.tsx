@@ -10,7 +10,7 @@ import { useChat } from "@/hooks/use-chat";
 import { useTheme } from "@/hooks/use-theme";
 import { useQkoins } from "@/hooks/use-qkoins";
 import { QkoinDisplay } from "@/components/qkoin-display";
-import { ArrowLeft, Bot, Settings, Download, Trash2, User, LogOut, Moon, Sun } from "lucide-react";
+import { ArrowLeft, Bot, Settings, Download, Trash2, User, LogOut, Moon, Sun, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Chat() {
@@ -158,6 +158,18 @@ export default function Chat() {
                         title="Meu Perfil"
                       >
                         <User className="w-4 h-4" />
+                      </Button>
+                    </Link>
+                  )}
+                  {user.username === 'daniel08' && (
+                    <Link href="/admin">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="p-1 text-muted-foreground hover:text-blue-500 transition-all duration-300 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950"
+                        title="Painel Administrativo"
+                      >
+                        <Shield className="w-4 h-4" />
                       </Button>
                     </Link>
                   )}

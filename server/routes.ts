@@ -355,6 +355,149 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin Routes (only for daniel08)
+  
+  // Middleware to check admin access
+  const checkAdmin = (req: any, res: any, next: any) => {
+    const username = req.headers['x-username'] as string;
+    if (username !== 'daniel08') {
+      return res.status(403).json({ error: "Acesso negado. Apenas administradores." });
+    }
+    next();
+  };
+
+  // Get all users for admin
+  app.get("/api/admin/users", checkAdmin, async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      
+      const adminUsers = await Promise.all(users.map(async (user: any) => {
+        const qkoins = await storage.getUserQkoins(user.id);
+        const messageCount = await storage.getUserMessageCount(user.id);
+        
+        return {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          qkoins,
+          messageCount,
+          lastLogin: user.lastLogin || new Date().toISOString(),
+          banned: user.banned || false,
+        };
+      }));
+
+      res.json(adminUsers);
+    } catch (error) {
+      console.error("Error getting admin users:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get system status
+  app.get("/api/admin/status", checkAdmin, async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      const totalMessages = await storage.getTotalMessageCount();
+      
+      res.json({
+        online: true,
+        uptime: process.uptime() + " seconds",
+        totalUsers: users.length,
+        activeUsers: users.filter((u: any) => !u.username?.includes('anonymous')).length,
+        totalMessages,
+        systemLoad: Math.random() * 100, // Simulated system load
+      });
+    } catch (error) {
+      console.error("Error getting system status:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get system logs
+  app.get("/api/admin/logs", checkAdmin, async (req, res) => {
+    try {
+      const logs = await storage.getSystemLogs();
+      res.json(logs);
+    } catch (error) {
+      console.error("Error getting logs:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Delete user
+  app.delete("/api/admin/users/:userId", checkAdmin, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      
+      await storage.deleteUser(userId);
+      await storage.addSystemLog('info', `Admin deleted user ${userId}`, `Deleted by daniel08`);
+      
+      res.json({ success: true, message: "Usuário excluído com sucesso" });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Ban/Unban user
+  app.patch("/api/admin/users/:userId/ban", checkAdmin, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { banned } = req.body;
+      
+      await storage.updateUserBanStatus(userId, banned);
+      await storage.addSystemLog('info', `Admin ${banned ? 'banned' : 'unbanned'} user ${userId}`, `Action by daniel08`);
+      
+      res.json({ success: true, message: banned ? "Usuário banido" : "Usuário desbanido" });
+    } catch (error) {
+      console.error("Error updating user ban status:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Clear user chat history
+  app.delete("/api/admin/users/:userId/history", checkAdmin, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      
+      await storage.clearUserChatHistory(userId);
+      await storage.addSystemLog('info', `Admin cleared chat history for user ${userId}`, `Action by daniel08`);
+      
+      res.json({ success: true, message: "Histórico do usuário limpo" });
+    } catch (error) {
+      console.error("Error clearing user history:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Toggle system online/offline
+  app.patch("/api/admin/system/toggle", checkAdmin, async (req, res) => {
+    try {
+      const { online } = req.body;
+      
+      await storage.setSystemStatus(online);
+      await storage.addSystemLog('info', `System ${online ? 'enabled' : 'disabled'}`, `Action by daniel08`);
+      
+      res.json({ success: true, message: online ? "Sistema ativado" : "Sistema desativado" });
+    } catch (error) {
+      console.error("Error toggling system status:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Clear all logs
+  app.delete("/api/admin/logs", checkAdmin, async (req, res) => {
+    try {
+      await storage.clearSystemLogs();
+      await storage.addSystemLog('info', 'All system logs cleared', 'Action by daniel08');
+      
+      res.json({ success: true, message: "Logs limpos com sucesso" });
+    } catch (error) {
+      console.error("Error clearing logs:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // QKoin Routes
   
   // Get user QKoins balance

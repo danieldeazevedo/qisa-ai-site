@@ -773,6 +773,228 @@ export class RedisStorage implements IStorage {
       }
     );
   }
+
+  // Admin methods
+  async getAllUsers(): Promise<any[]> {
+    return this.withFallback(
+      async () => {
+        const keys = await client!.keys('user:*');
+        const users = [];
+        
+        for (const key of keys) {
+          if (!key.includes(':') || key.split(':').length !== 2) continue; // Skip non-user keys
+          const userJson = await client!.get(key);
+          if (userJson) {
+            const userData = typeof userJson === 'string' ? JSON.parse(userJson) : userJson;
+            users.push(userData);
+          }
+        }
+        
+        return users;
+      },
+      () => {
+        const users = [];
+        for (const [key, value] of this.fallbackStorage.entries()) {
+          if (key.startsWith('user:') && !key.includes(':', 5)) { // user:id format only
+            const userData = typeof value === 'string' ? JSON.parse(value) : value;
+            users.push(userData);
+          }
+        }
+        return users;
+      }
+    );
+  }
+
+  async getUserMessageCount(userId: string): Promise<number> {
+    return this.withFallback(
+      async () => {
+        const messageKey = `user:${userId}:session:main:history`;
+        const messageIds = await client!.lrange(messageKey, 0, -1);
+        return messageIds.length;
+      },
+      () => {
+        // Count messages in fallback storage
+        let count = 0;
+        for (const key of this.fallbackStorage.keys()) {
+          if (key.startsWith(`user:${userId}:message:`)) {
+            count++;
+          }
+        }
+        return count;
+      }
+    );
+  }
+
+  async getTotalMessageCount(): Promise<number> {
+    return this.withFallback(
+      async () => {
+        const keys = await client!.keys('user:*:session:*:history');
+        let total = 0;
+        
+        for (const key of keys) {
+          const messageIds = await client!.lrange(key, 0, -1);
+          total += messageIds.length;
+        }
+        
+        return total;
+      },
+      () => {
+        let count = 0;
+        for (const key of this.fallbackStorage.keys()) {
+          if (key.includes(':message:')) {
+            count++;
+          }
+        }
+        return count;
+      }
+    );
+  }
+
+  async getSystemLogs(): Promise<any[]> {
+    return this.withFallback(
+      async () => {
+        const logsJson = await client!.get('system:logs');
+        return logsJson ? JSON.parse(logsJson) : [];
+      },
+      () => {
+        const logsJson = this.fallbackStorage.get('system:logs');
+        return logsJson ? JSON.parse(logsJson) : [];
+      }
+    );
+  }
+
+  async addSystemLog(level: string, message: string, details?: string): Promise<void> {
+    return this.withFallback(
+      async () => {
+        const logs = await this.getSystemLogs();
+        const newLog = {
+          id: randomUUID(),
+          timestamp: new Date().toISOString(),
+          level,
+          message,
+          details
+        };
+        
+        logs.unshift(newLog);
+        // Keep only last 1000 logs
+        if (logs.length > 1000) logs.splice(1000);
+        
+        await client!.set('system:logs', JSON.stringify(logs));
+      },
+      () => {
+        const logs = this.getSystemLogs();
+        const newLog = {
+          id: randomUUID(),
+          timestamp: new Date().toISOString(),
+          level,
+          message,
+          details
+        };
+        
+        logs.unshift(newLog);
+        // Keep only last 1000 logs
+        if (logs.length > 1000) logs.splice(1000);
+        
+        this.fallbackStorage.set('system:logs', JSON.stringify(logs));
+      }
+    );
+  }
+
+  async deleteUser(userId: string): Promise<void> {
+    return this.withFallback(
+      async () => {
+        // Delete user data
+        await client!.del(`user:${userId}`);
+        
+        // Delete user sessions and messages
+        const sessionKeys = await client!.keys(`user:${userId}:*`);
+        if (sessionKeys.length > 0) {
+          await client!.del(...sessionKeys);
+        }
+        
+        // Delete QKoins data
+        await client!.del(`user:${userId}:qkoins`);
+        await client!.del(`user:${userId}:transactions`);
+        await client!.del(`user:${userId}:lastReward`);
+        await client!.del(`user:${userId}:lastBonusClaim`);
+      },
+      () => {
+        // Delete from fallback storage
+        const keysToDelete = [];
+        for (const key of this.fallbackStorage.keys()) {
+          if (key.startsWith(`user:${userId}`)) {
+            keysToDelete.push(key);
+          }
+        }
+        
+        keysToDelete.forEach(key => this.fallbackStorage.delete(key));
+      }
+    );
+  }
+
+  async updateUserBanStatus(userId: string, banned: boolean): Promise<void> {
+    return this.withFallback(
+      async () => {
+        const userJson = await client!.get(`user:${userId}`);
+        if (userJson) {
+          const userData = typeof userJson === 'string' ? JSON.parse(userJson) : userJson;
+          userData.banned = banned;
+          await client!.set(`user:${userId}`, JSON.stringify(userData));
+        }
+      },
+      () => {
+        const userJson = this.fallbackStorage.get(`user:${userId}`);
+        if (userJson) {
+          const userData = typeof userJson === 'string' ? JSON.parse(userJson) : userJson;
+          userData.banned = banned;
+          this.fallbackStorage.set(`user:${userId}`, JSON.stringify(userData));
+        }
+      }
+    );
+  }
+
+  async clearUserChatHistory(userId: string): Promise<void> {
+    return this.withFallback(
+      async () => {
+        const sessionKeys = await client!.keys(`user:${userId}:session:*`);
+        if (sessionKeys.length > 0) {
+          await client!.del(...sessionKeys);
+        }
+      },
+      () => {
+        const keysToDelete = [];
+        for (const key of this.fallbackStorage.keys()) {
+          if (key.startsWith(`user:${userId}:session:`) || key.startsWith(`user:${userId}:message:`)) {
+            keysToDelete.push(key);
+          }
+        }
+        
+        keysToDelete.forEach(key => this.fallbackStorage.delete(key));
+      }
+    );
+  }
+
+  async setSystemStatus(online: boolean): Promise<void> {
+    return this.withFallback(
+      async () => {
+        await client!.set('system:status', JSON.stringify({ online, updatedAt: new Date().toISOString() }));
+      },
+      () => {
+        this.fallbackStorage.set('system:status', JSON.stringify({ online, updatedAt: new Date().toISOString() }));
+      }
+    );
+  }
+
+  async clearSystemLogs(): Promise<void> {
+    return this.withFallback(
+      async () => {
+        await client!.del('system:logs');
+      },
+      () => {
+        this.fallbackStorage.delete('system:logs');
+      }
+    );
+  }
 }
 
 export const storage = new RedisStorage();
