@@ -27,10 +27,10 @@ export async function apiRequest(
   // Add unique session ID for personal chats
   headers['x-user-session'] = getUserSessionId();
   
-  // Add Firebase UID if user is authenticated
-  const currentUser = (window as any).currentUser;
-  if (currentUser?.uid) {
-    headers['x-firebase-uid'] = currentUser.uid;
+  // Add username if user is authenticated
+  const currentUser = JSON.parse(localStorage.getItem('qisa_user') || 'null');
+  if (currentUser?.username) {
+    headers['x-username'] = currentUser.username;
   }
 
   const res = await fetch(url, {
@@ -55,10 +55,10 @@ export const getQueryFn: <T>(options: {
     // Add unique session ID for personal chats
     headers['x-user-session'] = getUserSessionId();
     
-    // Add Firebase UID if user is authenticated
-    const currentUser = (window as any).currentUser;
-    if (currentUser?.uid) {
-      headers['x-firebase-uid'] = currentUser.uid;
+    // Add username if user is authenticated
+    const currentUser = JSON.parse(localStorage.getItem('qisa_user') || 'null');
+    if (currentUser?.username) {
+      headers['x-username'] = currentUser.username;
     }
 
     const res = await fetch(queryKey.join("/") as string, {

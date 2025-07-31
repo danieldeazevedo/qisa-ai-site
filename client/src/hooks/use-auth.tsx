@@ -34,9 +34,10 @@ export function useAuth() {
         setUser(data.user);
         localStorage.setItem('qisa_user', JSON.stringify(data.user));
         
-        // Clear chat cache to reload with new user's session
+        // Clear chat cache to reload with new user's session and history
         queryClient.invalidateQueries({ queryKey: ["/api/chat/current-session"] });
         queryClient.invalidateQueries({ queryKey: ["/api/chat/messages"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/chat/history"] });
         
         toast({
           title: "Login realizado",
@@ -65,9 +66,10 @@ export function useAuth() {
         setUser(data.user);
         localStorage.setItem('qisa_user', JSON.stringify(data.user));
         
-        // Clear chat cache to reload with new user's session
+        // Clear chat cache to reload with new user's session and history
         queryClient.invalidateQueries({ queryKey: ["/api/chat/current-session"] });
         queryClient.invalidateQueries({ queryKey: ["/api/chat/messages"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/chat/history"] });
         
         toast({
           title: "Conta criada",
