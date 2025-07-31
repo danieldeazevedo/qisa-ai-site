@@ -9,9 +9,10 @@ import { useQkoins } from "@/hooks/use-qkoins";
 import { QkoinDisplay } from "@/components/qkoin-display";
 
 // Componente de texto animado com efeito de digitação
-function TypewriterText({ text, delay = 50, className = "" }: { text: string; delay?: number; className?: string }) {
+function TypewriterText({ text, delay = 50, className = "", showCursor = true }: { text: string; delay?: number; className?: string; showCursor?: boolean }) {
   const [displayText, setDisplayText] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [showTypingCursor, setShowTypingCursor] = useState(true);
 
   useEffect(() => {
     if (currentIndex < text.length) {
@@ -22,9 +23,28 @@ function TypewriterText({ text, delay = 50, className = "" }: { text: string; de
 
       return () => clearTimeout(timeout);
     }
-  }, [currentIndex, delay, text]);
+  }, [currentIndex, delay, text, showCursor]);
 
-  return <span className={className}>{displayText}</span>;
+  // Animação de piscar do cursor
+  useEffect(() => {
+    if (showCursor) {
+      const cursorInterval = setInterval(() => {
+        setShowTypingCursor(prev => !prev);
+      }, 530); // Frequência de piscar
+
+      return () => clearInterval(cursorInterval);
+    }
+  }, [showCursor]);
+
+  return (
+    <span className={className}>
+      {displayText}
+      {showCursor && (
+        <span className={`inline-block w-[2px] h-[1em] ml-[2px] bg-current ${showTypingCursor ? 'opacity-100' : 'opacity-0'} transition-opacity duration-100`}>
+        </span>
+      )}
+    </span>
+  );
 }
 
 // Componente de animação de entrada
