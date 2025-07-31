@@ -2,6 +2,10 @@ import { Message } from "@shared/schema";
 import { Bot, User } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import ReactMarkdown from "react-markdown";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import "katex/dist/katex.min.css";
 
 interface ChatMessageProps {
   message: Message;
@@ -31,9 +35,14 @@ export function ChatMessage({ message }: ChatMessageProps) {
       >
         {message.imageUrl ? (
           <div className="space-y-3">
-            <p className={isUser ? "text-white" : "text-foreground"}>
-              {message.content}
-            </p>
+            <div className={`prose prose-sm max-w-none ${isUser ? "prose-invert text-white" : "text-foreground"}`}>
+              <ReactMarkdown 
+                remarkPlugins={[remarkMath]}
+                rehypePlugins={[rehypeKatex]}
+              >
+                {message.content}
+              </ReactMarkdown>
+            </div>
             <img
               src={message.imageUrl}
               alt="Generated image"
@@ -41,9 +50,14 @@ export function ChatMessage({ message }: ChatMessageProps) {
             />
           </div>
         ) : (
-          <p className={isUser ? "text-white" : "text-foreground"}>
-            {message.content}
-          </p>
+          <div className={`prose prose-sm max-w-none ${isUser ? "prose-invert text-white" : "text-foreground"}`}>
+            <ReactMarkdown 
+              remarkPlugins={[remarkMath]}
+              rehypePlugins={[rehypeKatex]}
+            >
+              {message.content}
+            </ReactMarkdown>
+          </div>
         )}
         <span
           className={`text-xs mt-2 block transition-opacity duration-300 ${
