@@ -192,7 +192,7 @@ export default function Home() {
 
           {/* Features Grid */}
           <FadeInUp delay={3000}>
-            <div className="grid md:grid-cols-2 gap-6 mb-12 max-w-3xl mx-auto">
+            <div className="grid md:grid-cols-3 gap-6 mb-12 max-w-5xl mx-auto">
               <Card className="border border-border hover:shadow-lg hover:scale-105 transition-all duration-300 hover:border-primary/20 bg-card animate-fade-in">
                 <CardContent className="p-6">
                   <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-4 mx-auto animate-bounce-subtle">
@@ -221,6 +221,57 @@ export default function Home() {
                   </p>
                 </CardContent>
               </Card>
+              <Card className="border border-border hover:shadow-lg hover:scale-105 transition-all duration-300 hover:border-green-500/20 bg-card animate-fade-in">
+                <CardContent className="p-6">
+                  <div className="w-12 h-12 bg-green-500/10 rounded-xl flex items-center justify-center mb-4 mx-auto animate-bounce-subtle">
+                    <span className="text-green-500 text-xl">🧩</span>
+                  </div>
+                  <h3 className="text-lg font-semibold text-foreground mb-2">
+                    Matemática Avançada
+                  </h3>
+                  <p className="text-muted-foreground">
+                    Resolução de problemas complexos e suporte a LaTeX para
+                    expressões matemáticas.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </FadeInUp>
+
+          {/* Principais diferenciais */}
+          <FadeInUp delay={4000}>
+            <div className="mb-16">
+              <h2 className="text-2xl font-bold text-foreground mb-8 text-center">Por que escolher a Qisa?</h2>
+              <div className="grid md:grid-cols-2 gap-4 max-w-4xl mx-auto">
+                <div className="flex items-center space-x-3 p-4 bg-gradient-to-r from-blue-50 to-primary/5 dark:from-blue-950 dark:to-primary/10 rounded-xl border border-blue-200 dark:border-blue-800">
+                  <div className="text-2xl">🧠</div>
+                  <div>
+                    <h4 className="font-semibold text-foreground">Inteligência Treinada</h4>
+                    <p className="text-sm text-muted-foreground">Com grandes volumes de dados confiáveis</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3 p-4 bg-gradient-to-r from-purple-50 to-secondary/5 dark:from-purple-950 dark:to-secondary/10 rounded-xl border border-purple-200 dark:border-purple-800">
+                  <div className="text-2xl">🎨</div>
+                  <div>
+                    <h4 className="font-semibold text-foreground">Criação Visual</h4>
+                    <p className="text-sm text-muted-foreground">Gera imagens únicas baseadas em texto</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3 p-4 bg-gradient-to-r from-green-50 to-green-500/5 dark:from-green-950 dark:to-green-500/10 rounded-xl border border-green-200 dark:border-green-800">
+                  <div className="text-2xl">💬</div>
+                  <div>
+                    <h4 className="font-semibold text-foreground">Conversas Envolventes</h4>
+                    <p className="text-sm text-muted-foreground">Úteis e personalizadas</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3 p-4 bg-gradient-to-r from-orange-50 to-orange-500/5 dark:from-orange-950 dark:to-orange-500/10 rounded-xl border border-orange-200 dark:border-orange-800">
+                  <div className="text-2xl">🚀</div>
+                  <div>
+                    <h4 className="font-semibold text-foreground">Evolução Contínua</h4>
+                    <p className="text-sm text-muted-foreground">Sempre melhorando com foco em você</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </FadeInUp>
 
@@ -229,10 +280,10 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-background border-t border-border py-8">
+      <footer className="bg-background border-t border-border py-8 mt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <p className="text-muted-foreground">
-            © 2025 QisaSeek AI Labs.
+            © 2025 QisaSeek AI Labs. Desenvolvido com ❤️ para conectar humanos e IA.
           </p>
         </div>
       </footer>
