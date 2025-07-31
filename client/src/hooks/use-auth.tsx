@@ -93,7 +93,12 @@ export function useAuth() {
   }, [toast]);
 
   const login = async () => {
+    console.log('Login function called');
+    console.log('hasFirebaseConfig:', hasFirebaseConfig);
+    console.log('auth object:', !!auth);
+    
     if (!hasFirebaseConfig) {
+      console.log('Firebase config missing');
       toast({
         title: "Firebase não configurado",
         description: "As credenciais do Firebase não foram fornecidas. Configure VITE_FIREBASE_API_KEY, VITE_FIREBASE_PROJECT_ID e VITE_FIREBASE_APP_ID.",
@@ -103,7 +108,9 @@ export function useAuth() {
     }
 
     try {
+      console.log('Attempting to sign in with Google...');
       await signInWithGoogle();
+      console.log('signInWithGoogle completed');
     } catch (error: any) {
       console.error("Login error:", error);
       

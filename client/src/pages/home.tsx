@@ -99,7 +99,10 @@ export default function Home() {
                 </div>
               ) : hasFirebaseConfig ? (
                 <Button
-                  onClick={login}
+                  onClick={() => {
+                    console.log('Login button clicked');
+                    login();
+                  }}
                   variant="outline"
                   size="sm"
                   className="text-primary border-primary hover:bg-primary hover:text-white transition-colors"
