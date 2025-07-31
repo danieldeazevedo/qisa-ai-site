@@ -96,6 +96,19 @@ export default function Chat() {
                   Sobre
                 </Button>
               </Link>
+
+              {/* Profile Button - only for authenticated users */}
+              {user?.username && !user.username.includes('anonymous') && (
+                <Link href="/profile">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-muted-foreground hover:text-primary transition-all duration-300 rounded-lg hover:bg-muted animate-scale-in"
+                  >
+                    Perfil
+                  </Button>
+                </Link>
+              )}
               
               {/* QKoin Display */}
               <QkoinDisplay compact={true} />

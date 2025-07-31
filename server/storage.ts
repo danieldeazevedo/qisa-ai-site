@@ -581,9 +581,9 @@ export class RedisStorage implements IStorage {
         await client!.set(`transaction:${transactionId}`, JSON.stringify(transaction));
         await client!.lpush(`user:${userId}:transactions`, transactionId);
       },
-      () => {
+      async () => {
         // Fallback logic
-        const currentQkoins = this.getUserQkoins(userId);
+        const currentQkoins = await this.getUserQkoins(userId);
         const newQkoins = (currentQkoins || 0) + amount;
         
         this.fallbackStorage.set(`user:${userId}:qkoins`, newQkoins.toString());
@@ -631,32 +631,24 @@ export class RedisStorage implements IStorage {
   async checkDailyReward(userId: string): Promise<boolean> {
     return this.withFallback(
       async () => {
-        const userJson = await client!.get(`user:${userId}`);
-        if (!userJson) return false;
+        const lastRewardTimestamp = await client!.get(`user:${userId}:lastDailyReward`);
+        if (!lastRewardTimestamp) return true; // Never claimed
         
-        const userData = typeof userJson === 'string' ? JSON.parse(userJson) : userJson;
-        const lastReward = userData.lastDailyReward ? new Date(userData.lastDailyReward) : null;
+        const lastRewardTime = parseInt(lastRewardTimestamp as string);
+        const now = Date.now();
+        const hoursDiff = (now - lastRewardTime) / (1000 * 60 * 60);
         
-        if (!lastReward) return true; // Never claimed
-        
-        const now = new Date();
-        const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-        
-        return lastReward < oneDayAgo;
+        return hoursDiff >= 24;
       },
       () => {
-        const userJson = this.fallbackStorage.get(`user:${userId}`);
-        if (!userJson) return false;
+        const lastRewardTimestamp = this.fallbackStorage.get(`user:${userId}:lastDailyReward`);
+        if (!lastRewardTimestamp) return true; // Never claimed
         
-        const userData = typeof userJson === 'string' ? JSON.parse(userJson) : userJson;
-        const lastReward = userData.lastDailyReward ? new Date(userData.lastDailyReward) : null;
+        const lastRewardTime = parseInt(lastRewardTimestamp);
+        const now = Date.now();
+        const hoursDiff = (now - lastRewardTime) / (1000 * 60 * 60);
         
-        if (!lastReward) return true;
-        
-        const now = new Date();
-        const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-        
-        return lastReward < oneDayAgo;
+        return hoursDiff >= 24;
       }
     );
   }
@@ -671,29 +663,19 @@ export class RedisStorage implements IStorage {
         // Add 10 QKoins daily reward
         await this.addQkoins(userId, 10, 'daily_reward', 'Recompensa diária');
         
-        // Update lastDailyReward
-        const userJson = await client!.get(`user:${userId}`);
-        if (userJson) {
-          const userData = typeof userJson === 'string' ? JSON.parse(userJson) : userJson;
-          userData.lastDailyReward = new Date();
-          await client!.set(`user:${userId}`, JSON.stringify(userData));
-        }
+        // Update lastDailyReward with timestamp
+        const now = Date.now();
+        await client!.set(`user:${userId}:lastDailyReward`, now.toString());
         
         return true;
       },
-      () => {
-        // Fallback logic
-        const currentQkoins = this.getUserQkoins(userId);
-        this.fallbackStorage.set(`user:${userId}:qkoins`, (currentQkoins + 10).toString());
+      async () => {
+        // Add 10 QKoins to fallback storage
+        await this.addQkoins(userId, 10, 'daily_reward', 'Recompensa diária');
         
-        // Update user object
-        const userJson = this.fallbackStorage.get(`user:${userId}`);
-        if (userJson) {
-          const userData = typeof userJson === 'string' ? JSON.parse(userJson) : userJson;
-          userData.qkoins = currentQkoins + 10;
-          userData.lastDailyReward = new Date();
-          this.fallbackStorage.set(`user:${userId}`, JSON.stringify(userData));
-        }
+        // Update lastDailyReward with timestamp
+        const now = Date.now();
+        this.fallbackStorage.set(`user:${userId}:lastDailyReward`, now.toString());
         
         return true;
       }
