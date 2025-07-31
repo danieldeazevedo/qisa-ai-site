@@ -4,11 +4,11 @@ type Theme = "light" | "dark";
 
 export function useTheme() {
   const [theme, setTheme] = useState<Theme>(() => {
-    // Check localStorage first, then system preference
+    // Check localStorage first, then default to light mode
     const stored = localStorage.getItem('qisa-theme') as Theme;
     if (stored) return stored;
     
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    return 'light'; // Default to light mode
   });
 
   useEffect(() => {

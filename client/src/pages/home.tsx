@@ -146,14 +146,11 @@ export default function Home() {
             </h1>
           </FadeInUp>
           
-          <FadeInUp delay={1500} className="mb-8">
+          <div className="mb-8">
             <p className="text-xl sm:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed">
-              <TypewriterText 
-                text="Sua assistente de IA avançada que conversa naturalmente e gera imagens incríveis a partir de suas ideias." 
-                delay={30}
-              />
+              Sua assistente de IA avançada que conversa naturalmente e gera imagens incríveis a partir de suas ideias.
             </p>
-          </FadeInUp>
+          </div>
 
           {/* Features Grid */}
           <FadeInUp delay={3000}>
