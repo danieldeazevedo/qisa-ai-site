@@ -5,8 +5,9 @@ import { randomUUID } from "crypto";
 export interface IStorage {
   // User methods
   getUser(id: string): Promise<User | undefined>;
-  getUserByFirebaseId(firebaseId: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  createUser(user: InsertUser & { passwordHash: string }): Promise<User>;
   
   // Chat session methods
   getCurrentSession(userId: string): Promise<ChatSession>;
@@ -54,38 +55,54 @@ export class RedisStorage implements IStorage {
     );
   }
 
-  async getUserByFirebaseId(firebaseId: string): Promise<User | undefined> {
+  async getUserByUsername(username: string): Promise<User | undefined> {
     return this.withFallback(
       async () => {
-        const userId = await client!.get(`firebase:${firebaseId}`);
+        const userId = await client!.get(`username:${username}`);
         return userId ? this.getUser(userId as string) : undefined;
       },
       async () => {
-        const userId = this.fallbackStorage.get(`firebase:${firebaseId}`);
+        const userId = this.fallbackStorage.get(`username:${username}`);
         return userId ? await this.getUser(userId) : undefined;
       }
     );
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return this.withFallback(
+      async () => {
+        const userId = await client!.get(`email:${email}`);
+        return userId ? this.getUser(userId as string) : undefined;
+      },
+      async () => {
+        const userId = this.fallbackStorage.get(`email:${email}`);
+        return userId ? await this.getUser(userId) : undefined;
+      }
+    );
+  }
+
+  async createUser(insertUser: InsertUser & { passwordHash: string }): Promise<User> {
     const id = randomUUID();
     const user: User = {
-      ...insertUser,
+      id,
+      username: insertUser.username,
+      email: insertUser.email,
       displayName: insertUser.displayName || null,
       photoURL: insertUser.photoURL || null,
-      id,
       createdAt: new Date(),
     };
     
     return this.withFallback(
       async () => {
-        await client!.set(`user:${id}`, JSON.stringify(user));
-        await client!.set(`firebase:${insertUser.firebaseId}`, id);
+        await client!.set(`user:${id}`, JSON.stringify({...user, passwordHash: insertUser.passwordHash}));
+        await client!.set(`username:${insertUser.username}`, id);
+        await client!.set(`email:${insertUser.email}`, id);
         return user;
       },
       () => {
-        this.fallbackStorage.set(`user:${id}`, JSON.stringify(user));
-        this.fallbackStorage.set(`firebase:${insertUser.firebaseId}`, id);
+        this.fallbackStorage.set(`user:${id}`, JSON.stringify({...user, passwordHash: insertUser.passwordHash}));
+        this.fallbackStorage.set(`username:${insertUser.username}`, id);
+        this.fallbackStorage.set(`email:${insertUser.email}`, id);
         return user;
       }
     );

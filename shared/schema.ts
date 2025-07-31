@@ -2,10 +2,16 @@ import { z } from "zod";
 
 // Redis-based schema definitions - no Drizzle needed
 export const insertUserSchema = z.object({
-  firebaseId: z.string(),
+  username: z.string().min(3).max(20),
   email: z.string().email(),
+  password: z.string().min(6),
   displayName: z.string().nullable().optional(),
   photoURL: z.string().nullable().optional(),
+});
+
+export const loginUserSchema = z.object({
+  username: z.string(),
+  password: z.string(),
 });
 
 export const insertChatSessionSchema = z.object({
@@ -23,9 +29,10 @@ export const insertMessageSchema = z.object({
 
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
+export type LoginUser = z.infer<typeof loginUserSchema>;
 export type User = {
   id: string;
-  firebaseId: string;
+  username: string;
   email: string;
   displayName: string | null;
   photoURL: string | null;
