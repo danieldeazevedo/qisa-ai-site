@@ -7,6 +7,7 @@ import Home from "@/pages/home";
 import Chat from "@/pages/chat";
 import AuthPage from "@/pages/auth-page";
 import About from "@/pages/about";
+import Profile from "@/pages/profile";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -16,6 +17,7 @@ function Router() {
       <Route path="/chat" component={Chat} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/about" component={About} />
+      <Route path="/profile" component={Profile} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -136,6 +136,18 @@ export default function Chat() {
                       {user.email}
                     </p>
                   </div>
+                  {user.username && !user.username.includes('anonymous') && (
+                    <Link href="/profile">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="p-1 text-muted-foreground hover:text-primary transition-all duration-300 rounded-lg hover:bg-primary/10"
+                        title="Meu Perfil"
+                      >
+                        <User className="w-4 h-4" />
+                      </Button>
+                    </Link>
+                  )}
                   <Button
                     variant="ghost"
                     size="sm"

@@ -38,10 +38,11 @@ export function useQkoins() {
 
   // Claim daily reward mutation
   const claimDailyRewardMutation = useMutation({
-    mutationFn: () => apiRequest('/api/qkoins/daily-reward', {
-      method: 'POST',
-    }),
-    onSuccess: (data) => {
+    mutationFn: async () => {
+      const response = await apiRequest('POST', '/api/qkoins/daily-reward');
+      return await response.json();
+    },
+    onSuccess: (data: any) => {
       toast({
         title: "Recompensa coletada!",
         description: `+10 QKoins adicionados. Total: ${data.qkoins} QKoins`,
@@ -61,6 +62,34 @@ export function useQkoins() {
 
   const claimDailyReward = () => {
     claimDailyRewardMutation.mutate();
+  };
+
+  // Claim bonus QKoins mutation
+  const claimBonusMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('POST', '/api/qkoins/claim-bonus');
+      return await response.json();
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: "Bônus resgatado!",
+        description: `+5 QKoins adicionados. Total: ${data.qkoins} QKoins`,
+      });
+      
+      // Invalidate and refetch balance
+      queryClient.invalidateQueries({ queryKey: ['qkoins'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro",
+        description: error.message || "Não foi possível resgatar o bônus",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const claimBonus = () => {
+    claimBonusMutation.mutate();
   };
 
   const canGenerateImage = () => {
@@ -97,6 +126,8 @@ export function useQkoins() {
     isLoadingTransactions,
     claimDailyReward,
     isClaimingReward: claimDailyRewardMutation.isPending,
+    claimBonus,
+    isClaimingBonus: claimBonusMutation.isPending,
     canGenerateImage,
     getQkoinStatus,
   };

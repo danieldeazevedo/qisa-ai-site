@@ -439,6 +439,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Add bonus QKoins (reward button)
+  app.post("/api/qkoins/claim-bonus", async (req, res) => {
+    try {
+      const username = req.headers['x-username'] as string;
+      
+      if (!username || username.includes('anonymous')) {
+        return res.status(401).json({ error: "Login necessário para receber bônus" });
+      }
+
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
+        return res.status(401).json({ error: "Usuário não encontrado" });
+      }
+
+      // Add 5 bonus QKoins (can be used multiple times per day)
+      await storage.addQkoins(user.id, 5, 'earned', 'Bônus resgatado pelo usuário');
+      const newBalance = await storage.getUserQkoins(user.id);
+      
+      res.json({ 
+        success: true, 
+        message: "Bônus resgatado! +5 QKoins",
+        qkoins: newBalance
+      });
+    } catch (error) {
+      console.error("Error claiming bonus QKoins:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Health check endpoint
   app.get("/api/health", (req, res) => {
     res.json({ 
