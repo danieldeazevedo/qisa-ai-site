@@ -6,6 +6,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/use-theme";
 import { Link, useLocation } from "wouter";
+import rewardSoundPath from "@assets/2025-07-31-13-14-20-Trim_1753978942570.mp3";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +33,17 @@ export default function Profile() {
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
 
+  // Function to play reward sound
+  const playRewardSound = () => {
+    try {
+      const audio = new Audio(rewardSoundPath);
+      audio.volume = 0.5;
+      audio.play().catch(console.error);
+    } catch (error) {
+      console.error('Error playing reward sound:', error);
+    }
+  };
+
   // Claim bonus QKoins mutation
   const claimBonusMutation = useMutation({
     mutationFn: async () => {
@@ -39,6 +51,7 @@ export default function Profile() {
       return await response.json();
     },
     onSuccess: (data: any) => {
+      playRewardSound();
       toast({
         title: "Bônus resgatado!",
         description: `+5 QKoins adicionados. Total: ${data.qkoins} QKoins`,
@@ -222,24 +235,28 @@ export default function Profile() {
                   <Zap className="w-5 h-5" />
                   <span className="font-medium">Bônus Extra</span>
                 </div>
-                {canClaimBonus ? (
-                  <Button
-                    onClick={handleClaimBonus}
-                    disabled={claimBonusMutation.isPending}
-                    variant="outline"
-                    className="w-full border-purple-200 text-purple-700 hover:bg-purple-50 dark:border-purple-800 dark:text-purple-300 dark:hover:bg-purple-950"
-                  >
-                    <Trophy className="w-4 h-4 mr-2" />
-                    {claimBonusMutation.isPending ? "Resgatando..." : "Resgatar +5 QKoins"}
-                  </Button>
-                ) : (
-                  <div className="w-full">
-                    <Badge variant="secondary" className="w-full py-2 bg-gray-100 dark:bg-gray-800">
-                      <Clock className="w-3 h-3 mr-2" />
+                <Button
+                  onClick={handleClaimBonus}
+                  disabled={!canClaimBonus || claimBonusMutation.isPending}
+                  variant="outline"
+                  className={`w-full ${
+                    canClaimBonus 
+                      ? "border-purple-200 text-purple-700 hover:bg-purple-50 dark:border-purple-800 dark:text-purple-300 dark:hover:bg-purple-950" 
+                      : "border-gray-200 text-gray-400 cursor-not-allowed dark:border-gray-700 dark:text-gray-500"
+                  }`}
+                >
+                  {canClaimBonus ? (
+                    <>
+                      <Trophy className="w-4 h-4 mr-2" />
+                      {claimBonusMutation.isPending ? "Resgatando..." : "Resgatar +5 QKoins"}
+                    </>
+                  ) : (
+                    <>
+                      <Clock className="w-4 h-4 mr-2" />
                       Aguarde 4h para próximo bônus
-                    </Badge>
-                  </div>
-                )}
+                    </>
+                  )}
+                </Button>
               </div>
             </div>
 

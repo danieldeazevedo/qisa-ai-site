@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "./use-auth";
 import { useToast } from "./use-toast";
+import rewardSoundPath from "@assets/2025-07-31-13-14-20-Trim_1753978942570.mp3";
 
 export interface QkoinBalance {
   qkoins: number;
@@ -25,6 +26,17 @@ export function useQkoins() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Function to play reward sound
+  const playRewardSound = () => {
+    try {
+      const audio = new Audio(rewardSoundPath);
+      audio.volume = 0.5;
+      audio.play().catch(console.error);
+    } catch (error) {
+      console.error('Error playing reward sound:', error);
+    }
+  };
+
   // Get QKoins balance
   const { data: balance, isLoading: isLoadingBalance } = useQuery<QkoinBalance>({
     queryKey: ['/api/qkoins/balance'],
@@ -44,6 +56,7 @@ export function useQkoins() {
       return await response.json();
     },
     onSuccess: (data: any) => {
+      playRewardSound();
       toast({
         title: "Recompensa coletada!",
         description: `+10 QKoins adicionados. Total: ${data.qkoins} QKoins`,
