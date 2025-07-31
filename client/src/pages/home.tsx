@@ -148,7 +148,10 @@ export default function Home() {
           
           <div className="mb-8">
             <p className="text-xl sm:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed">
-              Sua assistente de IA avançada que conversa naturalmente e gera imagens incríveis a partir de suas ideias.
+              <TypewriterText 
+                text="Sua assistente de IA avançada que conversa naturalmente e gera imagens incríveis a partir de suas ideias." 
+                delay={30}
+              />
             </p>
           </div>
 
