@@ -19,10 +19,16 @@ Preferred communication style: Simple, everyday language.
 - **Fixed chat history isolation per authenticated user**
 - **Enhanced cache invalidation when users login/logout**
 - **Personalized welcome message: "Bem vindo a qisa [username]"**
-- **Removed message persistence system - chat now works in memory only** ✅ RESOLVIDO
-- **Simplified chat to fix message display issues**
-- **Created new endpoint `/api/chat/simple-send` without database saves**
-- All core features working: custom auth, chat, image generation, session-based memory
+- **IMPLEMENTED COMPLETE CHAT HISTORY SYSTEM IN REDIS** ✅ NOVO
+- **Created persistent chat history storage with user-specific sessions**
+- **Added username personalization in AI system instructions**
+- **Implemented anonymous vs authenticated user handling**
+- **Anonymous users: no history saved, temporary session only**
+- **Authenticated users: full history saved in Redis with proper isolation**
+- **New endpoints: `/api/chat/send`, `/api/chat/history/:sessionId`, `/api/chat/history/:sessionId` (DELETE)**
+- **Updated frontend to load history on login and save messages automatically**
+- **Added visual indicators for history status in chat interface**
+- All core features working: custom auth, persistent chat history, image generation, personalized AI responses
 
 ## System Architecture
 
@@ -64,26 +70,38 @@ Preferred communication style: Simple, everyday language.
 - **System Prompt**: Configured as "Qisa" assistant with specific personality traits
 
 ### Chat System
-- **Sessions**: Each user has isolated chat sessions in memory only
+- **Sessions**: Each authenticated user has persistent chat sessions saved in Redis
 - **Messages**: Support both text and image content with metadata
 - **Real-time**: Currently polling-based (no WebSocket implementation)
-- **Storage**: Messages stored in browser memory only - reset on page refresh or user switch
+- **Storage**: 
+  - **Authenticated users**: Messages stored in Redis with user-specific keys
+  - **Anonymous users**: Messages stored in browser memory only (no persistence)
+- **History**: Full conversation history loaded automatically on login
+- **Personalization**: AI includes username in system instructions for natural conversation
 
 ### Data Storage
 - **Database**: Redis Upstash for cloud-hosted high-performance storage
-- **Structure**: Key-value pairs with sets and hashes for relationships
-- **Persistence**: User profiles and authentication data stored in Redis Upstash
-- **Chat Storage**: Messages stored in browser memory only (no persistence)
+- **Structure**: Key-value pairs with lists and hashes for relationships
+- **Persistence**: User profiles, authentication data, and chat history stored in Redis
+- **Chat Storage**: 
+  - **Authenticated users**: Messages stored in Redis with keys `user:{userId}:session:{sessionId}:history`
+  - **Anonymous users**: Messages expire after 1 hour or are not saved
+- **History Organization**: Messages stored in chronological order using Redis lists
 - **Performance**: Optimized for real-time operations with global CDN
 - **Scalability**: Serverless Redis with automatic scaling and high availability
 
 ## Data Flow
 
 1. **User Authentication**: Username/Password → Redis user verification → Session establishment
-2. **Chat Initiation**: Authenticated user → Initialize empty chat session in browser memory
-3. **Message Flow**: User input → Gemini API → Display response immediately in UI (no storage)
-4. **Image Requests**: Detected by keywords → Gemini image generation → Display with URL in UI
-5. **Session Isolation**: Each user gets fresh chat state when logging in
+2. **Chat Initiation**: 
+   - **Authenticated users**: Load existing chat history from Redis
+   - **Anonymous users**: Start fresh session in browser memory
+3. **Message Flow**: 
+   - **Authenticated users**: User input → Save to Redis → Gemini API (with username context) → Save response to Redis → Display
+   - **Anonymous users**: User input → Gemini API → Display response (no storage)
+4. **Image Requests**: Detected by keywords → Gemini image generation → Save/Display based on user type
+5. **Session Isolation**: Each authenticated user has persistent history, anonymous users get temporary sessions
+6. **History Management**: Authenticated users can clear history (deletes from Redis), anonymous users clear local memory
 
 ## External Dependencies
 

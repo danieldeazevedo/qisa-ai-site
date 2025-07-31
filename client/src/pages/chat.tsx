@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function Chat() {
   const { user, loading: authLoading, logout } = useAuth();
-  const { messages, loading: chatLoading, sendMessage, clearHistory, isSending } = useChat();
+  const { messages, loading: chatLoading, sendMessage, clearHistory, isSending, isClearing } = useChat();
   const [showSettings, setShowSettings] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -73,7 +73,12 @@ export default function Chat() {
               </div>
               <div className="flex-1">
                 <h1 className="text-lg font-semibold text-gray-900">Qisa</h1>
-                <p className="text-sm text-gray-500">Seu Chat Pessoal</p>
+                {user?.username && !user.username.includes('anonymous') && (
+                  <p className="text-xs text-green-600">Histórico sendo salvo</p>
+                )}
+                {(!user?.username || user.username.includes('anonymous')) && (
+                  <p className="text-xs text-orange-600">Modo anônimo - sem histórico</p>
+                )}
               </div>
             </div>
             <div className="flex items-center space-x-3">
@@ -221,15 +226,21 @@ export default function Chat() {
               />
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-700">Limpar histórico</span>
+              <span className="text-gray-700">
+                {user?.username && !user.username.includes('anonymous') 
+                  ? 'Limpar histórico salvo' 
+                  : 'Limpar chat atual'
+                }
+              </span>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={clearHistory}
-                className="text-red-600 border-red-200 hover:bg-red-50"
+                disabled={isClearing}
+                className="text-red-600 border-red-200 hover:bg-red-50 disabled:opacity-50"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
-                Limpar
+                {isClearing ? 'Limpando...' : 'Limpar'}
               </Button>
             </div>
             <div className="flex justify-between items-center">

@@ -131,7 +131,159 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Simple send message without persistence
+  // Send message with full history persistence
+  app.post("/api/chat/send", async (req, res) => {
+    try {
+      const sendMessageSchema = z.object({
+        content: z.string(),
+        isImageRequest: z.boolean().default(false),
+        sessionId: z.string(),
+      });
+
+      const { content, isImageRequest, sessionId } = sendMessageSchema.parse(req.body);
+
+      // Get username from headers
+      const username = req.headers['x-username'] as string;
+      let user;
+      let userId;
+      let shouldSaveHistory = false;
+
+      if (username && !username.includes('anonymous')) {
+        // Authenticated user - save history
+        user = await storage.getUserByUsername(username);
+        if (!user) {
+          return res.status(401).json({ error: "Usuário não encontrado" });
+        }
+        userId = user.id;
+        shouldSaveHistory = true;
+      } else {
+        // Anonymous user - don't save history, just use session
+        const sessionUserId = req.headers['x-user-session'] as string || 
+                             req.headers['user-agent']?.slice(0, 20) + '-' + Date.now();
+        
+        const anonymousUsername = `anonymous-${sessionUserId}`;
+        user = await storage.getUserByUsername(anonymousUsername);
+        if (!user) {
+          user = await storage.createUser({
+            username: anonymousUsername,
+            email: "anonimo@qisa.ai",
+            password: "anonymous",
+            displayName: "Usuário Anônimo", 
+            photoURL: null,
+            passwordHash: "anonymous"
+          });
+        }
+        userId = user.id;
+        shouldSaveHistory = false; // Don't save for anonymous users
+      }
+
+      // Get chat history for context (only if saving history)
+      let context: any[] = [];
+      if (shouldSaveHistory) {
+        const history = await storage.getChatHistory(userId, sessionId);
+        context = history.slice(-10).map(msg => ({
+          role: msg.role,
+          content: msg.content
+        }));
+      }
+
+      // Save user message if authenticated
+      if (shouldSaveHistory) {
+        await storage.saveMessageToHistory(userId, sessionId, {
+          sessionId,
+          role: "user",
+          content,
+          imageUrl: null,
+          metadata: null
+        });
+      }
+
+      let response: string;
+      let imageUrl: string | null = null;
+
+      if (isImageRequest) {
+        try {
+          imageUrl = await generateImage(content);
+          response = "Aqui está a imagem que você solicitou:";
+        } catch (error) {
+          response = "Desculpe, não consegui gerar a imagem. Tente novamente com uma descrição diferente.";
+        }
+      } else {
+        // Pass username to AI for personalization
+        const actualUsername = username && !username.includes('anonymous') ? user.username : undefined;
+        response = await generateResponse(content, context, actualUsername);
+      }
+
+      // Save AI response if authenticated
+      if (shouldSaveHistory) {
+        await storage.saveMessageToHistory(userId, sessionId, {
+          sessionId,
+          role: "assistant",
+          content: response,
+          imageUrl,
+          metadata: null
+        });
+      }
+
+      res.json({
+        response,
+        imageUrl,
+        saved: shouldSaveHistory
+      });
+    } catch (error) {
+      console.error("Error sending message:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get chat history for authenticated users
+  app.get("/api/chat/history/:sessionId", async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const username = req.headers['x-username'] as string;
+
+      if (!username || username.includes('anonymous')) {
+        // Anonymous users don't have history
+        return res.json([]);
+      }
+
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
+        return res.status(401).json({ error: "Usuário não encontrado" });
+      }
+
+      const history = await storage.getChatHistory(user.id, sessionId);
+      res.json(history);
+    } catch (error) {
+      console.error("Error getting chat history:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Clear chat history for authenticated users
+  app.delete("/api/chat/history/:sessionId", async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const username = req.headers['x-username'] as string;
+
+      if (!username || username.includes('anonymous')) {
+        return res.json({ success: true, message: "Não há histórico para limpar" });
+      }
+
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
+        return res.status(401).json({ error: "Usuário não encontrado" });
+      }
+
+      await storage.clearChatHistory(user.id, sessionId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error clearing chat history:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Simple send message without persistence (fallback for anonymous users)
   app.post("/api/chat/simple-send", async (req, res) => {
     try {
       const sendMessageSchema = z.object({
@@ -156,6 +308,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           response = "Desculpe, não consegui gerar a imagem. Tente novamente com uma descrição diferente.";
         }
       } else {
+        // Don't pass username for anonymous users
         response = await generateResponse(content, context);
       }
 

@@ -18,6 +18,9 @@ export interface IStorage {
   // Message methods
   getMessagesBySession(sessionId: string): Promise<Message[]>;
   createMessage(message: InsertMessage): Promise<Message>;
+  saveMessageToHistory(userId: string, sessionId: string, message: InsertMessage): Promise<Message>;
+  getChatHistory(userId: string, sessionId: string): Promise<Message[]>;
+  clearChatHistory(userId: string, sessionId: string): Promise<void>;
 }
 
 
@@ -384,6 +387,122 @@ export class RedisStorage implements IStorage {
         }
         
         return message;
+      }
+    );
+  }
+
+  async saveMessageToHistory(userId: string, sessionId: string, insertMessage: InsertMessage): Promise<Message> {
+    const id = randomUUID();
+    const message: Message = {
+      ...insertMessage,
+      metadata: insertMessage.metadata || null,
+      imageUrl: insertMessage.imageUrl || null,
+      id,
+      createdAt: new Date(),
+    };
+    
+    return this.withFallback(
+      async () => {
+        // Save message to Redis with user-specific history key
+        const historyKey = `user:${userId}:session:${sessionId}:history`;
+        await client!.set(`message:${id}`, JSON.stringify(message));
+        await client!.lpush(historyKey, id); // Use lpush to maintain chronological order
+        
+        // Set expiration for anonymous users (1 hour)
+        if (userId.includes('anonymous')) {
+          await client!.expire(historyKey, 3600);
+          await client!.expire(`message:${id}`, 3600);
+        }
+        
+        return message;
+      },
+      () => {
+        // Fallback logic - save to memory
+        const historyKey = `user:${userId}:session:${sessionId}:history`;
+        const historyJson = this.fallbackStorage.get(historyKey) || '[]';
+        const history: string[] = JSON.parse(historyJson);
+        history.unshift(id); // Add to beginning for chronological order
+        this.fallbackStorage.set(historyKey, JSON.stringify(history));
+        this.fallbackStorage.set(`message:${id}`, JSON.stringify(message));
+        
+        return message;
+      }
+    );
+  }
+
+  async getChatHistory(userId: string, sessionId: string): Promise<Message[]> {
+    return this.withFallback(
+      async () => {
+        const historyKey = `user:${userId}:session:${sessionId}:history`;
+        const messageIds = await client!.lrange(historyKey, 0, -1); // Get all messages
+        
+        if (messageIds.length === 0) return [];
+        
+        // Get messages individually for Upstash
+        const messages: Message[] = [];
+        for (const messageId of messageIds.reverse()) { // Reverse to get chronological order
+          const messageJson = await client!.get(`message:${messageId}`);
+          if (messageJson) {
+            const parsed = JSON.parse(messageJson as string);
+            // Convert string dates back to Date objects
+            if (parsed.createdAt) {
+              parsed.createdAt = new Date(parsed.createdAt);
+            }
+            messages.push(parsed);
+          }
+        }
+        
+        return messages;
+      },
+      () => {
+        const historyKey = `user:${userId}:session:${sessionId}:history`;
+        const historyJson = this.fallbackStorage.get(historyKey) || '[]';
+        const messageIds: string[] = JSON.parse(historyJson);
+        
+        const messages: Message[] = [];
+        for (const messageId of messageIds.reverse()) { // Reverse to get chronological order
+          const messageJson = this.fallbackStorage.get(`message:${messageId}`);
+          if (messageJson) {
+            const parsed = typeof messageJson === 'string' ? JSON.parse(messageJson) : messageJson;
+            // Ensure dates are Date objects
+            if (parsed.createdAt && typeof parsed.createdAt === 'string') {
+              parsed.createdAt = new Date(parsed.createdAt);
+            }
+            messages.push(parsed);
+          }
+        }
+        
+        return messages;
+      }
+    );
+  }
+
+  async clearChatHistory(userId: string, sessionId: string): Promise<void> {
+    return this.withFallback(
+      async () => {
+        const historyKey = `user:${userId}:session:${sessionId}:history`;
+        const messageIds = await client!.lrange(historyKey, 0, -1);
+        
+        // Delete all messages
+        for (const messageId of messageIds) {
+          await client!.del(`message:${messageId}`);
+        }
+        
+        // Clear the history list
+        await client!.del(historyKey);
+      },
+      () => {
+        const historyKey = `user:${userId}:session:${sessionId}:history`;
+        const historyJson = this.fallbackStorage.get(historyKey) || '[]';
+        const messageIds: string[] = JSON.parse(historyJson);
+        
+        // Delete all messages
+        for (const messageId of messageIds) {
+          this.fallbackStorage.delete(`message:${messageId}`);
+        }
+        
+        // Clear the history
+        this.fallbackStorage.delete(historyKey);
       }
     );
   }

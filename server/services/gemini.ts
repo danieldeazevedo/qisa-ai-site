@@ -22,7 +22,8 @@ export interface ChatContext {
 
 export async function generateResponse(
   message: string,
-  context: ChatContext[] = []
+  context: ChatContext[] = [],
+  username?: string
 ): Promise<string> {
   try {
     // Build conversation history
@@ -37,10 +38,16 @@ export async function generateResponse(
       parts: [{ text: message }]
     });
 
+    // Create personalized system instruction
+    let systemInstruction = SYSTEM_INSTRUCTION;
+    if (username && username !== 'anonymous') {
+      systemInstruction += `\n\nO usuário com quem você está conversando se chama ${username}. Use o nome dele naturalmente na conversa quando apropriado.`;
+    }
+
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
       config: {
-        systemInstruction: SYSTEM_INSTRUCTION,
+        systemInstruction: systemInstruction,
       },
       contents,
     });
