@@ -182,6 +182,7 @@ export class RedisStorage implements IStorage {
       photoURL: insertUser.photoURL || null,
       qkoins: 10, // Usuários começam com 10 QKoins
       lastDailyReward: null,
+      lastBonusClaim: null,
       createdAt: new Date(),
     };
     
@@ -718,6 +719,57 @@ export class RedisStorage implements IStorage {
         }
         
         return transactions;
+      }
+    );
+  }
+
+  async canClaimBonus(userId: string): Promise<boolean> {
+    return this.withFallback(
+      async () => {
+        const user = await this.getUser(userId);
+        if (!user || !user.lastBonusClaim) return true;
+        
+        const now = new Date();
+        const timeSinceLastBonus = now.getTime() - new Date(user.lastBonusClaim).getTime();
+        const oneHourInMs = 60 * 60 * 1000; // 1 hour
+        
+        return timeSinceLastBonus >= oneHourInMs;
+      },
+      () => {
+        const lastBonusClaimTs = this.fallbackStorage.get(`user:${userId}:lastBonusClaim`);
+        if (!lastBonusClaimTs) return true;
+        
+        const now = Date.now();
+        const timeSinceLastBonus = now - parseInt(lastBonusClaimTs);
+        const oneHourInMs = 60 * 60 * 1000; // 1 hour
+        
+        return timeSinceLastBonus >= oneHourInMs;
+      }
+    );
+  }
+
+  async updateUserBonusClaim(userId: string, timestamp: Date): Promise<void> {
+    return this.withFallback(
+      async () => {
+        // Update user object in Redis
+        const userJson = await client!.get(`user:${userId}`);
+        if (userJson) {
+          const userData = typeof userJson === 'string' ? JSON.parse(userJson) : userJson;
+          userData.lastBonusClaim = timestamp;
+          await client!.set(`user:${userId}`, JSON.stringify(userData));
+        }
+      },
+      () => {
+        // Update user object in fallback storage
+        const userJson = this.fallbackStorage.get(`user:${userId}`);
+        if (userJson) {
+          const userData = typeof userJson === 'string' ? JSON.parse(userJson) : userJson;
+          userData.lastBonusClaim = timestamp;
+          this.fallbackStorage.set(`user:${userId}`, JSON.stringify(userData));
+        }
+        
+        // Also store timestamp separately for easy access
+        this.fallbackStorage.set(`user:${userId}:lastBonusClaim`, timestamp.getTime().toString());
       }
     );
   }

@@ -6,6 +6,7 @@ import { useToast } from "./use-toast";
 export interface QkoinBalance {
   qkoins: number;
   canClaimDaily: boolean;
+  canClaimBonus: boolean;
   userId?: string;
   message?: string;
 }

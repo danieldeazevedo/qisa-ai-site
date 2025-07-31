@@ -82,6 +82,7 @@ export default function Profile() {
 
   const qkoins = balance?.qkoins || 0;
   const canClaimDaily = balance?.canClaimDaily || false;
+  const canClaimBonus = balance?.canClaimBonus || false;
   const recentTransactions = transactions?.slice(0, 5) || [];
 
   return (
@@ -221,15 +222,24 @@ export default function Profile() {
                   <Zap className="w-5 h-5" />
                   <span className="font-medium">Bônus Extra</span>
                 </div>
-                <Button
-                  onClick={handleClaimBonus}
-                  disabled={claimBonusMutation.isPending}
-                  variant="outline"
-                  className="w-full border-purple-200 text-purple-700 hover:bg-purple-50 dark:border-purple-800 dark:text-purple-300 dark:hover:bg-purple-950"
-                >
-                  <Trophy className="w-4 h-4 mr-2" />
-                  {claimBonusMutation.isPending ? "Resgatando..." : "Resgatar +5 QKoins"}
-                </Button>
+                {canClaimBonus ? (
+                  <Button
+                    onClick={handleClaimBonus}
+                    disabled={claimBonusMutation.isPending}
+                    variant="outline"
+                    className="w-full border-purple-200 text-purple-700 hover:bg-purple-50 dark:border-purple-800 dark:text-purple-300 dark:hover:bg-purple-950"
+                  >
+                    <Trophy className="w-4 h-4 mr-2" />
+                    {claimBonusMutation.isPending ? "Resgatando..." : "Resgatar +5 QKoins"}
+                  </Button>
+                ) : (
+                  <div className="w-full">
+                    <Badge variant="secondary" className="w-full py-2 bg-gray-100 dark:bg-gray-800">
+                      <Clock className="w-3 h-3 mr-2" />
+                      Aguarde 1h para próximo bônus
+                    </Badge>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -241,7 +251,7 @@ export default function Profile() {
               <ul className="text-sm text-amber-700 dark:text-amber-300 space-y-1">
                 <li>• 1 QKoin = 1 geração de imagem</li>
                 <li>• Recompensa diária: 10 QKoins (a cada 24h)</li>
-                <li>• Bônus extra: 5 QKoins (sem limite)</li>
+                <li>• Bônus extra: 5 QKoins (a cada 1 hora)</li>
                 <li>• QKoins são salvos na sua conta permanentemente</li>
               </ul>
             </div>

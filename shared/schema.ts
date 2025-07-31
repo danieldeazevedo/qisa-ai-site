@@ -45,6 +45,7 @@ export type User = {
   photoURL: string | null;
   qkoins: number;
   lastDailyReward: Date | null;
+  lastBonusClaim: Date | null;
   createdAt: Date;
 };
 

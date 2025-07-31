@@ -373,10 +373,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const qkoins = await storage.getUserQkoins(user.id);
       const canClaimDaily = await storage.checkDailyReward(user.id);
+      const canClaimBonus = await storage.canClaimBonus(user.id);
       
       res.json({ 
         qkoins, 
         canClaimDaily,
+        canClaimBonus,
         userId: user.id 
       });
     } catch (error) {
@@ -453,8 +455,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "Usuário não encontrado" });
       }
 
-      // Add 5 bonus QKoins (can be used multiple times per day)
+      // Check if user can claim bonus (1 hour cooldown)
+      const now = new Date();
+      if (user.lastBonusClaim) {
+        const timeSinceLastBonus = now.getTime() - new Date(user.lastBonusClaim).getTime();
+        const oneHourInMs = 60 * 60 * 1000; // 1 hour
+        
+        if (timeSinceLastBonus < oneHourInMs) {
+          const remainingTime = Math.ceil((oneHourInMs - timeSinceLastBonus) / (60 * 1000)); // minutes
+          return res.status(400).json({ 
+            error: `Aguarde ${remainingTime} minutos para resgatar outro bônus` 
+          });
+        }
+      }
+
+      // Add 5 bonus QKoins and update last bonus claim time
       await storage.addQkoins(user.id, 5, 'earned', 'Bônus resgatado pelo usuário');
+      await storage.updateUserBonusClaim(user.id, now);
       const newBalance = await storage.getUserQkoins(user.id);
       
       res.json({ 
