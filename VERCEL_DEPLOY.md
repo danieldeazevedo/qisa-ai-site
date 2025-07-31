@@ -102,40 +102,73 @@ Na dashboard do banco criado, copie:
 4. Selecione o repositório `qisa`
 5. Clique em **"Import"**
 
-### 4.2 Configurar variáveis de ambiente
-Na tela de configuração do projeto:
+### 4.2 Configurar projeto
+**CONFIGURAÇÕES IMPORTANTES:**
 
-1. Vá para **"Environment Variables"**
-2. Adicione as seguintes variáveis:
+#### Root Directory: 
+- **Deixe VAZIO** ou coloque apenas `.` (ponto)
+
+#### Framework Preset: 
+- **Other**
+
+#### Build and Output Settings:
+- **Build Command**: `npm run build`
+- **Output Directory**: `dist`
+- **Install Command**: `npm install`
+
+### 4.3 Variáveis de ambiente
+Na seção **"Environment Variables"**, adicione:
 
 ```env
-# Redis (Upstash)
-REDIS_URL=redis://default:seu_token@sua_url.upstash.io:porta
+# Redis (Upstash) - OBRIGATÓRIO
 UPSTASH_REDIS_REST_URL=https://sua_url.upstash.io
 UPSTASH_REDIS_REST_TOKEN=seu_token_aqui
 
-# Google Gemini
+# Google Gemini - OBRIGATÓRIO  
 GEMINI_API_KEY=sua_chave_gemini_aqui
-
-# Firebase (se estiver usando)
-VITE_FIREBASE_API_KEY=sua_chave_firebase
-VITE_FIREBASE_PROJECT_ID=seu_projeto_id
-VITE_FIREBASE_APP_ID=seu_app_id
 
 # Ambiente
 NODE_ENV=production
 ```
 
-### 4.3 Configurações de build
-- **Framework Preset**: Other
-- **Build Command**: `npm run vercel-build`
-- **Output Directory**: `dist/public`
-- **Install Command**: `npm install`
+**⚠️ IMPORTANTE**: As variáveis `UPSTASH_REDIS_REST_URL` e `UPSTASH_REDIS_REST_TOKEN` são obrigatórias para login e chat funcionarem.
 
 ### 4.4 Finalizar deploy
 1. Clique em **"Deploy"**
 2. Aguarde o build completar (3-5 minutos)
 3. Sua aplicação estará disponível em `https://seu-projeto.vercel.app`
+
+## ⚠️ TROUBLESHOOTING - Login e Chat não funcionam
+
+### Problema: "Login não funciona" ou "Chat sem resposta"
+
+**CAUSA PRINCIPAL**: Variáveis de ambiente Redis não configuradas
+
+### ✅ SOLUÇÃO:
+1. Na Vercel, vá em **Settings → Environment Variables**
+2. **OBRIGATORIAMENTE** adicione:
+```env
+UPSTASH_REDIS_REST_URL=https://sua_url.upstash.io
+UPSTASH_REDIS_REST_TOKEN=seu_token_aqui
+GEMINI_API_KEY=sua_chave_gemini
+NODE_ENV=production
+```
+
+3. **REDEPLOY** após adicionar as variáveis:
+   - Vá em **Deployments**
+   - Clique nos **3 pontos** no último deploy
+   - Clique em **"Redeploy"**
+
+### Verificar se funcionou:
+- Acesse `https://seu-app.vercel.app/api/health`
+- Deve retornar: `{"status":"ok",...}`
+
+### Se ainda não funcionar:
+1. **Verifique logs**: Vercel Dashboard → Functions → Ver erros
+2. **Teste Redis**: No Upstash Console, teste conexão
+3. **Teste Gemini**: Verificar se API key é válida
+
+**DICA**: O sistema funciona perfeitamente no Replit, os problemas na Vercel são sempre de configuração de variáveis.
 
 ## Passo 5: Sistema Anti-Hibernação
 
