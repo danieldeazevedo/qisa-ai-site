@@ -98,9 +98,6 @@ export default function Home() {
                     <p className="text-sm font-medium text-foreground">
                       {user.displayName || 'Usuário'}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      {user.email}
-                    </p>
                   </div>
                   <Button
                     variant="outline"
