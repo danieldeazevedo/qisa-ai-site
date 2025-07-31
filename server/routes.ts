@@ -131,61 +131,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Send message
-  app.post("/api/chat/send", async (req, res) => {
+  // Simple send message without persistence
+  app.post("/api/chat/simple-send", async (req, res) => {
     try {
       const sendMessageSchema = z.object({
-        sessionId: z.string(),
         content: z.string(),
         isImageRequest: z.boolean().default(false),
+        context: z.array(z.object({
+          role: z.enum(["user", "assistant"]),
+          content: z.string(),
+        })).default([]),
       });
 
-      const { sessionId, content, isImageRequest } = sendMessageSchema.parse(req.body);
+      const { content, isImageRequest, context } = sendMessageSchema.parse(req.body);
 
-      // Save user message
-      const userMessage = await storage.createMessage({
-        sessionId,
-        role: "user",
-        content,
-        imageUrl: null,
-        metadata: null,
-      });
-
-      // Get conversation context
-      const messages = await storage.getMessagesBySession(sessionId);
-      const context = messages
-        .slice(0, -1) // Exclude the just-added user message
-        .map(msg => ({
-          role: msg.role as "user" | "assistant",
-          content: msg.content,
-        }));
-
-      let assistantResponse: string;
+      let response: string;
       let imageUrl: string | null = null;
 
       if (isImageRequest) {
         try {
           imageUrl = await generateImage(content);
-          assistantResponse = "Aqui está a imagem que você solicitou:";
+          response = "Aqui está a imagem que você solicitou:";
         } catch (error) {
-          assistantResponse = "Desculpe, não consegui gerar a imagem. Tente novamente com uma descrição diferente.";
+          response = "Desculpe, não consegui gerar a imagem. Tente novamente com uma descrição diferente.";
         }
       } else {
-        assistantResponse = await generateResponse(content, context);
+        response = await generateResponse(content, context);
       }
 
-      // Save assistant message
-      const assistantMessage = await storage.createMessage({
-        sessionId,
-        role: "assistant",
-        content: assistantResponse,
-        imageUrl,
-        metadata: null,
-      });
-
       res.json({
-        userMessage,
-        assistantMessage,
+        response,
+        imageUrl,
       });
     } catch (error) {
       console.error("Error sending message:", error);

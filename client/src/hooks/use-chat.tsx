@@ -1,55 +1,57 @@
 import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { Message, ChatSession } from "@shared/schema";
+import { Message } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 
 export function useChat() {
+  const [messages, setMessages] = useState<Message[]>([]);
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  // Get or create current session
-  const { data: currentSession, isLoading: sessionLoading } = useQuery({
-    queryKey: ["/api/chat/current-session", user?.username || "anonymous"],
-    enabled: true,
-    queryFn: async () => {
-      const headers: Record<string, string> = {};
-      if (user) {
-        headers['x-username'] = user.username;
-      }
-      
-      const response = await fetch('/api/chat/current-session', {
-        headers,
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to get session');
-      }
-      
-      return response.json();
-    },
-  });
-
-  // Get messages for current session
-  const { data: messages = [], isLoading: messagesLoading } = useQuery({
-    queryKey: ["/api/chat/messages", currentSession?.id, user?.username || "anonymous"],
-    enabled: !!currentSession?.id,
-  });
+  // Reset messages when user changes
+  useEffect(() => {
+    setMessages([]);
+  }, [user?.username]);
 
   // Send message mutation
   const sendMessageMutation = useMutation({
     mutationFn: async ({ content, isImageRequest }: { content: string; isImageRequest: boolean }) => {
-      const response = await apiRequest("POST", "/api/chat/send", {
-        sessionId: currentSession?.id,
+      // Add user message immediately to UI
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        sessionId: "local",
+        role: "user",
+        content,
+        imageUrl: null,
+        metadata: null,
+        createdAt: new Date(),
+      };
+      
+      setMessages(prev => [...prev, userMessage]);
+
+      // Call API for AI response without saving
+      const response = await apiRequest("POST", "/api/chat/simple-send", {
         content,
         isImageRequest,
+        context: messages.slice(-10) // Last 10 messages for context
       });
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/chat/messages", currentSession?.id, user?.username || "anonymous"] });
+    onSuccess: (data) => {
+      // Add AI response to UI
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        sessionId: "local",
+        role: "assistant", 
+        content: data.response,
+        imageUrl: data.imageUrl || null,
+        metadata: null,
+        createdAt: new Date(),
+      };
+      
+      setMessages(prev => [...prev, assistantMessage]);
     },
     onError: (error) => {
       console.error("Send message error:", error);
@@ -61,42 +63,22 @@ export function useChat() {
     },
   });
 
-  // Clear history mutation
-  const clearHistoryMutation = useMutation({
-    mutationFn: async () => {
-      await apiRequest("DELETE", `/api/chat/sessions/${currentSession?.id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/chat/current-session"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/chat/messages"] });
-      toast({
-        title: "Histórico limpo",
-        description: "O histórico de conversas foi removido.",
-      });
-    },
-    onError: (error) => {
-      console.error("Clear history error:", error);
-      toast({
-        title: "Erro ao limpar histórico",
-        description: "Não foi possível limpar o histórico.",
-        variant: "destructive",
-      });
-    },
-  });
-
-
+  // Clear history - simple local clear
+  const clearHistory = () => {
+    setMessages([]);
+    toast({
+      title: "Histórico limpo",
+      description: "O histórico de conversas foi removido.",
+    });
+  };
 
   const sendMessage = (content: string, isImageRequest = false) => {
     sendMessageMutation.mutate({ content, isImageRequest });
   };
 
-  const clearHistory = () => {
-    clearHistoryMutation.mutate();
-  };
-
   return {
-    messages: messages || [],
-    loading: messagesLoading || sessionLoading,
+    messages,
+    loading: false,
     sendMessage,
     clearHistory,
     isSending: sendMessageMutation.isPending,

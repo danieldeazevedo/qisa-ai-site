@@ -19,7 +19,10 @@ Preferred communication style: Simple, everyday language.
 - **Fixed chat history isolation per authenticated user**
 - **Enhanced cache invalidation when users login/logout**
 - **Personalized welcome message: "Bem vindo a qisa [username]"**
-- All core features working: custom auth, chat, image generation, persistent secure storage
+- **Removed message persistence system - chat now works in memory only** ✅ RESOLVIDO
+- **Simplified chat to fix message display issues**
+- **Created new endpoint `/api/chat/simple-send` without database saves**
+- All core features working: custom auth, chat, image generation, session-based memory
 
 ## System Architecture
 
@@ -61,24 +64,26 @@ Preferred communication style: Simple, everyday language.
 - **System Prompt**: Configured as "Qisa" assistant with specific personality traits
 
 ### Chat System
-- **Sessions**: Each user has chat sessions with persistent message history
+- **Sessions**: Each user has isolated chat sessions in memory only
 - **Messages**: Support both text and image content with metadata
 - **Real-time**: Currently polling-based (no WebSocket implementation)
-- **Storage**: All chat data persisted in PostgreSQL
+- **Storage**: Messages stored in browser memory only - reset on page refresh or user switch
 
 ### Data Storage
 - **Database**: Redis Upstash for cloud-hosted high-performance storage
 - **Structure**: Key-value pairs with sets and hashes for relationships
-- **Persistence**: All chat history, user profiles, and session data stored in Redis Upstash
-- **Performance**: Optimized for real-time chat operations with global CDN
+- **Persistence**: User profiles and authentication data stored in Redis Upstash
+- **Chat Storage**: Messages stored in browser memory only (no persistence)
+- **Performance**: Optimized for real-time operations with global CDN
 - **Scalability**: Serverless Redis with automatic scaling and high availability
 
 ## Data Flow
 
-1. **User Authentication**: Google OAuth → Firebase → Backend sync → Redis user record
-2. **Chat Initiation**: Authenticated user → Get/create current session → Load message history from Redis
-3. **Message Flow**: User input → Gemini API → Store response in Redis → Update UI
-4. **Image Requests**: Detected by keywords → Gemini image generation → Store with URL in Redis
+1. **User Authentication**: Username/Password → Redis user verification → Session establishment
+2. **Chat Initiation**: Authenticated user → Initialize empty chat session in browser memory
+3. **Message Flow**: User input → Gemini API → Display response immediately in UI (no storage)
+4. **Image Requests**: Detected by keywords → Gemini image generation → Display with URL in UI
+5. **Session Isolation**: Each user gets fresh chat state when logging in
 
 ## External Dependencies
 
