@@ -1,9 +1,10 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Bot, MessageCircle, Image, Shield, LogIn, LogOut, User } from "lucide-react";
+import { Bot, MessageCircle, Image, Shield, LogIn, LogOut, User, Moon, Sun } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { useTheme } from "@/hooks/use-theme";
 
 // Componente de texto animado com efeito de digitação
 function TypewriterText({ text, delay = 50, className = "" }: { text: string; delay?: number; className?: string }) {
@@ -45,11 +46,12 @@ function FadeInUp({ children, delay = 0, className = "" }: { children: React.Rea
 
 export default function Home() {
   const { user, loading, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background text-foreground">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+      <header className="bg-background/80 backdrop-blur-md shadow-sm border-b border-border sticky top-0 z-50 animate-fade-in">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center h-16 px-4 sm:px-6 lg:px-8">
             <div className="flex items-center space-x-3">
@@ -63,10 +65,24 @@ export default function Home() {
             
             {/* Auth Section */}
             <div className="flex items-center space-x-3">
+              {/* Theme Toggle */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleTheme}
+                className="p-2 text-muted-foreground hover:text-primary transition-all duration-300 rounded-lg hover:bg-muted animate-scale-in"
+              >
+                {theme === 'dark' ? (
+                  <Sun className="w-4 h-4" />
+                ) : (
+                  <Moon className="w-4 h-4" />
+                )}
+              </Button>
+
               {loading ? (
                 <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
               ) : user ? (
-                <div className="flex items-center space-x-3 bg-gray-50 rounded-lg px-3 py-2">
+                <div className="flex items-center space-x-3 bg-muted/50 rounded-lg px-3 py-2 animate-slide-in">
                   {user.photoURL ? (
                     <img 
                       src={user.photoURL} 
@@ -79,10 +95,10 @@ export default function Home() {
                     </div>
                   )}
                   <div className="hidden sm:block">
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm font-medium text-foreground">
                       {user.displayName || 'Usuário'}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted-foreground">
                       {user.email}
                     </p>
                   </div>
@@ -90,7 +106,7 @@ export default function Home() {
                     variant="outline"
                     size="sm"
                     onClick={logout}
-                    className="text-gray-600 border-gray-300 hover:bg-gray-50"
+                    className="text-muted-foreground border-border hover:bg-muted transition-all duration-300"
                     data-testid="button-logout"
                   >
                     <LogOut className="w-4 h-4 mr-1" />
@@ -102,7 +118,7 @@ export default function Home() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="text-primary border-primary hover:bg-primary hover:text-white transition-colors"
+                    className="text-primary border-primary hover:bg-primary hover:text-white transition-all duration-300 animate-scale-in"
                     data-testid="button-login"
                   >
                     <LogIn className="w-4 h-4 mr-2" />
@@ -122,7 +138,7 @@ export default function Home() {
             <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-primary to-secondary rounded-3xl mb-6 shadow-lg animate-pulse">
               <Bot className="text-white text-3xl" />
             </div>
-            <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+            <h1 className="text-5xl sm:text-6xl font-bold text-foreground mb-6 leading-tight">
               <TypewriterText text="Bem-vindo à " delay={80} />
               <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                 <TypewriterText text="Qisa" delay={120} />
@@ -131,7 +147,7 @@ export default function Home() {
           </FadeInUp>
           
           <FadeInUp delay={1500} className="mb-8">
-            <p className="text-xl sm:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-xl sm:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed">
               <TypewriterText 
                 text="Sua assistente de IA avançada que conversa naturalmente e gera imagens incríveis a partir de suas ideias." 
                 delay={30}
@@ -142,29 +158,29 @@ export default function Home() {
           {/* Features Grid */}
           <FadeInUp delay={3000}>
             <div className="grid md:grid-cols-2 gap-6 mb-12 max-w-3xl mx-auto">
-              <Card className="border border-gray-100 hover:shadow-lg hover:scale-105 transition-all duration-300 hover:border-primary/20">
+              <Card className="border border-border hover:shadow-lg hover:scale-105 transition-all duration-300 hover:border-primary/20 bg-card animate-fade-in">
                 <CardContent className="p-6">
-                  <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-4 mx-auto">
+                  <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-4 mx-auto animate-bounce-subtle">
                     <MessageCircle className="text-primary text-xl" />
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  <h3 className="text-lg font-semibold text-foreground mb-2">
                     Conversação Natural
                   </h3>
-                  <p className="text-gray-600">
+                  <p className="text-muted-foreground">
                     Converse de forma natural sobre qualquer assunto. A Qisa
                     entende contexto e mantém conversas fluidas.
                   </p>
                 </CardContent>
               </Card>
-              <Card className="border border-gray-100 hover:shadow-lg hover:scale-105 transition-all duration-300 hover:border-secondary/20">
+              <Card className="border border-border hover:shadow-lg hover:scale-105 transition-all duration-300 hover:border-secondary/20 bg-card animate-fade-in">
                 <CardContent className="p-6">
-                  <div className="w-12 h-12 bg-secondary/10 rounded-xl flex items-center justify-center mb-4 mx-auto">
+                  <div className="w-12 h-12 bg-secondary/10 rounded-xl flex items-center justify-center mb-4 mx-auto animate-bounce-subtle">
                     <Image className="text-secondary text-xl" />
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  <h3 className="text-lg font-semibold text-foreground mb-2">
                     Geração de Imagens
                   </h3>
-                  <p className="text-gray-600">
+                  <p className="text-muted-foreground">
                     Transforme suas ideias em imagens únicas. Descreva o que
                     imagina e veja ganhar vida.
                   </p>
@@ -187,12 +203,12 @@ export default function Home() {
                 </Button>
               </Link>
               <div className="space-y-2">
-                <p className="text-sm text-gray-500 animate-fade-in">
+                <p className="text-sm text-muted-foreground animate-fade-in">
                   <Shield className="inline w-4 h-4 mr-1" />
                   Suas conversas são seguras e privadas
                 </p>
                 {!user && (
-                  <p className="text-xs text-blue-600 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+                  <p className="text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg px-3 py-2">
                     💡 O chat funciona sem login! Faça login para salvar seu histórico.
                   </p>
                 )}
@@ -203,9 +219,9 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 py-8">
+      <footer className="bg-background border-t border-border py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-gray-600">
+          <p className="text-muted-foreground">
             © 2024 QisaSeek AI Labs.
           </p>
         </div>

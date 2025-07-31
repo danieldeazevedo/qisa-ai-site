@@ -7,14 +7,15 @@ import { ChatMessage } from "@/components/chat-message";
 import { ChatInput } from "@/components/chat-input";
 import { useAuth } from "@/hooks/use-auth";
 import { useChat } from "@/hooks/use-chat";
-import { ArrowLeft, Bot, Settings, Download, Trash2, User, LogOut } from "lucide-react";
+import { useTheme } from "@/hooks/use-theme";
+import { ArrowLeft, Bot, Settings, Download, Trash2, User, LogOut, Moon, Sun } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Chat() {
   const { user, loading: authLoading, logout } = useAuth();
   const { messages, loading: chatLoading, sendMessage, clearHistory, isSending, isClearing } = useChat();
+  const { theme, toggleTheme } = useTheme();
   const [showSettings, setShowSettings] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -53,9 +54,9 @@ export default function Chat() {
   // No authentication checks - everyone can use the chat
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background text-foreground">
       {/* Chat Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
+      <header className="bg-background/80 backdrop-blur-md shadow-sm border-b border-border sticky top-0 z-10 animate-fade-in">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-3">
@@ -63,7 +64,7 @@ export default function Chat() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="p-2 text-gray-600 hover:text-primary transition-colors rounded-lg hover:bg-gray-100"
+                  className="p-2 text-muted-foreground hover:text-primary transition-all duration-300 rounded-lg hover:bg-muted animate-scale-in"
                 >
                   <ArrowLeft className="w-5 h-5" />
                 </Button>
@@ -72,19 +73,33 @@ export default function Chat() {
                 <Bot className="text-white" />
               </div>
               <div className="flex-1">
-                <h1 className="text-lg font-semibold text-gray-900">Qisa</h1>
+                <h1 className="text-lg font-semibold text-foreground animate-slide-in">Qisa</h1>
                 {user?.username && !user.username.includes('anonymous') && (
-                  <p className="text-xs text-green-600">Histórico sendo salvo</p>
+                  <p className="text-xs text-green-600 dark:text-green-400 animate-pulse-gentle">Histórico sendo salvo</p>
                 )}
                 {(!user?.username || user.username.includes('anonymous')) && (
-                  <p className="text-xs text-orange-600">Modo anônimo - sem histórico</p>
+                  <p className="text-xs text-orange-600 dark:text-orange-400 animate-pulse-gentle">Modo anônimo - sem histórico</p>
                 )}
               </div>
             </div>
             <div className="flex items-center space-x-3">
+              {/* Theme Toggle */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleTheme}
+                className="p-2 text-muted-foreground hover:text-primary transition-all duration-300 rounded-lg hover:bg-muted animate-scale-in"
+              >
+                {theme === 'dark' ? (
+                  <Sun className="w-4 h-4" />
+                ) : (
+                  <Moon className="w-4 h-4" />
+                )}
+              </Button>
+
               {/* User Profile Section */}
               {user ? (
-                <div className="flex items-center space-x-2 bg-gray-50 rounded-lg px-3 py-2">
+                <div className="flex items-center space-x-2 bg-muted/50 rounded-lg px-3 py-2 animate-slide-in">
                   {user.photoURL ? (
                     <img 
                       src={user.photoURL} 
@@ -97,10 +112,10 @@ export default function Chat() {
                     </div>
                   )}
                   <div className="hidden sm:block">
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm font-medium text-foreground">
                       {user.displayName || 'Usuário'}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted-foreground">
                       {user.email}
                     </p>
                   </div>
@@ -108,15 +123,15 @@ export default function Chat() {
                     variant="ghost"
                     size="sm"
                     onClick={logout}
-                    className="p-1 text-gray-600 hover:text-red-500 transition-colors rounded-lg hover:bg-gray-100"
+                    className="p-1 text-muted-foreground hover:text-red-500 transition-all duration-300 rounded-lg hover:bg-red-50 dark:hover:bg-red-950"
                     data-testid="button-logout-chat"
                   >
                     <LogOut className="w-4 h-4" />
                   </Button>
                 </div>
               ) : (
-                <div className="flex items-center space-x-2 text-gray-600">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <div className="flex items-center space-x-2 text-muted-foreground animate-pulse-gentle">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce-subtle"></div>
                   <span className="text-sm">Modo Anônimo</span>
                 </div>
               )}
@@ -125,7 +140,7 @@ export default function Chat() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowSettings(true)}
-                className="p-2 text-gray-600 hover:text-primary transition-colors rounded-lg hover:bg-gray-100"
+                className="p-2 text-muted-foreground hover:text-primary transition-all duration-300 rounded-lg hover:bg-muted animate-scale-in"
                 data-testid="button-settings"
               >
                 <Settings className="w-4 h-4" />
@@ -140,12 +155,12 @@ export default function Chat() {
         <div className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="max-w-4xl mx-auto">
             {/* Welcome Message */}
-            <div className="flex items-start space-x-3 mb-6">
-              <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center flex-shrink-0">
+            <div className="flex items-start space-x-3 mb-6 animate-fade-in">
+              <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center flex-shrink-0 animate-bounce-subtle">
                 <Bot className="text-white text-sm" />
               </div>
-              <div className="bg-white rounded-2xl rounded-tl-md px-4 py-3 shadow-sm border border-gray-100 max-w-md">
-                <p className="text-gray-900">
+              <div className="bg-card rounded-2xl rounded-tl-md px-4 py-3 shadow-sm border border-border max-w-md animate-scale-in">
+                <p className="text-foreground">
                   {user ? (
                     <>
                       Bem-vindo à Qisa, <strong>{user.displayName || user.username}</strong>! 
@@ -160,7 +175,7 @@ export default function Chat() {
                     </>
                   )}
                 </p>
-                <span className="text-xs text-gray-500 mt-2 block">Agora</span>
+                <span className="text-xs text-muted-foreground mt-2 block">Agora</span>
               </div>
             </div>
 
@@ -178,24 +193,24 @@ export default function Chat() {
 
             {/* Loading Message */}
             {isSending && (
-              <div className="flex items-start space-x-3 mb-6">
-                <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center flex-shrink-0">
+              <div className="flex items-start space-x-3 mb-6 animate-fade-in">
+                <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center flex-shrink-0 animate-pulse-gentle">
                   <Bot className="text-white text-sm" />
                 </div>
-                <div className="bg-white rounded-2xl rounded-tl-md px-4 py-3 shadow-sm border border-gray-100">
+                <div className="bg-card rounded-2xl rounded-tl-md px-4 py-3 shadow-sm border border-border animate-scale-in">
                   <div className="flex items-center space-x-2">
                     <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"></div>
                       <div
-                        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                        className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"
                         style={{ animationDelay: "0.1s" }}
                       ></div>
                       <div
-                        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                        className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"
                         style={{ animationDelay: "0.2s" }}
                       ></div>
                     </div>
-                    <span className="text-gray-500 text-sm">
+                    <span className="text-muted-foreground text-sm">
                       Qisa está digitando...
                     </span>
                   </div>
@@ -218,38 +233,52 @@ export default function Chat() {
             <DialogTitle>Configurações</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-700">Modo escuro</span>
+            <div className="flex justify-between items-center animate-slide-in">
+              <div className="flex items-center space-x-2">
+                {theme === 'dark' ? (
+                  <Moon className="w-4 h-4 text-muted-foreground" />
+                ) : (
+                  <Sun className="w-4 h-4 text-muted-foreground" />
+                )}
+                <span className="text-foreground">Modo {theme === 'dark' ? 'escuro' : 'claro'}</span>
+              </div>
               <Switch
-                checked={darkMode}
-                onCheckedChange={setDarkMode}
+                checked={theme === 'dark'}
+                onCheckedChange={toggleTheme}
+                className="transition-all duration-300"
               />
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-700">
-                {user?.username && !user.username.includes('anonymous') 
-                  ? 'Limpar histórico salvo' 
-                  : 'Limpar chat atual'
-                }
-              </span>
+            <div className="flex justify-between items-center animate-slide-in" style={{ animationDelay: "0.1s" }}>
+              <div className="flex items-center space-x-2">
+                <Trash2 className="w-4 h-4 text-muted-foreground" />
+                <span className="text-foreground">
+                  {user?.username && !user.username.includes('anonymous') 
+                    ? 'Limpar histórico salvo' 
+                    : 'Limpar chat atual'
+                  }
+                </span>
+              </div>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={clearHistory}
                 disabled={isClearing}
-                className="text-red-600 border-red-200 hover:bg-red-50 disabled:opacity-50"
+                className="text-red-600 border-red-200 hover:bg-red-50 dark:hover:bg-red-950 disabled:opacity-50 transition-all duration-300"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
                 {isClearing ? 'Limpando...' : 'Limpar'}
               </Button>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-700">Exportar conversa</span>
+            <div className="flex justify-between items-center animate-slide-in" style={{ animationDelay: "0.2s" }}>
+              <div className="flex items-center space-x-2">
+                <Download className="w-4 h-4 text-muted-foreground" />
+                <span className="text-foreground">Exportar conversa</span>
+              </div>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleExportHistory}
-                className="text-primary border-primary hover:bg-blue-50"
+                className="text-primary border-primary hover:bg-primary/10 transition-all duration-300"
               >
                 <Download className="w-4 h-4 mr-2" />
                 Exportar

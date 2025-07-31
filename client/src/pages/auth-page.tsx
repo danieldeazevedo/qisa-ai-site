@@ -5,13 +5,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MessageCircle, Lock, User, Mail } from "lucide-react";
+import { MessageCircle, Lock, User, Mail, Moon, Sun } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useTheme } from "@/hooks/use-theme";
 import { useToast } from "@/hooks/use-toast";
 
 export default function AuthPage() {
   const [, setLocation] = useLocation();
   const { user, login, register, loading } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const { toast } = useToast();
 
   // Login form state
@@ -90,16 +92,30 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-background to-purple-50 dark:from-slate-900 dark:via-background dark:to-slate-800 flex animate-fade-in">
       {/* Left side - Auth forms */}
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-2xl mb-4">
+          <div className="text-center mb-8 animate-scale-in">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-2xl mb-4 animate-bounce-subtle">
               <MessageCircle className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900">Qisa</h1>
-            <p className="text-gray-600 mt-2">Sua assistente de IA pessoal</p>
+            <h1 className="text-3xl font-bold text-foreground">Qisa</h1>
+            <p className="text-muted-foreground mt-2">Sua assistente de IA pessoal</p>
+            
+            {/* Theme Toggle */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleTheme}
+              className="mt-4 p-2 text-muted-foreground hover:text-primary transition-all duration-300 rounded-lg hover:bg-muted"
+            >
+              {theme === 'dark' ? (
+                <Sun className="w-4 h-4" />
+              ) : (
+                <Moon className="w-4 h-4" />
+              )}
+            </Button>
           </div>
 
           <Tabs defaultValue="login" className="w-full">
@@ -122,12 +138,12 @@ export default function AuthPage() {
                     <div className="space-y-2">
                       <Label htmlFor="username">Nome de usuário</Label>
                       <div className="relative">
-                        <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                        <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                         <Input
                           id="username"
                           type="text"
                           placeholder="seu_usuario"
-                          className="pl-10"
+                          className="pl-10 transition-all duration-300"
                           value={loginData.username}
                           onChange={(e) =>
                             setLoginData({ ...loginData, username: e.target.value })
@@ -140,7 +156,7 @@ export default function AuthPage() {
                     <div className="space-y-2">
                       <Label htmlFor="password">Senha</Label>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                        <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                         <Input
                           id="password"
                           type="password"

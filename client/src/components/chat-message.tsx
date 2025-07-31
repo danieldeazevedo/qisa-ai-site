@@ -15,39 +15,39 @@ export function ChatMessage({ message }: ChatMessageProps) {
   });
 
   return (
-    <div className={`flex items-start space-x-3 mb-6 ${isUser ? "justify-end" : ""}`}>
+    <div className={`flex items-start space-x-3 mb-6 animate-fade-in ${isUser ? "justify-end" : ""}`}>
       {!isUser && (
-        <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center flex-shrink-0">
+        <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center flex-shrink-0 animate-scale-in">
           <Bot className="text-white text-sm" />
         </div>
       )}
       
       <div
-        className={`max-w-md px-4 py-3 rounded-2xl ${
+        className={`max-w-md px-4 py-3 rounded-2xl animate-slide-in transition-all duration-300 ${
           isUser
-            ? "bg-gradient-to-r from-primary to-secondary text-white rounded-tr-md"
-            : "bg-white shadow-sm border border-gray-100 rounded-tl-md"
+            ? "bg-gradient-to-r from-primary to-secondary text-white rounded-tr-md shadow-lg"
+            : "bg-card shadow-sm border border-border rounded-tl-md hover:shadow-md"
         }`}
       >
         {message.imageUrl ? (
           <div className="space-y-3">
-            <p className={isUser ? "text-white" : "text-gray-900"}>
+            <p className={isUser ? "text-white" : "text-foreground"}>
               {message.content}
             </p>
             <img
               src={message.imageUrl}
               alt="Generated image"
-              className="rounded-xl w-full h-auto"
+              className="rounded-xl w-full h-auto transition-transform duration-300 hover:scale-105"
             />
           </div>
         ) : (
-          <p className={isUser ? "text-white" : "text-gray-900"}>
+          <p className={isUser ? "text-white" : "text-foreground"}>
             {message.content}
           </p>
         )}
         <span
-          className={`text-xs mt-2 block ${
-            isUser ? "text-white/80" : "text-gray-500"
+          className={`text-xs mt-2 block transition-opacity duration-300 ${
+            isUser ? "text-white/80" : "text-muted-foreground"
           }`}
         >
           {timestamp}
@@ -55,8 +55,8 @@ export function ChatMessage({ message }: ChatMessageProps) {
       </div>
 
       {isUser && (
-        <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
-          <User className="text-gray-600 text-sm" />
+        <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center flex-shrink-0 animate-scale-in">
+          <User className="text-muted-foreground text-sm" />
         </div>
       )}
     </div>
