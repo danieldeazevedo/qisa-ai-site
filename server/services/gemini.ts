@@ -1,7 +1,12 @@
 import { GoogleGenAI, Modality } from "@google/genai";
 
+const apiKey = process.env.GEMINI_API_KEY;
+if (!apiKey) {
+  throw new Error("GEMINI_API_KEY não configurada");
+}
+
 const ai = new GoogleGenAI({ 
-  apiKey: process.env.GEMINI_API_KEY || "" 
+  apiKey: apiKey 
 });
 
 const SYSTEM_INSTRUCTION = `Você é Qisa, uma assistente de IA avançada, amigável e prestativa. 
