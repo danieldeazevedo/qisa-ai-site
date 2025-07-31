@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { User, LoginUser, InsertUser } from "@shared/schema";
 
@@ -34,6 +34,10 @@ export function useAuth() {
         setUser(data.user);
         localStorage.setItem('qisa_user', JSON.stringify(data.user));
         
+        // Clear chat cache to reload with new user's session
+        queryClient.invalidateQueries({ queryKey: ["/api/chat/current-session"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/chat/messages"] });
+        
         toast({
           title: "Login realizado",
           description: `Bem-vindo à Qisa, ${data.user.displayName || data.user.username}!`,
@@ -61,6 +65,10 @@ export function useAuth() {
         setUser(data.user);
         localStorage.setItem('qisa_user', JSON.stringify(data.user));
         
+        // Clear chat cache to reload with new user's session
+        queryClient.invalidateQueries({ queryKey: ["/api/chat/current-session"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/chat/messages"] });
+        
         toast({
           title: "Conta criada",
           description: `Bem-vindo à Qisa, ${data.user.displayName || data.user.username}!`,
@@ -82,6 +90,11 @@ export function useAuth() {
     try {
       setUser(null);
       localStorage.removeItem('qisa_user');
+      
+      // Clear all chat cache when logging out
+      queryClient.invalidateQueries({ queryKey: ["/api/chat/current-session"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/chat/messages"] });
+      queryClient.clear(); // Clear entire cache
       
       toast({
         title: "Logout realizado",

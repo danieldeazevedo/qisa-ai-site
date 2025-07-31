@@ -10,17 +10,16 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-**2025-07-30**: 
-- **Implemented Firebase Google Authentication system**
-- **Added Redis Upstash integration for database** ✅ RESOLVIDO
-- **Created authenticated chat sessions per user**
-- **Each authenticated user gets unique secure chat history**
-- **Complete Google OAuth login/logout functionality**
-- **Firebase user sync with Redis backend storage**
-- **Enhanced UI with user profile display and auth controls**
-- **Redis Upstash configurado com biblioteca @upstash/redis**
-- **Interface mostra foto do usuário quando logado**
-- All core features working: authentication, chat, image generation, persistent secure storage
+**2025-07-31**: 
+- **Implemented Custom Username/Password Authentication System** ✅ RESOLVIDO
+- **Replaced Firebase with custom Redis-based authentication**
+- **Created secure password hashing with bcrypt**
+- **Fixed Redis Upstash data parsing issues causing login failures**
+- **Resolved session management for proper user switching**
+- **Fixed chat history isolation per authenticated user**
+- **Enhanced cache invalidation when users login/logout**
+- **Personalized welcome message: "Bem vindo a qisa [username]"**
+- All core features working: custom auth, chat, image generation, persistent secure storage
 
 ## System Architecture
 

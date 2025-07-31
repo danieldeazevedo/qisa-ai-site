@@ -59,16 +59,41 @@ export class RedisStorage implements IStorage {
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return this.withFallback(
-      async () => {
-        const userId = await client!.get(`username:${username}`);
-        return userId ? this.getUser(userId as string) : undefined;
-      },
-      async () => {
-        const userId = this.fallbackStorage.get(`username:${username}`);
-        return userId ? await this.getUser(userId) : undefined;
-      }
-    );
+    if (!client) {
+      // Fallback mode only
+      const userId = this.fallbackStorage.get(`username:${username}`);
+      if (!userId) return undefined;
+      
+      const userJson = this.fallbackStorage.get(`user:${userId}`);
+      if (!userJson) return undefined;
+      
+      const userData = typeof userJson === 'string' ? JSON.parse(userJson) : userJson;
+      return userData;
+    }
+
+    try {
+      // Try Redis first
+      const userId = await client.get(`username:${username}`);
+      if (!userId) return undefined;
+      
+      const userJson = await client.get(`user:${userId}`);
+      if (!userJson) return undefined;
+      
+      // Redis Upstash returns parsed JSON objects, not strings
+      const userData = userJson as any;
+      return userData;
+    } catch (error) {
+      console.error('Redis error in getUserByUsername, falling back:', error);
+      // If Redis fails, use fallback
+      const userId = this.fallbackStorage.get(`username:${username}`);
+      if (!userId) return undefined;
+      
+      const userJson = this.fallbackStorage.get(`user:${userId}`);
+      if (!userJson) return undefined;
+      
+      const userData = typeof userJson === 'string' ? JSON.parse(userJson) : userJson;
+      return userData;
+    }
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {

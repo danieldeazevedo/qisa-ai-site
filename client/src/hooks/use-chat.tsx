@@ -13,7 +13,7 @@ export function useChat() {
 
   // Get or create current session
   const { data: currentSession, isLoading: sessionLoading } = useQuery({
-    queryKey: ["/api/chat/current-session"],
+    queryKey: ["/api/chat/current-session", user?.username || "anonymous"],
     enabled: true,
     queryFn: async () => {
       const headers: Record<string, string> = {};
@@ -35,7 +35,7 @@ export function useChat() {
 
   // Get messages for current session
   const { data: messages = [], isLoading: messagesLoading } = useQuery({
-    queryKey: ["/api/chat/messages", currentSessionId],
+    queryKey: ["/api/chat/messages", currentSessionId, user?.username || "anonymous"],
     enabled: !!currentSessionId,
   });
 
