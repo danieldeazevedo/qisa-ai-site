@@ -7,6 +7,7 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserForAuth(username: string): Promise<(User & { passwordHash: string }) | undefined>;
   createUser(user: InsertUser & { passwordHash: string }): Promise<User>;
   
   // Chat session methods
@@ -81,6 +82,58 @@ export class RedisStorage implements IStorage {
         return userId ? await this.getUser(userId) : undefined;
       }
     );
+  }
+
+  async getUserForAuth(username: string): Promise<(User & { passwordHash: string }) | undefined> {
+    if (!client) {
+      // Fallback mode only
+      console.log('Looking for user in fallback storage:', username);
+      const userId = this.fallbackStorage.get(`username:${username}`);
+      console.log('Found userId in fallback:', userId);
+      
+      if (!userId) return undefined;
+      
+      const userJson = this.fallbackStorage.get(`user:${userId}`);
+      console.log('Found userJson in fallback:', userJson);
+      
+      if (!userJson) return undefined;
+      
+      const userData = typeof userJson === 'string' ? JSON.parse(userJson) : userJson;
+      console.log('Parsed userData from fallback:', { ...userData, passwordHash: userData.passwordHash ? '[PRESENT]' : '[MISSING]' });
+      
+      return userData.passwordHash ? userData : undefined;
+    }
+
+    try {
+      // Try Redis first
+      console.log('Looking for user in Redis:', username);
+      const userId = await client.get(`username:${username}`);
+      console.log('Found userId:', userId);
+      
+      if (!userId) return undefined;
+      
+      const userJson = await client.get(`user:${userId}`);
+      console.log('Found userJson:', userJson);
+      
+      if (!userJson) return undefined;
+      
+      // Redis Upstash returns parsed JSON objects, not strings
+      const userData = userJson as any;
+      console.log('Parsed userData:', { ...userData, passwordHash: userData.passwordHash ? '[PRESENT]' : '[MISSING]' });
+      
+      return userData.passwordHash ? userData : undefined;
+    } catch (error) {
+      console.error('Redis error in getUserForAuth, falling back:', error);
+      // If Redis fails, use fallback
+      const userId = this.fallbackStorage.get(`username:${username}`);
+      if (!userId) return undefined;
+      
+      const userJson = this.fallbackStorage.get(`user:${userId}`);
+      if (!userJson) return undefined;
+      
+      const userData = typeof userJson === 'string' ? JSON.parse(userJson) : userJson;
+      return userData.passwordHash ? userData : undefined;
+    }
   }
 
   async createUser(insertUser: InsertUser & { passwordHash: string }): Promise<User> {

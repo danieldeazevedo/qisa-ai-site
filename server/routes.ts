@@ -47,36 +47,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Login request:', req.body.username);
       const loginData = loginUserSchema.parse(req.body);
       
-      // Get user by username
-      const user = await storage.getUserByUsername(loginData.username);
-      if (!user) {
-        return res.status(401).json({ error: "Usuário ou senha incorretos" });
-      }
-      
-      // Get user with password hash from Redis
-      const userWithPasswordData = await storage.withFallback(
-        async () => {
-          const { client } = await import('./db');
-          const fullUserJson = await client!.get(`user:${user.id}`);
-          return fullUserJson ? JSON.parse(fullUserJson as string) : null;
-        },
-        () => {
-          const fullUserJson = storage.fallbackStorage.get(`user:${user.id}`);
-          return fullUserJson ? JSON.parse(fullUserJson) : null;
-        }
-      );
-      
+      // Get user with password hash for authentication
+      const userWithPasswordData = await storage.getUserForAuth(loginData.username);
       if (!userWithPasswordData) {
-        return res.status(401).json({ error: "Usuário não encontrado" });
+        console.log('User not found:', loginData.username);
+        return res.status(401).json({ error: "Usuário ou senha incorretos" });
       }
       
       // Verify password
       const bcrypt = await import("bcryptjs");
-      const isValidPassword = await bcrypt.compare(loginData.password, userWithPasswordData.passwordHash || '');
+      const isValidPassword = await bcrypt.compare(loginData.password, userWithPasswordData.passwordHash);
       
       if (!isValidPassword) {
+        console.log('Invalid password for user:', loginData.username);
         return res.status(401).json({ error: "Usuário ou senha incorretos" });
       }
+      
+      // Remove password hash from response
+      const { passwordHash, ...user } = userWithPasswordData;
       
       console.log('User logged in:', user.id, loginData.username);
       res.json({ success: true, user });
