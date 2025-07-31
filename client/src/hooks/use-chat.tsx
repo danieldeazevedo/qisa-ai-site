@@ -41,13 +41,26 @@ export function useChat() {
       const isAuthenticated = user?.username && !user.username.includes('anonymous');
       
       if (isAuthenticated) {
+        // Add user message immediately to UI for authenticated users too
+        const userMessage: Message = {
+          id: Date.now().toString(),
+          sessionId: sessionId,
+          role: "user",
+          content,
+          imageUrl: null,
+          metadata: null,
+          createdAt: new Date(),
+        };
+        
+        setMessages(prev => [...prev, userMessage]);
+
         // Use the new API with history persistence
         const response = await apiRequest("POST", "/api/chat/send", {
           content,
           isImageRequest,
           sessionId
         });
-        return response.json();
+        return await response.json();
       } else {
         // Add user message immediately for anonymous users
         const userMessage: Message = {
@@ -71,36 +84,29 @@ export function useChat() {
             content: msg.content
           }))
         });
-        return { ...response.json(), isAnonymous: true };
+        const responseData = await response.json();
+        return { ...responseData, isAnonymous: true };
       }
     },
     onSuccess: (data) => {
       const isAuthenticated = user?.username && !user.username.includes('anonymous');
       
-      if (isAuthenticated) {
-        // For authenticated users, refetch history to get updated messages
-        queryClient.invalidateQueries({ queryKey: ['/api/chat/history', sessionId, user?.username] });
-        
-        if (data.saved) {
-          toast({
-            title: "Mensagem salva",
-            description: "Sua conversa foi salva no histórico.",
-            variant: "default",
-          });
-        }
-      } else {
-        // For anonymous users, add AI response to local state
-        const assistantMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          sessionId: "local",
-          role: "assistant", 
-          content: data.response,
-          imageUrl: data.imageUrl || null,
-          metadata: null,
-          createdAt: new Date(),
-        };
-        
-        setMessages(prev => [...prev, assistantMessage]);
+      // Add AI response to UI immediately for both authenticated and anonymous users
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        sessionId: isAuthenticated ? sessionId : "local",
+        role: "assistant", 
+        content: data.response,
+        imageUrl: data.imageUrl || null,
+        metadata: null,
+        createdAt: new Date(),
+      };
+      
+      setMessages(prev => [...prev, assistantMessage]);
+      
+      if (isAuthenticated && data.saved) {
+        // Optionally show success toast for authenticated users
+        console.log("Mensagem salva no histórico");
       }
     },
     onError: (error) => {
