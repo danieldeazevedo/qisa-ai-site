@@ -169,9 +169,9 @@ export default function Home() {
               <Bot className="text-white text-3xl" />
             </div>
             <h1 className="text-5xl sm:text-6xl font-bold text-foreground mb-6 leading-tight">
-              <TypewriterText text="Bem-vindo à " delay={80} />
+              <TypewriterText text="Bem-vindo à " delay={80} showCursor={false} />
               <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                <TypewriterText text="Qisa" delay={120} />
+                <TypewriterText text="Qisa" delay={120} showCursor={true} />
               </span>
             </h1>
           </FadeInUp>
