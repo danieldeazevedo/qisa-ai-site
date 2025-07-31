@@ -2,73 +2,124 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { generateResponse, generateImage } from "./services/gemini";
-import { insertUserSchema, insertMessageSchema } from "@shared/schema";
+import { insertUserSchema, insertMessageSchema, loginUserSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Auth sync endpoint
-  app.post("/api/auth/sync", async (req, res) => {
+  // Register endpoint
+  app.post("/api/auth/register", async (req, res) => {
     try {
-      console.log('Auth sync request:', req.body);
+      console.log('Register request:', req.body.username);
       const userData = insertUserSchema.parse(req.body);
       
       // Check if user already exists
-      let user = await storage.getUserByFirebaseId(userData.firebaseId);
-      
-      if (!user) {
-        // Create new user
-        user = await storage.createUser(userData);
-        console.log('Created new user:', user.id, user.firebaseId);
-      } else {
-        console.log('User already exists:', user.id, user.firebaseId);
+      const existingUserByUsername = await storage.getUserByUsername(userData.username);
+      if (existingUserByUsername) {
+        return res.status(400).json({ error: "Nome de usuário já existe" });
       }
       
+      const existingUserByEmail = await storage.getUserByEmail(userData.email);
+      if (existingUserByEmail) {
+        return res.status(400).json({ error: "Email já está em uso" });
+      }
+      
+      // Hash password
+      const bcrypt = await import("bcryptjs");
+      const passwordHash = await bcrypt.hash(userData.password, 10);
+      
+      // Create user
+      const user = await storage.createUser({
+        ...userData,
+        passwordHash
+      });
+      
+      console.log('Created new user:', user.id, userData.username);
       res.json({ success: true, user });
     } catch (error) {
-      console.error("Error syncing user:", error);
-      res.status(500).json({ message: "Internal server error" });
+      console.error("Error in register:", error);
+      res.status(400).json({ error: "Dados inválidos" });
+    }
+  });
+
+  // Login endpoint
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      console.log('Login request:', req.body.username);
+      const loginData = loginUserSchema.parse(req.body);
+      
+      // Get user by username
+      const user = await storage.getUserByUsername(loginData.username);
+      if (!user) {
+        return res.status(401).json({ error: "Usuário ou senha incorretos" });
+      }
+      
+      // Get user with password hash from Redis
+      const userWithPasswordData = await storage.withFallback(
+        async () => {
+          const { client } = await import('./db');
+          const fullUserJson = await client!.get(`user:${user.id}`);
+          return fullUserJson ? JSON.parse(fullUserJson as string) : null;
+        },
+        () => {
+          const fullUserJson = storage.fallbackStorage.get(`user:${user.id}`);
+          return fullUserJson ? JSON.parse(fullUserJson) : null;
+        }
+      );
+      
+      if (!userWithPasswordData) {
+        return res.status(401).json({ error: "Usuário não encontrado" });
+      }
+      
+      // Verify password
+      const bcrypt = await import("bcryptjs");
+      const isValidPassword = await bcrypt.compare(loginData.password, userWithPasswordData.passwordHash || '');
+      
+      if (!isValidPassword) {
+        return res.status(401).json({ error: "Usuário ou senha incorretos" });
+      }
+      
+      console.log('User logged in:', user.id, loginData.username);
+      res.json({ success: true, user });
+    } catch (error) {
+      console.error("Error in login:", error);
+      res.status(400).json({ error: "Dados inválidos" });
     }
   });
 
   // Get current chat session
   app.get("/api/chat/current-session", async (req, res) => {
     try {
-      // Check for authenticated Firebase user first
-      const firebaseUserId = req.headers['x-firebase-uid'] as string;
+      // Check for authenticated user first
+      const username = req.headers['x-username'] as string;
       let user;
       
-      if (firebaseUserId) {
-        // User is authenticated with Firebase
-        console.log('Getting session for authenticated user:', firebaseUserId);
-        user = await storage.getUserByFirebaseId(firebaseUserId);
+      if (username) {
+        // User is authenticated
+        console.log('Getting session for authenticated user:', username);
+        user = await storage.getUserByUsername(username);
         
         if (!user) {
-          // This shouldn't happen if auth sync worked, but create fallback
-          user = await storage.createUser({
-            firebaseId: firebaseUserId,
-            email: "usuario@qisa.ai",
-            displayName: "Usuário Autenticado",
-            photoURL: null,
-          });
-          console.log('Created fallback user for Firebase ID:', firebaseUserId);
+          return res.status(401).json({ error: "Usuário não encontrado" });
         }
       } else {
         // Anonymous user - generate browser session ID
         const sessionUserId = req.headers['x-user-session'] as string || 
                              req.headers['user-agent']?.slice(0, 20) + '-' + Date.now();
         
-        const firebaseId = `anonymous-${sessionUserId}`;
-        console.log('Getting session for anonymous user:', firebaseId);
+        const anonymousUsername = `anonymous-${sessionUserId}`;
+        console.log('Getting session for anonymous user:', anonymousUsername);
         
-        user = await storage.getUserByFirebaseId(firebaseId);
+        user = await storage.getUserByUsername(anonymousUsername);
         if (!user) {
           user = await storage.createUser({
-            firebaseId,
+            username: anonymousUsername,
             email: "anonimo@qisa.ai",
+            password: "anonymous", // Not used for anonymous users
             displayName: "Usuário Anônimo",
             photoURL: null,
+            passwordHash: "anonymous" // Not used for anonymous users
           });
-          console.log('Created anonymous user:', firebaseId);
+          console.log('Created anonymous user:', anonymousUsername);
         }
       }
       

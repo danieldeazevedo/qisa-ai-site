@@ -22,14 +22,14 @@ export interface IStorage {
 
 
 export class RedisStorage implements IStorage {
-  private fallbackStorage: Map<string, any> = new Map();
+  public fallbackStorage: Map<string, any> = new Map();
 
   constructor() {
     console.log('🚀 Storage initialized with Redis fallback support');
     console.log('🔗 Redis URL configured:', process.env.REDIS_URL ? 'Yes' : 'No');
   }
 
-  private async withFallback<T>(redisOperation: () => Promise<T>, fallbackOperation: () => T | Promise<T>): Promise<T> {
+  public async withFallback<T>(redisOperation: () => Promise<T>, fallbackOperation: () => T | Promise<T>): Promise<T> {
     if (!client) {
       return await Promise.resolve(fallbackOperation());
     }
@@ -41,6 +41,8 @@ export class RedisStorage implements IStorage {
       return await Promise.resolve(fallbackOperation());
     }
   }
+
+
 
   async getUser(id: string): Promise<User | undefined> {
     return this.withFallback(
