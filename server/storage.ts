@@ -731,9 +731,9 @@ export class RedisStorage implements IStorage {
         
         const now = new Date();
         const timeSinceLastBonus = now.getTime() - new Date(user.lastBonusClaim).getTime();
-        const oneHourInMs = 60 * 60 * 1000; // 1 hour
+        const fourHoursInMs = 4 * 60 * 60 * 1000; // 4 hours
         
-        return timeSinceLastBonus >= oneHourInMs;
+        return timeSinceLastBonus >= fourHoursInMs;
       },
       () => {
         const lastBonusClaimTs = this.fallbackStorage.get(`user:${userId}:lastBonusClaim`);
@@ -741,9 +741,9 @@ export class RedisStorage implements IStorage {
         
         const now = Date.now();
         const timeSinceLastBonus = now - parseInt(lastBonusClaimTs);
-        const oneHourInMs = 60 * 60 * 1000; // 1 hour
+        const fourHoursInMs = 4 * 60 * 60 * 1000; // 4 hours
         
-        return timeSinceLastBonus >= oneHourInMs;
+        return timeSinceLastBonus >= fourHoursInMs;
       }
     );
   }

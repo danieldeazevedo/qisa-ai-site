@@ -236,7 +236,7 @@ export default function Profile() {
                   <div className="w-full">
                     <Badge variant="secondary" className="w-full py-2 bg-gray-100 dark:bg-gray-800">
                       <Clock className="w-3 h-3 mr-2" />
-                      Aguarde 1h para próximo bônus
+                      Aguarde 4h para próximo bônus
                     </Badge>
                   </div>
                 )}
@@ -251,7 +251,7 @@ export default function Profile() {
               <ul className="text-sm text-amber-700 dark:text-amber-300 space-y-1">
                 <li>• 1 QKoin = 1 geração de imagem</li>
                 <li>• Recompensa diária: 10 QKoins (a cada 24h)</li>
-                <li>• Bônus extra: 5 QKoins (a cada 1 hora)</li>
+                <li>• Bônus extra: 5 QKoins (a cada 4 horas)</li>
                 <li>• QKoins são salvos na sua conta permanentemente</li>
               </ul>
             </div>

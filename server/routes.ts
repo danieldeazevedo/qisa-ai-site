@@ -455,14 +455,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "Usuário não encontrado" });
       }
 
-      // Check if user can claim bonus (1 hour cooldown)
+      // Check if user can claim bonus (4 hour cooldown)
       const now = new Date();
       if (user.lastBonusClaim) {
         const timeSinceLastBonus = now.getTime() - new Date(user.lastBonusClaim).getTime();
-        const oneHourInMs = 60 * 60 * 1000; // 1 hour
+        const fourHoursInMs = 4 * 60 * 60 * 1000; // 4 hours
         
-        if (timeSinceLastBonus < oneHourInMs) {
-          const remainingTime = Math.ceil((oneHourInMs - timeSinceLastBonus) / (60 * 1000)); // minutes
+        if (timeSinceLastBonus < fourHoursInMs) {
+          const remainingTime = Math.ceil((fourHoursInMs - timeSinceLastBonus) / (60 * 1000)); // minutes
           return res.status(400).json({ 
             error: `Aguarde ${remainingTime} minutos para resgatar outro bônus` 
           });

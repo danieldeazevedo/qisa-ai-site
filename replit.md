@@ -67,11 +67,15 @@ Preferred communication style: Simple, everyday language.
 - **Created user-friendly QKoins balance display with compact and detailed views**
 - **IMPLEMENTED BONUS QKOINS SYSTEM WITH USER PROFILE PAGE** ✅ NOVO
 - **Added `/profile` page with complete user account information and QKoins management**
-- **Created bonus claim system (+5 QKoins) with unlimited daily usage via `/api/qkoins/claim-bonus`**
+- **Created bonus claim system (+5 QKoins) with 4-hour cooldown limit via `/api/qkoins/claim-bonus`**
 - **Fixed timestamp-based daily reward system (24h real-time validation using Redis)**
 - **Added profile navigation button in chat interface for authenticated users**
 - **Enhanced QKoins transaction history display with recent activity tracking**
 - **Implemented proper fallback storage handling for offline Redis scenarios**
+- **BONUS QKOINS COOLDOWN UPDATED TO 4 HOURS** ✅ ATUALIZADO
+- **Changed bonus system from 1-hour to 4-hour cooldown for better balance**
+- **Updated frontend messages and info to reflect 4-hour limitation**
+- **Backend validation ensures users must wait 4 hours between bonus claims**
 - All core features working: custom auth, persistent chat history, image generation, personalized AI responses, theme system, markdown/math support, about page, enhanced home, QKoins virtual currency system, Vercel deployment ready
 
 ## System Architecture
