@@ -81,41 +81,26 @@ export default function AdminPanel() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUser, setSelectedUser] = useState<string>("");
 
-  // Check if user is admin (daniel08)
-  if (!user || user.username !== 'daniel08') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 via-background to-red-100 dark:from-red-900 dark:via-background dark:to-red-800 flex items-center justify-center">
-        <Card className="w-full max-w-md mx-4">
-          <CardContent className="p-6 text-center">
-            <Shield className="w-12 h-12 mx-auto mb-4 text-red-500" />
-            <h2 className="text-xl font-semibold mb-2">Acesso Negado</h2>
-            <p className="text-muted-foreground mb-4">
-              Você não tem permissão para acessar o painel administrativo.
-            </p>
-            <Link href="/chat">
-              <Button className="w-full">Voltar ao Chat</Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // Always call hooks at the top level - use enabled to conditionally fetch
+  const isAdmin = user?.username === 'daniel08';
 
-  // Fetch admin data
   const { data: users, isLoading: usersLoading } = useQuery<AdminUser[]>({
     queryKey: ['/api/admin/users'],
+    enabled: isAdmin,
   });
 
   const { data: systemStatus, isLoading: statusLoading } = useQuery<SystemStatus>({
     queryKey: ['/api/admin/status'],
-    refetchInterval: 30000, // Refresh every 30 seconds
+    refetchInterval: 30000,
+    enabled: isAdmin,
   });
 
   const { data: logs, isLoading: logsLoading } = useQuery<SystemLog[]>({
     queryKey: ['/api/admin/logs'],
+    enabled: isAdmin,
   });
 
-  // Admin mutations
+  // Admin mutations - define all hooks before any conditional returns
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: string) => {
       const response = await apiRequest('DELETE', `/api/admin/users/${userId}`);
@@ -214,6 +199,26 @@ export default function AdminPanel() {
       });
     },
   });
+
+  // Check if user is admin (daniel08) - render after all hooks
+  if (!user || !isAdmin) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-background to-red-100 dark:from-red-900 dark:via-background dark:to-red-800 flex items-center justify-center">
+        <Card className="w-full max-w-md mx-4">
+          <CardContent className="p-6 text-center">
+            <Shield className="w-12 h-12 mx-auto mb-4 text-red-500" />
+            <h2 className="text-xl font-semibold mb-2">Acesso Negado</h2>
+            <p className="text-muted-foreground mb-4">
+              Você não tem permissão para acessar o painel administrativo.
+            </p>
+            <Link href="/chat">
+              <Button className="w-full">Voltar ao Chat</Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const filteredUsers = users?.filter(user => 
     user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
