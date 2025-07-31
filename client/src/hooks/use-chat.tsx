@@ -6,7 +6,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 
 export function useChat() {
-  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -35,22 +34,22 @@ export function useChat() {
 
   // Get messages for current session
   const { data: messages = [], isLoading: messagesLoading } = useQuery({
-    queryKey: ["/api/chat/messages", currentSessionId, user?.username || "anonymous"],
-    enabled: !!currentSessionId,
+    queryKey: ["/api/chat/messages", currentSession?.id, user?.username || "anonymous"],
+    enabled: !!currentSession?.id,
   });
 
   // Send message mutation
   const sendMessageMutation = useMutation({
     mutationFn: async ({ content, isImageRequest }: { content: string; isImageRequest: boolean }) => {
       const response = await apiRequest("POST", "/api/chat/send", {
-        sessionId: currentSessionId,
+        sessionId: currentSession?.id,
         content,
         isImageRequest,
       });
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/chat/messages", currentSessionId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/chat/messages", currentSession?.id, user?.username || "anonymous"] });
     },
     onError: (error) => {
       console.error("Send message error:", error);
@@ -65,7 +64,7 @@ export function useChat() {
   // Clear history mutation
   const clearHistoryMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("DELETE", `/api/chat/sessions/${currentSessionId}`);
+      await apiRequest("DELETE", `/api/chat/sessions/${currentSession?.id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/chat/current-session"] });
@@ -85,11 +84,7 @@ export function useChat() {
     },
   });
 
-  useEffect(() => {
-    if (currentSession && typeof currentSession === 'object' && currentSession !== null && 'id' in currentSession) {
-      setCurrentSessionId((currentSession as any).id);
-    }
-  }, [currentSession]);
+
 
   const sendMessage = (content: string, isImageRequest = false) => {
     sendMessageMutation.mutate({ content, isImageRequest });
