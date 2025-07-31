@@ -177,17 +177,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         shouldSaveHistory = false; // Don't save for anonymous users
       }
 
-      // Get chat history for context (only if saving history)
-      let context: any[] = [];
-      if (shouldSaveHistory) {
-        const history = await storage.getChatHistory(userId, sessionId);
-        context = history.slice(-10).map(msg => ({
-          role: msg.role,
-          content: msg.content
-        }));
-      }
-
-      // Save user message if authenticated
+      // Save user message first if authenticated
       if (shouldSaveHistory) {
         await storage.saveMessageToHistory(userId, sessionId, {
           sessionId,
@@ -196,6 +186,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           imageUrl: null,
           metadata: null
         });
+      }
+
+      // Get chat history for context (including the message we just saved)
+      let context: any[] = [];
+      if (shouldSaveHistory) {
+        console.log(`🔍 Getting context for userId: ${userId}, sessionId: ${sessionId}`);
+        const history = await storage.getChatHistory(userId, sessionId);
+        console.log(`📚 Retrieved ${history.length} messages from history`);
+        context = history.slice(-10).map(msg => ({
+          role: msg.role,
+          content: msg.content
+        }));
+        console.log(`📖 Context for AI:`, context);
       }
 
       let response: string;

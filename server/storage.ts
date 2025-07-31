@@ -405,8 +405,10 @@ export class RedisStorage implements IStorage {
       async () => {
         // Save message to Redis with user-specific history key
         const historyKey = `user:${userId}:session:${sessionId}:history`;
+        console.log(`💾 Saving message to ${historyKey}, messageId: ${id}`);
         await client!.set(`message:${id}`, JSON.stringify(message));
         await client!.lpush(historyKey, id); // Use lpush to maintain chronological order
+        console.log(`✅ Message saved to Redis`);
         
         // Set expiration for anonymous users (1 hour)
         if (userId.includes('anonymous')) {
@@ -434,24 +436,40 @@ export class RedisStorage implements IStorage {
     return this.withFallback(
       async () => {
         const historyKey = `user:${userId}:session:${sessionId}:history`;
+        console.log(`🔍 Getting chat history for key: ${historyKey}`);
         const messageIds = await client!.lrange(historyKey, 0, -1); // Get all messages
+        console.log(`📝 Found ${messageIds.length} message IDs:`, messageIds);
         
         if (messageIds.length === 0) return [];
         
-        // Get messages individually for Upstash
+        // Get all messages using batch operation for better performance
         const messages: Message[] = [];
-        for (const messageId of messageIds.reverse()) { // Reverse to get chronological order
-          const messageJson = await client!.get(`message:${messageId}`);
-          if (messageJson) {
-            const parsed = JSON.parse(messageJson as string);
-            // Convert string dates back to Date objects
-            if (parsed.createdAt) {
-              parsed.createdAt = new Date(parsed.createdAt);
-            }
-            messages.push(parsed);
-          }
-        }
         
+        // Try to get all messages in parallel
+        const messagePromises = messageIds.map(async (messageId) => {
+          try {
+            const messageJson = await client!.get(`message:${messageId}`);
+            if (messageJson) {
+              const parsed = typeof messageJson === 'string' ? JSON.parse(messageJson) : messageJson;
+              if (parsed.createdAt) {
+                parsed.createdAt = new Date(parsed.createdAt);
+              }
+              return parsed;
+            }
+            return null;
+          } catch (error) {
+            console.error(`❌ Error getting message ${messageId}:`, error);
+            return null;
+          }
+        });
+        
+        const messageResults = await Promise.all(messagePromises);
+        
+        // Filter out null results and reverse to get chronological order
+        const validMessages = messageResults.filter(msg => msg !== null);
+        messages.push(...validMessages.reverse());
+        
+        console.log(`✅ Returning ${messages.length} messages`);
         return messages;
       },
       () => {
