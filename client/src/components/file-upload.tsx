@@ -39,13 +39,15 @@ export function FileUpload({ onFilesUploaded, maxFiles = 5, className = "" }: Fi
     if (!selectedFiles) return;
     
     const newFiles = Array.from(selectedFiles).filter(file => {
-      const isValidType = file.type === 'application/pdf' || file.type.startsWith('image/');
+      const isValidType = file.type === 'application/pdf' || 
+                         file.type.startsWith('image/') || 
+                         file.type.startsWith('text/');
       const isValidSize = file.size <= 10 * 1024 * 1024; // 10MB
       
       if (!isValidType) {
         toast({
           title: "Tipo de arquivo inválido",
-          description: `${file.name}: Apenas PDFs e imagens são permitidos`,
+          description: `${file.name}: Apenas PDFs, imagens e arquivos de texto são permitidos`,
           variant: "destructive",
         });
         return false;
@@ -111,14 +113,25 @@ export function FileUpload({ onFilesUploaded, maxFiles = 5, className = "" }: Fi
     setUploadProgress(0);
 
     try {
+      console.log('📁 Starting upload with files:', files);
+      
       const formData = new FormData();
-      files.forEach(file => {
+      files.forEach((file, index) => {
+        console.log(`📁 Adding file ${index}:`, file.name, file.type, file.size);
         formData.append('files', file);
       });
 
-      const response = await apiRequest("POST", "/api/files/upload", formData, {
-        'x-username': user!.username,
+      console.log('📁 FormData created, sending request...');
+      
+      const response = await fetch("/api/files/upload", {
+        method: "POST",
+        headers: {
+          'x-username': user!.username,
+        },
+        body: formData,
       });
+
+      console.log('📁 Response received:', response.status);
 
       const result = await response.json();
       
@@ -190,7 +203,7 @@ export function FileUpload({ onFilesUploaded, maxFiles = 5, className = "" }: Fi
           Arrastar arquivos aqui ou clique para selecionar
         </p>
         <p className="text-sm text-muted-foreground mb-4">
-          Suporte a PDFs e imagens (máximo 10MB cada)
+          Suporte a PDFs, imagens e arquivos de texto (máximo 10MB cada)
         </p>
         
         <Button
@@ -206,7 +219,7 @@ export function FileUpload({ onFilesUploaded, maxFiles = 5, className = "" }: Fi
           ref={fileInputRef}
           type="file"
           multiple
-          accept=".pdf,image/*"
+          accept=".pdf,image/*,text/*"
           onChange={(e) => handleFileSelect(e.target.files)}
           className="hidden"
         />

@@ -969,11 +969,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       fileSize: 10 * 1024 * 1024, // 10MB limit
     },
     fileFilter: (req, file, cb) => {
-      // Allow PDFs and images
-      if (file.mimetype === 'application/pdf' || file.mimetype.startsWith('image/')) {
+      console.log('📁 File filter check:', file.originalname, file.mimetype);
+      // Allow PDFs, images, and text files for testing
+      if (file.mimetype === 'application/pdf' || 
+          file.mimetype.startsWith('image/') || 
+          file.mimetype.startsWith('text/')) {
         cb(null, true);
       } else {
-        cb(new Error('Apenas PDFs e imagens são permitidos') as any, false);
+        console.log('❌ File type rejected:', file.mimetype);
+        cb(new Error('Apenas PDFs, imagens e arquivos de texto são permitidos') as any, false);
       }
     }
   });
@@ -981,19 +985,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Upload and process files
   app.post("/api/files/upload", upload.array('files', 5), async (req, res) => {
     try {
+      console.log('📁 Upload request received');
+      console.log('📁 Headers:', req.headers);
+      console.log('📁 Files received:', req.files);
+      console.log('📁 Body:', req.body);
+      
       const username = req.headers['x-username'] as string;
       
       if (!username || username.includes('anonymous')) {
+        console.log('❌ No username or anonymous user');
         return res.status(401).json({ error: "Login necessário para fazer upload de arquivos" });
       }
 
       const user = await storage.getUserByUsername(username);
       if (!user) {
+        console.log('❌ User not found:', username);
         return res.status(401).json({ error: "Usuário não encontrado" });
       }
 
       const files = req.files as any[];
+      console.log('📁 Files array:', files);
+      console.log('📁 Files length:', files?.length);
+      
       if (!files || files.length === 0) {
+        console.log('❌ No files in request');
         return res.status(400).json({ error: "Nenhum arquivo enviado" });
       }
 
