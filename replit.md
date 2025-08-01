@@ -73,6 +73,20 @@ Preferred communication style: Simple, everyday language.
 - **Enhanced QKoins transaction history display with recent activity tracking**
 - **Implemented proper fallback storage handling for offline Redis scenarios**
 - **BONUS QKOINS COOLDOWN UPDATED TO 4 HOURS** ✅ ATUALIZADO
+
+**2025-08-01**: 
+- **IMPLEMENTED MULTIPLE CHAT SESSIONS SYSTEM LIKE CHATGPT** ✅ NOVO
+- **Created comprehensive multiple chat sessions management with persistent history per session**
+- **Added ChatSidebar component with session creation, renaming, deletion, and switching**
+- **Enhanced storage interface with getUserSessions, updateChatSession, setCurrentSession methods**
+- **Built useSessions hook for managing multiple chat sessions with React Query integration**
+- **Updated useChat hook to work with dynamic session IDs from current session**
+- **Added new API endpoints: GET/POST/PATCH/DELETE `/api/chat/sessions` for session management**
+- **Implemented session activation system with proper history isolation**
+- **Updated chat interface with sidebar toggle and current session title display**
+- **Anonymous users remain single-session, authenticated users get multiple sessions**
+- **Each session maintains independent chat history and can be renamed/deleted**
+- **Sidebar shows session list with timestamps, creation dates, and management options**
 - **Changed bonus system from 1-hour to 4-hour cooldown for better balance**
 - **Updated frontend messages and info to reflect 4-hour limitation**
 - **Backend validation ensures users must wait 4 hours between bonus claims**

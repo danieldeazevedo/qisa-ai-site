@@ -16,7 +16,7 @@ export const loginUserSchema = z.object({
 
 export const insertChatSessionSchema = z.object({
   userId: z.string(),
-  title: z.string(),
+  title: z.string().default("Nova Conversa"),
 });
 
 export const insertMessageSchema = z.object({

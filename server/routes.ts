@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { generateResponse, generateImage } from "./services/gemini";
-import { insertUserSchema, insertMessageSchema, loginUserSchema } from "@shared/schema";
+import { insertUserSchema, insertMessageSchema, loginUserSchema, insertChatSessionSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -343,10 +343,120 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get user's chat sessions
+  app.get("/api/chat/sessions", async (req, res) => {
+    try {
+      const username = req.headers['x-username'] as string;
+      
+      if (!username || username.includes('anonymous')) {
+        return res.status(401).json({ error: "Login necessário para acessar múltiplas sessões" });
+      }
+      
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
+        return res.status(401).json({ error: "Usuário não encontrado" });
+      }
+      
+      const sessions = await storage.getUserSessions(user.id);
+      res.json(sessions);
+    } catch (error) {
+      console.error("Error getting user sessions:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Create new chat session
+  app.post("/api/chat/sessions", async (req, res) => {
+    try {
+      const username = req.headers['x-username'] as string;
+      
+      if (!username || username.includes('anonymous')) {
+        return res.status(401).json({ error: "Login necessário para criar novas sessões" });
+      }
+      
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
+        return res.status(401).json({ error: "Usuário não encontrado" });
+      }
+      
+      const sessionData = insertChatSessionSchema.parse({
+        userId: user.id,
+        title: req.body.title || "Nova Conversa"
+      });
+      
+      const session = await storage.createChatSession(sessionData);
+      res.json(session);
+    } catch (error) {
+      console.error("Error creating session:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Update chat session (e.g., rename)
+  app.patch("/api/chat/sessions/:sessionId", async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const username = req.headers['x-username'] as string;
+      
+      if (!username || username.includes('anonymous')) {
+        return res.status(401).json({ error: "Login necessário para atualizar sessões" });
+      }
+      
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
+        return res.status(401).json({ error: "Usuário não encontrado" });
+      }
+      
+      const updates = {
+        title: req.body.title
+      };
+      
+      const session = await storage.updateChatSession(sessionId, updates);
+      res.json(session);
+    } catch (error) {
+      console.error("Error updating session:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Set current session
+  app.post("/api/chat/sessions/:sessionId/activate", async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const username = req.headers['x-username'] as string;
+      
+      if (!username || username.includes('anonymous')) {
+        return res.status(401).json({ error: "Login necessário para alternar sessões" });
+      }
+      
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
+        return res.status(401).json({ error: "Usuário não encontrado" });
+      }
+      
+      await storage.setCurrentSession(user.id, sessionId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error setting current session:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Delete chat session
   app.delete("/api/chat/sessions/:sessionId", async (req, res) => {
     try {
       const { sessionId } = req.params;
+      const username = req.headers['x-username'] as string;
+      
+      if (!username || username.includes('anonymous')) {
+        return res.status(401).json({ error: "Login necessário para deletar sessões" });
+      }
+      
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
+        return res.status(401).json({ error: "Usuário não encontrado" });
+      }
+      
       await storage.deleteChatSession(sessionId);
       res.json({ success: true });
     } catch (error) {

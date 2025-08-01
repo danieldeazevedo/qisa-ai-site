@@ -5,8 +5,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Switch } from "@/components/ui/switch";
 import { ChatMessage } from "@/components/chat-message";
 import { ChatInput } from "@/components/chat-input";
+import { ChatSidebar } from "@/components/chat-sidebar";
 import { useAuth } from "@/hooks/use-auth";
 import { useChat } from "@/hooks/use-chat";
+import { useSessions } from "@/hooks/use-sessions";
 import { useTheme } from "@/hooks/use-theme";
 import { useQkoins } from "@/hooks/use-qkoins";
 import { QkoinDisplay } from "@/components/qkoin-display";
@@ -16,9 +18,11 @@ import { useToast } from "@/hooks/use-toast";
 export default function Chat() {
   const { user, loading: authLoading, logout } = useAuth();
   const { messages, loading: chatLoading, sendMessage, clearHistory, isSending, isClearing } = useChat();
+  const { isAuthenticated, currentSession } = useSessions();
   const { theme, toggleTheme } = useTheme();
   const { canGenerateImage } = useQkoins();
   const [showSettings, setShowSettings] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -57,30 +61,56 @@ export default function Chat() {
   // No authentication checks - everyone can use the chat
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground">
+      {/* Chat Sidebar */}
+      <ChatSidebar 
+        isOpen={sidebarOpen} 
+        onToggle={() => setSidebarOpen(!sidebarOpen)}
+      />
+
+      {/* Main Chat Container */}
+      <div className={`min-h-screen flex flex-col transition-all duration-300 ${
+        sidebarOpen && isAuthenticated ? "lg:ml-80" : ""
+      }`}>
       {/* Chat Header */}
       <header className="bg-background/80 backdrop-blur-md shadow-sm border-b border-border sticky top-0 z-10 animate-fade-in">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-3">
-              <Link href="/">
+              {isAuthenticated && (
                 <Button
                   variant="ghost"
                   size="sm"
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
                   className="p-2 text-muted-foreground hover:text-primary transition-all duration-300 rounded-lg hover:bg-muted animate-scale-in"
                 >
-                  <ArrowLeft className="w-5 h-5" />
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
                 </Button>
-              </Link>
+              )}
+              {!isAuthenticated && (
+                <Link href="/">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="p-2 text-muted-foreground hover:text-primary transition-all duration-300 rounded-lg hover:bg-muted animate-scale-in"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                  </Button>
+                </Link>
+              )}
               <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center">
                 <Bot className="text-white" />
               </div>
               <div className="flex-1">
-                <h1 className="text-lg font-semibold text-foreground animate-slide-in">Qisa</h1>
-                {user?.username && !user.username.includes('anonymous') && (
+                <h1 className="text-lg font-semibold text-foreground animate-slide-in">
+                  {(currentSession as any)?.title || "Qisa"}
+                </h1>
+                {isAuthenticated && (
                   <p className="text-xs text-green-600 dark:text-green-400 animate-pulse-gentle">Histórico sendo salvo</p>
                 )}
-                {(!user?.username || user.username.includes('anonymous')) && (
+                {!isAuthenticated && (
                   <p className="text-xs text-orange-600 dark:text-orange-400 animate-pulse-gentle">Modo anônimo - sem histórico</p>
                 )}
               </div>
@@ -348,6 +378,7 @@ export default function Chat() {
           </div>
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   );
 }

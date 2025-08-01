@@ -12,8 +12,11 @@ export interface IStorage {
   
   // Chat session methods
   getCurrentSession(userId: string): Promise<ChatSession>;
+  getUserSessions(userId: string): Promise<ChatSession[]>;
   createChatSession(session: InsertChatSession): Promise<ChatSession>;
+  updateChatSession(sessionId: string, updates: Partial<ChatSession>): Promise<ChatSession>;
   deleteChatSession(sessionId: string): Promise<void>;
+  setCurrentSession(userId: string, sessionId: string): Promise<void>;
   
   // Message methods
   getMessagesBySession(sessionId: string): Promise<Message[]>;
@@ -211,53 +214,85 @@ export class RedisStorage implements IStorage {
         if (sessionId) {
           const sessionJson = await client!.get(`session:${sessionId}`);
           if (sessionJson) {
-            return JSON.parse(sessionJson as string);
+            const session = JSON.parse(sessionJson as string);
+            // Ensure dates are Date objects
+            if (session.createdAt) session.createdAt = new Date(session.createdAt);
+            if (session.updatedAt) session.updatedAt = new Date(session.updatedAt);
+            return session;
           }
         }
 
-        // Create new session
-        const newSessionId = randomUUID();
-        const now = new Date();
-        const session: ChatSession = {
-          id: newSessionId,
+        // Create new session if none exists
+        return await this.createChatSession({
           userId,
-          title: "Nova Conversa",
-          createdAt: now,
-          updatedAt: now,
-        };
-        
-        await client!.set(`session:${newSessionId}`, JSON.stringify(session));
-        await client!.set(`user:${userId}:current_session`, newSessionId);
-        await client!.sadd(`user:${userId}:sessions`, newSessionId);
-        
-        return session;
+          title: "Nova Conversa"
+        });
       },
-      () => {
+      async () => {
         // Fallback logic
         const sessionId = this.fallbackStorage.get(`user:${userId}:current_session`);
         
         if (sessionId) {
           const sessionJson = this.fallbackStorage.get(`session:${sessionId}`);
           if (sessionJson) {
-            return JSON.parse(sessionJson);
+            const session = JSON.parse(sessionJson);
+            // Ensure dates are Date objects
+            if (session.createdAt) session.createdAt = new Date(session.createdAt);
+            if (session.updatedAt) session.updatedAt = new Date(session.updatedAt);
+            return session;
           }
         }
 
-        // Create new session
-        const newSessionId = randomUUID();
-        const now = new Date();
-        const session: ChatSession = {
-          id: newSessionId,
+        // Create new session if none exists
+        return await this.createChatSession({
           userId,
-          title: "Nova Conversa",
-          createdAt: now,
-          updatedAt: now,
-        };
+          title: "Nova Conversa"
+        });
+      }
+    );
+  }
+
+  async getUserSessions(userId: string): Promise<ChatSession[]> {
+    return this.withFallback(
+      async () => {
+        const sessionIds = await client!.smembers(`user:${userId}:sessions`);
         
-        this.fallbackStorage.set(`session:${newSessionId}`, JSON.stringify(session));
-        this.fallbackStorage.set(`user:${userId}:current_session`, newSessionId);
+        if (sessionIds.length === 0) return [];
         
-        return session;
+        const sessions: ChatSession[] = [];
+        for (const sessionId of sessionIds) {
+          const sessionJson = await client!.get(`session:${sessionId}`);
+          if (sessionJson) {
+            const session = JSON.parse(sessionJson as string);
+            // Ensure dates are Date objects
+            if (session.createdAt) session.createdAt = new Date(session.createdAt);
+            if (session.updatedAt) session.updatedAt = new Date(session.updatedAt);
+            sessions.push(session);
+          }
+        }
+        
+        // Sort by updatedAt descending (most recent first)
+        return sessions.sort((a, b) => (b.updatedAt?.getTime() || 0) - (a.updatedAt?.getTime() || 0));
+      },
+      () => {
+        const sessionsKey = `user:${userId}:sessions`;
+        const sessionIdsJson = this.fallbackStorage.get(sessionsKey) || '[]';
+        const sessionIds: string[] = JSON.parse(sessionIdsJson);
+        
+        const sessions: ChatSession[] = [];
+        for (const sessionId of sessionIds) {
+          const sessionJson = this.fallbackStorage.get(`session:${sessionId}`);
+          if (sessionJson) {
+            const session = JSON.parse(sessionJson);
+            // Ensure dates are Date objects
+            if (session.createdAt) session.createdAt = new Date(session.createdAt);
+            if (session.updatedAt) session.updatedAt = new Date(session.updatedAt);
+            sessions.push(session);
+          }
+        }
+        
+        // Sort by updatedAt descending (most recent first)
+        return sessions.sort((a, b) => (b.updatedAt?.getTime() || 0) - (a.updatedAt?.getTime() || 0));
       }
     );
   }
@@ -276,11 +311,90 @@ export class RedisStorage implements IStorage {
       async () => {
         await client!.set(`session:${id}`, JSON.stringify(session));
         await client!.sadd(`user:${insertSession.userId}:sessions`, id);
+        
+        // Set as current session if user has no current session
+        const currentSession = await client!.get(`user:${insertSession.userId}:current_session`);
+        if (!currentSession) {
+          await client!.set(`user:${insertSession.userId}:current_session`, id);
+        }
+        
         return session;
       },
       () => {
         this.fallbackStorage.set(`session:${id}`, JSON.stringify(session));
+        
+        // Update fallback sessions list
+        const sessionsKey = `user:${insertSession.userId}:sessions`;
+        const sessionIdsJson = this.fallbackStorage.get(sessionsKey) || '[]';
+        const sessionIds: string[] = JSON.parse(sessionIdsJson);
+        sessionIds.push(id);
+        this.fallbackStorage.set(sessionsKey, JSON.stringify(sessionIds));
+        
+        // Set as current session if user has no current session
+        const currentSession = this.fallbackStorage.get(`user:${insertSession.userId}:current_session`);
+        if (!currentSession) {
+          this.fallbackStorage.set(`user:${insertSession.userId}:current_session`, id);
+        }
+        
         return session;
+      }
+    );
+  }
+
+  async updateChatSession(sessionId: string, updates: Partial<ChatSession>): Promise<ChatSession> {
+    return this.withFallback(
+      async () => {
+        const sessionJson = await client!.get(`session:${sessionId}`);
+        if (!sessionJson) {
+          throw new Error('Session not found');
+        }
+        
+        const session = JSON.parse(sessionJson as string);
+        const updatedSession = {
+          ...session,
+          ...updates,
+          updatedAt: new Date(),
+        };
+        
+        await client!.set(`session:${sessionId}`, JSON.stringify(updatedSession));
+        
+        // Ensure dates are Date objects
+        if (updatedSession.createdAt) updatedSession.createdAt = new Date(updatedSession.createdAt);
+        if (updatedSession.updatedAt) updatedSession.updatedAt = new Date(updatedSession.updatedAt);
+        
+        return updatedSession;
+      },
+      () => {
+        const sessionJson = this.fallbackStorage.get(`session:${sessionId}`);
+        if (!sessionJson) {
+          throw new Error('Session not found');
+        }
+        
+        const session = JSON.parse(sessionJson);
+        const updatedSession = {
+          ...session,
+          ...updates,
+          updatedAt: new Date(),
+        };
+        
+        this.fallbackStorage.set(`session:${sessionId}`, JSON.stringify(updatedSession));
+        
+        // Ensure dates are Date objects
+        if (updatedSession.createdAt) updatedSession.createdAt = new Date(updatedSession.createdAt);
+        if (updatedSession.updatedAt) updatedSession.updatedAt = new Date(updatedSession.updatedAt);
+        
+        return updatedSession;
+      }
+    );
+  }
+
+  async setCurrentSession(userId: string, sessionId: string): Promise<void> {
+    return this.withFallback(
+      async () => {
+        await client!.set(`user:${userId}:current_session`, sessionId);
+      },
+      () => {
+        this.fallbackStorage.set(`user:${userId}:current_session`, sessionId);
       }
     );
   }
@@ -293,27 +407,57 @@ export class RedisStorage implements IStorage {
         if (sessionJson) {
           const session: ChatSession = JSON.parse(sessionJson as string);
           
-          // For Upstash, we need to delete items individually
-          const messageIds = await client!.smembers(`session:${sessionId}:messages`);
-          for (const messageId of messageIds) {
-            await client!.del(`message:${messageId}`);
-          }
+          // Delete chat history for this session
+          await this.clearChatHistory(session.userId, sessionId);
           
-          await client!.del(`session:${sessionId}:messages`);
+          // Delete session record
           await client!.del(`session:${sessionId}`);
           await client!.srem(`user:${session.userId}:sessions`, sessionId);
           
-          // If this was the current session, clear it
+          // If this was the current session, switch to another or clear
           const currentSession = await client!.get(`user:${session.userId}:current_session`);
           if (currentSession === sessionId) {
-            await client!.del(`user:${session.userId}:current_session`);
+            // Get remaining sessions and set the most recent one as current
+            const remainingSessions = await this.getUserSessions(session.userId);
+            if (remainingSessions.length > 0) {
+              await client!.set(`user:${session.userId}:current_session`, remainingSessions[0].id);
+            } else {
+              await client!.del(`user:${session.userId}:current_session`);
+            }
           }
         }
       },
-      () => {
+      async () => {
         // Fallback deletion logic
-        this.fallbackStorage.delete(`session:${sessionId}`);
-        this.fallbackStorage.delete(`session:${sessionId}:messages`);
+        const sessionJson = this.fallbackStorage.get(`session:${sessionId}`);
+        if (sessionJson) {
+          const session: ChatSession = JSON.parse(sessionJson);
+          
+          // Delete chat history for this session
+          await this.clearChatHistory(session.userId, sessionId);
+          
+          // Delete session record
+          this.fallbackStorage.delete(`session:${sessionId}`);
+          
+          // Update sessions list
+          const sessionsKey = `user:${session.userId}:sessions`;
+          const sessionIdsJson = this.fallbackStorage.get(sessionsKey) || '[]';
+          const sessionIds: string[] = JSON.parse(sessionIdsJson);
+          const updatedIds = sessionIds.filter(id => id !== sessionId);
+          this.fallbackStorage.set(sessionsKey, JSON.stringify(updatedIds));
+          
+          // If this was the current session, switch to another or clear
+          const currentSession = this.fallbackStorage.get(`user:${session.userId}:current_session`);
+          if (currentSession === sessionId) {
+            // Get remaining sessions and set the most recent one as current
+            const remainingSessions = await this.getUserSessions(session.userId);
+            if (remainingSessions.length > 0) {
+              this.fallbackStorage.set(`user:${session.userId}:current_session`, remainingSessions[0].id);
+            } else {
+              this.fallbackStorage.delete(`user:${session.userId}:current_session`);
+            }
+          }
+        }
       }
     );
   }
