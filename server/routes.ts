@@ -154,9 +154,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         content: z.string(),
         isImageRequest: z.boolean().default(false),
         sessionId: z.string(),
+        attachments: z.array(z.any()).default([]),
       });
 
-      const { content, isImageRequest, sessionId } = sendMessageSchema.parse(req.body);
+      const { content, isImageRequest, sessionId, attachments } = sendMessageSchema.parse(req.body);
+      console.log('📨 Received message with attachments:', attachments?.length || 0);
 
       // Get username from headers
       const username = req.headers['x-username'] as string;
@@ -246,9 +248,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           response = "❌ Para gerar imagens, você precisa fazer login e ter QKoins. Faça login e colete sua recompensa diária!";
         }
       } else {
-        // Pass username to AI for personalization
+        // Pass username to AI for personalization and include attachments
         const actualUsername = username && !username.includes('anonymous') ? user.username : undefined;
-        response = await generateResponse(content, context, actualUsername);
+        response = await generateResponse(content, context, actualUsername, attachments);
       }
 
       // Save AI response if authenticated

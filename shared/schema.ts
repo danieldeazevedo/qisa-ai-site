@@ -91,6 +91,8 @@ export type FileAttachment = {
   type: 'pdf' | 'image' | 'other';
   uploadedAt: Date;
   processedContent?: string;
+  filePath?: string;
+  extractedText?: string;
 };
 
 export type QkoinTransaction = {

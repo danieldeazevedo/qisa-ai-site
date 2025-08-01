@@ -75,10 +75,21 @@ export async function generateResponse(
       
     const currentParts: any[] = [{ text: userPrompt }];
     
-    // Add current message attachments
+    // Add current message attachments using correct Gemini API format
     if (attachments && attachments.length > 0) {
       for (const attachment of attachments) {
-        if (attachment.type === 'image' && attachment.filePath && fs.existsSync(attachment.filePath)) {
+        if (attachment.type === 'pdf' && attachment.filePath && fs.existsSync(attachment.filePath)) {
+          // For PDFs, use the native PDF support in Gemini 2.5 Flash
+          const pdfBytes = fs.readFileSync(attachment.filePath);
+          currentParts.push({
+            inlineData: {
+              data: pdfBytes.toString("base64"),
+              mimeType: "application/pdf",
+            },
+          });
+          console.log(`📄 Added PDF ${attachment.originalName} to Gemini request`);
+        } else if (attachment.type === 'image' && attachment.filePath && fs.existsSync(attachment.filePath)) {
+          // For images, use the native image support
           const imageBytes = fs.readFileSync(attachment.filePath);
           currentParts.push({
             inlineData: {
@@ -86,11 +97,7 @@ export async function generateResponse(
               mimeType: attachment.mimeType || "image/jpeg",
             },
           });
-        } else if (attachment.extractedText) {
-          // For PDFs, add the extracted text as context
-          currentParts.push({
-            text: `[Conteúdo do arquivo ${attachment.originalName}]:\n${attachment.extractedText}`
-          });
+          console.log(`🖼️ Added image ${attachment.originalName} to Gemini request`);
         }
       }
     }
@@ -110,17 +117,18 @@ export async function generateResponse(
     }
 
     if (attachments && attachments.length > 0) {
-      systemInstruction += `\n\nO usuário anexou ${attachments.length} arquivo(s). Analise o conteúdo e responda de acordo com o que foi solicitado.`;
+      systemInstruction += `\n\nO usuário anexou ${attachments.length} arquivo(s). Analise o conteúdo dos arquivos anexados e responda de acordo com o que foi solicitado. Você pode ver e processar PDFs e imagens diretamente.`;
     }
 
     const response = await ai.models.generateContent({
-      model: "gemini-1.5-flash",
+      model: "gemini-2.5-flash",
       config: {
         systemInstruction: systemInstruction,
       },
       contents,
     });
 
+    console.log('🤖 Gemini response generated for user:', username);
     return response.text || "Desculpe, não consegui processar sua mensagem.";
   } catch (error) {
     console.error("Error generating response:", error);
