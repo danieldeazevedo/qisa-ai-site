@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { client } from "./db";
 import { generateResponse, generateImage } from "./services/gemini";
 import { insertUserSchema, insertMessageSchema, loginUserSchema, insertChatSessionSchema } from "@shared/schema";
 import { z } from "zod";
@@ -503,6 +504,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.log(`❌ Direct Redis: No remaining sessions, cleared current session`);
           }
         }
+        
+        // Verify deletion worked
+        const verifySession = await client.get(`session:${sessionId}`);
+        const verifyInSet = await client.sismember(`user:${user.id}:sessions`, sessionId);
+        console.log(`🔍 Verification: session exists: ${!!verifySession}, in set: ${verifyInSet}`);
+      } else {
+        console.log('❌ Redis client not available, using storage layer fallback');
+        await storage.deleteChatSession(sessionId);
       }
       
       console.log(`✅ Session ${sessionId} force deleted successfully from Redis`);
