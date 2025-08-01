@@ -43,11 +43,15 @@ export class FileProcessor {
       url: `/uploads/${filename}`,
       type: this.getFileType(file.mimetype),
       uploadedAt: new Date(),
+      filePath: filePath, // Add server file path for Gemini processing
+      extractedText: undefined, // Will be set below for PDFs
     };
 
     // Process based on file type
     if (attachment.type === 'pdf') {
-      attachment.processedContent = await this.extractPdfText(filePath);
+      const extractedText = await this.extractPdfText(filePath);
+      attachment.processedContent = extractedText;
+      attachment.extractedText = extractedText; // Add for compatibility with Gemini processing
     } else if (attachment.type === 'image') {
       // For images, we'll let Gemini analyze them directly
       // But we can also extract metadata or optimize the image
