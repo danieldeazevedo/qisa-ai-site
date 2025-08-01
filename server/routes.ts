@@ -474,11 +474,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "Usuário não encontrado" });
       }
       
-      console.log(`🔍 Deleting session ${sessionId} for user ${user.id}`);
-      await storage.deleteChatSession(sessionId);
-      console.log(`✅ Session ${sessionId} deleted successfully`);
+      console.log(`🔍 Force deleting session ${sessionId} for user ${user.id}`);
       
-      res.json({ success: true });
+      // Force delete directly from Redis to ensure it's removed
+      if (client) {
+        // Delete session data
+        const sessionDeleted = await client.del(`session:${sessionId}`);
+        console.log(`🗑️ Direct Redis: Deleted session:${sessionId} (result: ${sessionDeleted})`);
+        
+        // Remove from user's session set
+        const removedCount = await client.srem(`user:${user.id}:sessions`, sessionId);
+        console.log(`🗑️ Direct Redis: Removed ${sessionId} from user sessions set (count: ${removedCount})`);
+        
+        // Clear chat history
+        const historyDeleted = await client.del(`user:${user.id}:session:${sessionId}:history`);
+        console.log(`🧹 Direct Redis: Cleared chat history for session ${sessionId} (result: ${historyDeleted})`);
+        
+        // If this was the current session, switch to another
+        const currentSession = await client.get(`user:${user.id}:current_session`);
+        if (currentSession === sessionId) {
+          // Get remaining sessions to switch to
+          const sessionIds = await client.smembers(`user:${user.id}:sessions`);
+          if (sessionIds.length > 0) {
+            await client.set(`user:${user.id}:current_session`, sessionIds[0]);
+            console.log(`🔄 Direct Redis: Switched current session to ${sessionIds[0]}`);
+          } else {
+            await client.del(`user:${user.id}:current_session`);
+            console.log(`❌ Direct Redis: No remaining sessions, cleared current session`);
+          }
+        }
+      }
+      
+      console.log(`✅ Session ${sessionId} force deleted successfully from Redis`);
+      
+      res.json({ 
+        success: true, 
+        sessionId,
+        message: "Session deleted successfully from Redis"
+      });
     } catch (error) {
       console.error("Error deleting session:", error);
       res.status(500).json({ message: "Internal server error" });
