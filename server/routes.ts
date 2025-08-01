@@ -222,7 +222,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let response: string;
       let imageUrl: string | null = null;
 
-      if (isImageRequest) {
+      // Check if this is an image edit request (has image attachment + edit prompt)
+      const hasImageAttachment = attachments?.some(att => att.type === 'image');
+      const isImageEditRequest = hasImageAttachment && (
+        content.toLowerCase().includes('editar') ||
+        content.toLowerCase().includes('trocar') ||
+        content.toLowerCase().includes('modificar') ||
+        content.toLowerCase().includes('alterar') ||
+        content.toLowerCase().includes('mudar')
+      );
+
+      if (isImageEditRequest && username && !username.includes('anonymous')) {
+        // Image editing request - use QKoins and return edited image
+        const userQkoins = await storage.getUserQkoins(userId);
+        if (userQkoins < 1) {
+          response = "❌ QKoins insuficientes! Você precisa de 1 QKoin para editar uma imagem. Colete sua recompensa diária ou aguarde até amanhã.";
+        } else {
+          try {
+            // Spend 1 QKoin for image editing
+            const spent = await storage.spendQkoins(userId, 1, `Edição de imagem: ${content.substring(0, 50)}...`);
+            if (spent) {
+              const imageAttachment = attachments.find(att => att.type === 'image');
+              if (imageAttachment?.filePath) {
+                const { editImage } = await import('../services/gemini.js');
+                imageUrl = await editImage(imageAttachment.filePath, content);
+                response = "Aqui está sua imagem editada:";
+              } else {
+                response = "❌ Erro ao processar a imagem anexada.";
+              }
+            } else {
+              response = "❌ Erro ao processar QKoins. Tente novamente.";
+            }
+          } catch (error) {
+            // Refund the QKoin if image editing fails
+            await storage.addQkoins(userId, 1, 'earned', 'Reembolso: falha na edição de imagem');
+            response = "Desculpe, não consegui editar a imagem. Tente novamente com uma descrição diferente. Seu QKoin foi reembolsado.";
+          }
+        }
+      } else if (isImageRequest) {
         // Check if user has enough QKoins for image generation
         if (username && !username.includes('anonymous')) {
           const userQkoins = await storage.getUserQkoins(userId);

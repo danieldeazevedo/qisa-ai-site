@@ -208,3 +208,49 @@ export async function generateImage(prompt: string): Promise<string> {
     throw new Error("Erro ao gerar imagem");
   }
 }
+
+export async function editImage(imagePath: string, editPrompt: string): Promise<string> {
+  try {
+    const imageBytes = fs.readFileSync(imagePath);
+    
+    const contents = [
+      { text: editPrompt },
+      {
+        inlineData: {
+          mimeType: "image/png",
+          data: imageBytes.toString("base64"),
+        },
+      },
+    ];
+
+    const response = await ai.models.generateContent({
+      model: "gemini-2.0-flash-preview-image-generation",
+      contents: contents,
+      config: {
+        responseModalities: [Modality.TEXT, Modality.IMAGE],
+      },
+    });
+
+    const candidates = response.candidates;
+    if (!candidates || candidates.length === 0) {
+      throw new Error("Não foi possível editar a imagem");
+    }
+
+    const content = candidates[0].content;
+    if (!content || !content.parts) {
+      throw new Error("Resposta inválida do modelo");
+    }
+
+    for (const part of content.parts) {
+      if (part.inlineData && part.inlineData.data) {
+        // Return base64 image data
+        return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+      }
+    }
+
+    throw new Error("Nenhuma imagem editada foi gerada");
+  } catch (error) {
+    console.error("Error editing image:", error);
+    throw new Error("Erro ao editar imagem");
+  }
+}
