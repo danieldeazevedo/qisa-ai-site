@@ -88,6 +88,19 @@ export async function generateResponse(
             },
           });
           console.log(`📄 Added PDF ${attachment.originalName} to Gemini request`);
+          
+          // Schedule PDF cleanup after processing (async, non-blocking)
+          setTimeout(async () => {
+            try {
+              const fs = await import('fs');
+              if (attachment.filePath && fs.existsSync(attachment.filePath)) {
+                fs.unlinkSync(attachment.filePath);
+                console.log(`🧹 PDF ${attachment.originalName} deleted after processing`);
+              }
+            } catch (error) {
+              console.error(`Error deleting PDF ${attachment.originalName}:`, error);
+            }
+          }, 5000); // Wait 5 seconds to ensure processing is complete
         } else if (attachment.type === 'image' && attachment.filePath && fs.existsSync(attachment.filePath)) {
           // For images, use the native image support
           const imageBytes = fs.readFileSync(attachment.filePath);
