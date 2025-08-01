@@ -124,9 +124,19 @@ export function useSessions() {
       return await response.json();
     },
     onSuccess: (_, deletedSessionId) => {
-      // Invalidate sessions list and current session
+      console.log('🎯 Frontend: Delete mutation successful for session:', deletedSessionId);
+      
+      // Clear the cache completely and refetch fresh data
+      queryClient.removeQueries({ queryKey: ["/api/chat/sessions"] });
+      queryClient.removeQueries({ queryKey: ["/api/chat/current-session"] });
       queryClient.invalidateQueries({ queryKey: ["/api/chat/sessions"] });
       queryClient.invalidateQueries({ queryKey: ["/api/chat/current-session"] });
+      
+      // Force refetch immediately
+      queryClient.refetchQueries({ queryKey: ["/api/chat/sessions"] });
+      queryClient.refetchQueries({ queryKey: ["/api/chat/current-session"] });
+      
+      console.log('🔄 Frontend: Cache cleared and refetching data');
       
       // Navigate to the first available session, or to root if no sessions
       const currentSessions = sessions as ChatSession[];
@@ -135,9 +145,11 @@ export function useSessions() {
       if (remainingSessions.length > 0) {
         // Navigate to the first remaining session
         setLocation(`/chat/${remainingSessions[0].id}`);
+        console.log('🔀 Frontend: Navigating to session:', remainingSessions[0].id);
       } else {
         // No sessions left, navigate to root
         setLocation('/');
+        console.log('🏠 Frontend: No sessions left, navigating to root');
       }
       
       toast({

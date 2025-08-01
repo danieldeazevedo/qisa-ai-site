@@ -628,6 +628,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Clean duplicate sessions (Admin only)
+  app.post("/api/admin/clean-sessions", checkAdmin, async (req, res) => {
+    try {
+      const username = 'daniel08'; // Only for daniel08
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      console.log('🧹 Admin: Cleaning duplicate sessions for user:', user.id);
+      
+      // Get all sessions for the user
+      const sessions = await storage.getUserSessions(user.id);
+      console.log(`📋 Found ${sessions.length} sessions to clean`);
+      
+      // Keep only the most recent 3 sessions
+      const sessionsToKeep = sessions.slice(0, 3);
+      const sessionsToDelete = sessions.slice(3);
+      
+      console.log(`✅ Keeping ${sessionsToKeep.length} sessions`);
+      console.log(`🗑️ Deleting ${sessionsToDelete.length} old sessions`);
+      
+      // Delete old sessions
+      for (const session of sessionsToDelete) {
+        console.log(`🗑️ Deleting session: ${session.id} - ${session.title}`);
+        await storage.deleteChatSession(session.id);
+      }
+      
+      await storage.addSystemLog('info', `Admin cleaned ${sessionsToDelete.length} old sessions`, `Action by daniel08`);
+      
+      res.json({ 
+        success: true, 
+        message: `Limpeza concluída. ${sessionsToDelete.length} sessões antigas removidas.`,
+        kept: sessionsToKeep.length,
+        deleted: sessionsToDelete.length
+      });
+    } catch (error) {
+      console.error("Error cleaning sessions:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // QKoin Routes
   
   // Get user QKoins balance
