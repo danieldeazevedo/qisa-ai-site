@@ -255,22 +255,48 @@ export class RedisStorage implements IStorage {
   async getUserSessions(userId: string): Promise<ChatSession[]> {
     return this.withFallback(
       async () => {
+        console.log('🔍 Getting sessions for userId:', userId);
         const sessionIds = await client!.smembers(`user:${userId}:sessions`);
+        console.log('📋 Found session IDs:', sessionIds);
         
-        if (sessionIds.length === 0) return [];
-        
-        const sessions: ChatSession[] = [];
-        for (const sessionId of sessionIds) {
-          const sessionJson = await client!.get(`session:${sessionId}`);
-          if (sessionJson) {
-            const session = JSON.parse(sessionJson as string);
-            // Ensure dates are Date objects
-            if (session.createdAt) session.createdAt = new Date(session.createdAt);
-            if (session.updatedAt) session.updatedAt = new Date(session.updatedAt);
-            sessions.push(session);
-          }
+        if (sessionIds.length === 0) {
+          console.log('❌ No sessions found for user');
+          return [];
         }
         
+        const sessions: ChatSession[] = [];
+        
+        // Process sessions in parallel for better performance
+        const sessionPromises = sessionIds.map(async (sessionId) => {
+          try {
+            const sessionJson = await client!.get(`session:${sessionId}`);
+            if (sessionJson) {
+              // Handle both string and object responses from Upstash
+              const session = typeof sessionJson === 'string' 
+                ? JSON.parse(sessionJson) 
+                : sessionJson;
+              
+              // Ensure dates are Date objects
+              if (session.createdAt) session.createdAt = new Date(session.createdAt);
+              if (session.updatedAt) session.updatedAt = new Date(session.updatedAt);
+              
+              return session;
+            }
+            return null;
+          } catch (error) {
+            console.error('Error getting session:', sessionId, error);
+            return null;
+          }
+        });
+        
+        const sessionResults = await Promise.all(sessionPromises);
+        
+        // Filter out null results and add to sessions array
+        sessionResults.forEach(session => {
+          if (session) sessions.push(session);
+        });
+        
+        console.log(`✅ Returning ${sessions.length} sessions`);
         // Sort by updatedAt descending (most recent first)
         return sessions.sort((a, b) => (b.updatedAt?.getTime() || 0) - (a.updatedAt?.getTime() || 0));
       },

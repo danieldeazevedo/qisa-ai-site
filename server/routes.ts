@@ -123,7 +123,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/chat/messages/:sessionId", async (req, res) => {
     try {
       const { sessionId } = req.params;
-      const messages = await storage.getMessagesBySession(sessionId);
+      const username = req.headers['x-username'] as string;
+
+      if (!username || username.includes('anonymous')) {
+        // Anonymous users don't have persistent history
+        return res.json([]);
+      }
+
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
+        return res.status(401).json({ error: "Usuário não encontrado" });
+      }
+
+      const messages = await storage.getChatHistory(user.id, sessionId);
       res.json(messages);
     } catch (error) {
       console.error("Error getting messages:", error);
@@ -347,6 +359,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/chat/sessions", async (req, res) => {
     try {
       const username = req.headers['x-username'] as string;
+      console.log('Getting session for authenticated user:', username);
       
       if (!username || username.includes('anonymous')) {
         return res.status(401).json({ error: "Login necessário para acessar múltiplas sessões" });
@@ -357,7 +370,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "Usuário não encontrado" });
       }
       
+      console.log('Found user for sessions:', user.id);
       const sessions = await storage.getUserSessions(user.id);
+      console.log('Retrieved sessions:', sessions);
       res.json(sessions);
     } catch (error) {
       console.error("Error getting user sessions:", error);
