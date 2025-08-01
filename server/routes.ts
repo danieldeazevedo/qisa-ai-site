@@ -257,8 +257,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get chat history for authenticated users
-  app.get("/api/chat/history/:sessionId", async (req, res) => {
+  // Get chat messages for a specific session
+  app.get("/api/chat/messages/:sessionId", async (req, res) => {
     try {
       const { sessionId } = req.params;
       const username = req.headers['x-username'] as string;
@@ -281,8 +281,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Clear chat history for authenticated users
-  app.delete("/api/chat/history/:sessionId", async (req, res) => {
+  // Clear chat messages for a specific session
+  app.delete("/api/chat/messages/:sessionId", async (req, res) => {
     try {
       const { sessionId } = req.params;
       const username = req.headers['x-username'] as string;

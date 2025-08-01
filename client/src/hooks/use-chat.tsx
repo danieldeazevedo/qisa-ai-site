@@ -6,15 +6,15 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { useSessions } from "@/hooks/use-sessions";
 
-export function useChat() {
+export function useChat(chatId?: string) {
   const [messages, setMessages] = useState<Message[]>([]);
   const { toast } = useToast();
   const { user } = useAuth();
   const { currentSession, isAuthenticated } = useSessions();
   const queryClient = useQueryClient();
   
-  // Use current session ID or fallback to "main" for anonymous users
-  const sessionId = (currentSession as any)?.id || "main";
+  // Use provided chatId, current session ID, or fallback to "main" for anonymous users
+  const sessionId = chatId || (currentSession as any)?.id || "main";
 
   // Load chat history for authenticated users
   const { data: historyData, isLoading: historyLoading } = useQuery({

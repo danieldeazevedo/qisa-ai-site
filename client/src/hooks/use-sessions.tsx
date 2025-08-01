@@ -3,12 +3,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "./use-auth";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "./use-toast";
+import { useLocation } from "wouter";
 import type { ChatSession } from "@shared/schema";
 
 export function useSessions() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
 
   // Check if user is authenticated
@@ -48,8 +50,8 @@ export function useSessions() {
       // Invalidate sessions list to include new session
       queryClient.invalidateQueries({ queryKey: ["/api/chat/sessions"] });
       
-      // Set as current session
-      activateSessionMutation.mutate(newSession.id);
+      // Navigate to the new session
+      setLocation(`/chat/${newSession.id}`);
       
       toast({
         title: "Nova conversa criada",
@@ -160,7 +162,7 @@ export function useSessions() {
 
   const switchToSession = (sessionId: string) => {
     if (!isAuthenticated) return;
-    activateSessionMutation.mutate(sessionId);
+    setLocation(`/chat/${sessionId}`);
   };
 
   const deleteSession = (sessionId: string) => {
