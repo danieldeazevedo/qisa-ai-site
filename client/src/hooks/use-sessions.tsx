@@ -86,11 +86,22 @@ export function useSessions() {
       });
     },
     onError: (error: any) => {
-      toast({
-        title: "Erro ao renomear",
-        description: error.message || "Não foi possível renomear a conversa.",
-        variant: "destructive",
-      });
+      // Se a sessão não foi encontrada, limpa o cache e atualiza a lista
+      if (error.message?.includes("não encontrada") || error.message?.includes("not found")) {
+        queryClient.invalidateQueries({ queryKey: ["/api/chat/sessions"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/chat/current-session"] });
+        toast({
+          title: "Sessão removida",
+          description: "Esta conversa foi removida e não pode ser renomeada.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erro ao renomear",
+          description: error.message || "Não foi possível renomear a conversa.",
+          variant: "destructive",
+        });
+      }
     },
   });
 

@@ -423,14 +423,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "Usuário não encontrado" });
       }
       
+      // Verificar se a sessão ainda existe no Redis antes de tentar atualizar
+      if (client) {
+        const sessionExists = await client.get(`session:${sessionId}`);
+        const isInUserSet = await client.sismember(`user:${user.id}:sessions`, sessionId);
+        
+        console.log(`🔍 Rename check: Session ${sessionId} exists: ${!!sessionExists}, in set: ${isInUserSet}`);
+        
+        if (!sessionExists || !isInUserSet) {
+          console.log(`❌ Rename failed: Session ${sessionId} not found in Redis`);
+          return res.status(404).json({ error: "Sessão não encontrada ou foi removida" });
+        }
+      }
+      
       const updates = {
-        title: req.body.title
+        title: typeof req.body.title === 'string' ? req.body.title : String(req.body.title)
       };
       
-      const session = await storage.updateChatSession(sessionId, updates);
-      res.json(session);
+      console.log(`🔍 Rename request for session ${sessionId}`);
+      console.log(`🔍 Request body:`, req.body);
+      console.log(`🔍 Title value:`, req.body.title);
+      console.log(`🔍 Title type:`, typeof req.body.title);
+      console.log(`🔍 Updates object:`, updates);
+      
+      // Use direct Redis update since storage layer has inconsistencies
+      if (client) {
+        try {
+          const sessionData = await client.get(`session:${sessionId}`);
+          console.log(`🔍 Raw session data:`, sessionData);
+          
+          if (sessionData) {
+            let session;
+            try {
+              session = JSON.parse(sessionData);
+            } catch (parseError) {
+              console.log(`❌ JSON parse error, recreating session data`);
+              // If data is corrupted, recreate minimal session object
+              session = {
+                id: sessionId,
+                userId: user.id,
+                title: "Nova Conversa",
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              };
+            }
+            
+            session.title = updates.title;
+            session.updatedAt = new Date().toISOString();
+            
+            const sessionJson = JSON.stringify(session);
+            await client.set(`session:${sessionId}`, sessionJson);
+            console.log(`✅ Direct Redis: Session ${sessionId} renamed to: ${updates.title}`);
+            
+            res.json(session);
+            return;
+          } else {
+            console.log(`❌ Session ${sessionId} not found in Redis`);
+            return res.status(404).json({ error: "Sessão não encontrada ou foi removida" });
+          }
+        } catch (redisError: any) {
+          console.log(`❌ Direct Redis update failed:`, redisError.message);
+          console.log(`❌ Full redis error:`, redisError);
+          console.log(`❌ Redis error stack:`, redisError.stack);
+          return res.status(500).json({ error: "Erro interno do servidor" });
+        }
+      } else {
+        // Fallback to storage if Redis not available
+        try {
+          const session = await storage.updateChatSession(sessionId, updates);
+          console.log(`✅ Storage: Session ${sessionId} renamed successfully to: ${updates.title}`);
+          res.json(session);
+        } catch (updateError: any) {
+          console.log(`❌ Storage update failed for session ${sessionId}:`, updateError.message);
+          if (updateError.message === "Session not found") {
+            return res.status(404).json({ error: "Sessão não encontrada ou foi removida" });
+          }
+          return res.status(500).json({ error: "Erro interno do servidor" });
+        }
+      }
     } catch (error) {
       console.error("Error updating session:", error);
+      if (error.message === "Session not found") {
+        return res.status(404).json({ error: "Sessão não encontrada ou foi removida" });
+      }
       res.status(500).json({ message: "Internal server error" });
     }
   });
