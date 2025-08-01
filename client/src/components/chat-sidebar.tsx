@@ -100,16 +100,17 @@ export function ChatSidebar({ isOpen, onToggle, className = "" }: ChatSidebarPro
     deleteSession(sessionId);
   };
 
-  const formatSessionDate = (date: Date) => {
+  const formatSessionDate = (date: Date | string) => {
     const now = new Date();
-    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
+    const sessionDate = new Date(date);
+    const diffInHours = (now.getTime() - sessionDate.getTime()) / (1000 * 60 * 60);
     
     if (diffInHours < 24) {
-      return format(date, "HH:mm", { locale: ptBR });
+      return format(sessionDate, "HH:mm", { locale: ptBR });
     } else if (diffInHours < 24 * 7) {
-      return format(date, "EEEE", { locale: ptBR });
+      return format(sessionDate, "EEEE", { locale: ptBR });
     } else {
-      return format(date, "dd/MM", { locale: ptBR });
+      return format(sessionDate, "dd/MM", { locale: ptBR });
     }
   };
 
