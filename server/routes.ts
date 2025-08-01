@@ -637,35 +637,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "User not found" });
       }
 
-      console.log('🧹 Admin: Cleaning duplicate sessions for user:', user.id);
+      console.log('🧹 Admin: Force cleaning all old sessions for user:', user.id);
       
-      // Get all sessions for the user
-      const sessions = await storage.getUserSessions(user.id);
-      console.log(`📋 Found ${sessions.length} sessions to clean`);
+      // Direct Redis cleanup - get all session IDs
+      const sessionIdsSet = await client!.smembers(`user:${user.id}:sessions`);
+      console.log(`📋 Found ${sessionIdsSet.length} session IDs in Redis set:`, sessionIdsSet);
       
-      // Keep only the most recent 3 sessions
-      const sessionsToKeep = sessions.slice(0, 3);
-      const sessionsToDelete = sessions.slice(3);
+      let deletedCount = 0;
+      let keptSessions = [];
       
-      console.log(`✅ Keeping ${sessionsToKeep.length} sessions`);
-      console.log(`🗑️ Deleting ${sessionsToDelete.length} old sessions`);
-      
-      // Delete old sessions
-      for (const session of sessionsToDelete) {
-        console.log(`🗑️ Deleting session: ${session.id} - ${session.title}`);
-        await storage.deleteChatSession(session.id);
+      // Sort sessions by examining each one
+      const sessionDetails = [];
+      for (const sessionId of sessionIdsSet) {
+        const sessionData = await client!.get(`session:${sessionId}`);
+        if (sessionData) {
+          const session = JSON.parse(sessionData);
+          sessionDetails.push(session);
+        } else {
+          // Remove orphaned session ID
+          await client!.srem(`user:${user.id}:sessions`, sessionId);
+          console.log(`🗑️ Removed orphaned session ID: ${sessionId}`);
+          deletedCount++;
+        }
       }
       
-      await storage.addSystemLog('info', `Admin cleaned ${sessionsToDelete.length} old sessions`, `Action by daniel08`);
+      // Sort by creation date and keep only the 3 most recent
+      sessionDetails.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      const sessionsToKeep = sessionDetails.slice(0, 3);
+      const sessionsToDelete = sessionDetails.slice(3);
+      
+      keptSessions = sessionsToKeep;
+      
+      console.log(`✅ Keeping ${sessionsToKeep.length} sessions`);
+      console.log(`🗑️ Force deleting ${sessionsToDelete.length} old sessions`);
+      
+      // Force delete old sessions from Redis directly
+      for (const session of sessionsToDelete) {
+        console.log(`🗑️ Force deleting session: ${session.id} - ${session.title}`);
+        
+        // Delete session data
+        await client!.del(`session:${session.id}`);
+        
+        // Remove from user's session set
+        await client!.srem(`user:${user.id}:sessions`, session.id);
+        
+        // Clear chat history
+        await client!.del(`user:${user.id}:session:${session.id}:history`);
+        
+        // Clear current session if it was this one
+        const currentSession = await client!.get(`user:${user.id}:current_session`);
+        if (currentSession === session.id) {
+          if (sessionsToKeep.length > 0) {
+            await client!.set(`user:${user.id}:current_session`, sessionsToKeep[0].id);
+          } else {
+            await client!.del(`user:${user.id}:current_session`);
+          }
+        }
+        
+        deletedCount++;
+      }
+      
+      await storage.addSystemLog('info', `Admin force cleaned ${deletedCount} old sessions`, `Action by daniel08`);
       
       res.json({ 
         success: true, 
-        message: `Limpeza concluída. ${sessionsToDelete.length} sessões antigas removidas.`,
-        kept: sessionsToKeep.length,
-        deleted: sessionsToDelete.length
+        message: `Limpeza forçada concluída. ${deletedCount} sessões removidas.`,
+        kept: keptSessions.length,
+        deleted: deletedCount,
+        remaining: keptSessions.map(s => ({ id: s.id, title: s.title }))
       });
     } catch (error) {
-      console.error("Error cleaning sessions:", error);
+      console.error("Error force cleaning sessions:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });

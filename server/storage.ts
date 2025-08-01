@@ -42,6 +42,91 @@ export class RedisStorage implements IStorage {
   constructor() {
     console.log('🚀 Storage initialized with Redis fallback support');
     console.log('🔗 Redis URL configured:', process.env.REDIS_URL ? 'Yes' : 'No');
+    
+    // Auto-cleanup on startup
+    setTimeout(() => this.cleanupDuplicateSessions(), 3000);
+  }
+
+  async cleanupDuplicateSessions() {
+    try {
+      if (!client) return;
+      
+      console.log('🧹 Auto-cleanup: Starting duplicate session cleanup...');
+      
+      // Find daniel08 user
+      const danielUserId = await client.get('username:daniel08');
+      if (!danielUserId) {
+        console.log('❌ Daniel08 user not found for cleanup');
+        return;
+      }
+      
+      console.log('👤 Found daniel08 user ID:', danielUserId);
+      
+      // Get all session IDs for daniel08
+      const sessionIds = await client.smembers(`user:${danielUserId}:sessions`);
+      console.log(`📋 Found ${sessionIds.length} session IDs for cleanup:`, sessionIds);
+      
+      if (sessionIds.length <= 3) {
+        console.log('✅ No cleanup needed, user has 3 or fewer sessions');
+        return;
+      }
+      
+      // Get session details and sort by creation date
+      const sessionDetails = [];
+      for (const sessionId of sessionIds) {
+        const sessionData = await client.get(`session:${sessionId}`);
+        if (sessionData) {
+          try {
+            const session = typeof sessionData === 'string' ? JSON.parse(sessionData) : sessionData;
+            sessionDetails.push(session);
+          } catch (parseError) {
+            console.log(`⚠️ Failed to parse session data for ${sessionId}, removing:`, parseError);
+            await client.srem(`user:${danielUserId}:sessions`, sessionId);
+            await client.del(`session:${sessionId}`);
+          }
+        } else {
+          // Remove orphaned session ID
+          await client.srem(`user:${danielUserId}:sessions`, sessionId);
+          console.log(`🗑️ Removed orphaned session ID: ${sessionId}`);
+        }
+      }
+      
+      // Sort by creation date (newest first) and keep only 3
+      sessionDetails.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      const sessionsToKeep = sessionDetails.slice(0, 3);
+      const sessionsToDelete = sessionDetails.slice(3);
+      
+      console.log(`✅ Keeping ${sessionsToKeep.length} most recent sessions`);
+      console.log(`🗑️ Auto-deleting ${sessionsToDelete.length} old sessions`);
+      
+      // Delete old sessions
+      for (const session of sessionsToDelete) {
+        console.log(`🗑️ Auto-deleting session: ${session.id} - ${session.title}`);
+        
+        // Delete session data
+        await client.del(`session:${session.id}`);
+        
+        // Remove from user's session set
+        await client.srem(`user:${danielUserId}:sessions`, session.id);
+        
+        // Clear chat history
+        await client.del(`user:${danielUserId}:session:${session.id}:history`);
+      }
+      
+      // Update current session if needed
+      const currentSession = await client.get(`user:${danielUserId}:current_session`);
+      const currentSessionExists = sessionsToKeep.find(s => s.id === currentSession);
+      
+      if (!currentSessionExists && sessionsToKeep.length > 0) {
+        await client.set(`user:${danielUserId}:current_session`, sessionsToKeep[0].id);
+        console.log(`🔄 Updated current session to: ${sessionsToKeep[0].id}`);
+      }
+      
+      console.log(`✅ Auto-cleanup completed! Deleted ${sessionsToDelete.length} old sessions`);
+      
+    } catch (error) {
+      console.error('❌ Auto-cleanup failed:', error);
+    }
   }
 
   public async withFallback<T>(redisOperation: () => Promise<T>, fallbackOperation: () => T | Promise<T>): Promise<T> {
