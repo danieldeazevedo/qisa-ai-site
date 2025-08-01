@@ -137,8 +137,9 @@ export function useSessions() {
     onSuccess: (_, deletedSessionId) => {
       console.log('🎯 Frontend: Delete mutation successful for session:', deletedSessionId);
       
-      // Clear ALL cache and force immediate reload
-      queryClient.clear();
+      // Invalidate cache to refresh data
+      queryClient.invalidateQueries({ queryKey: ["/api/chat/sessions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/chat/current-session"] });
       
       // Show success message
       toast({
@@ -146,10 +147,15 @@ export function useSessions() {
         description: "A conversa foi excluída com sucesso.",
       });
       
-      // Force page reload to ensure clean state
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+      // If we deleted the current session, navigate to the first available session
+      const currentSessions = Array.isArray(sessions) ? sessions : [];
+      const remainingSessions = currentSessions.filter((s: any) => s.id !== deletedSessionId);
+      if (remainingSessions.length > 0) {
+        setLocation(`/chat/${remainingSessions[0].id}`);
+      } else {
+        // If no sessions left, stay on main chat page
+        setLocation('/chat');
+      }
     },
     onError: (error: any) => {
       toast({

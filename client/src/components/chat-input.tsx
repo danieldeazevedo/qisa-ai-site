@@ -48,7 +48,7 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
   };
 
   return (
-    <div className="bg-white border-t border-gray-200 px-4 sm:px-6 lg:px-8 py-4">
+    <div className="bg-background border-t border-border px-4 sm:px-6 lg:px-8 py-4">
       <div className="max-w-4xl mx-auto">
         <form onSubmit={handleSubmit} className="flex items-end space-x-3">
           <div className="flex-1 relative">
@@ -61,7 +61,7 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
                   ? "Descreva a imagem que você quer gerar..."
                   : "Digite sua mensagem para a Qisa..."
               }
-              className="resize-none border border-gray-300 rounded-2xl px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent max-h-32 min-h-[48px]"
+              className="resize-none border-input bg-background text-foreground rounded-2xl px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent max-h-32 min-h-[48px] placeholder:text-muted-foreground"
               rows={1}
               disabled={isLoading}
               onKeyDown={(e) => {
@@ -75,7 +75,7 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
               type="button"
               variant="ghost"
               size="sm"
-              className="absolute right-3 bottom-3 p-1.5 text-gray-400 hover:text-primary transition-colors rounded-lg hover:bg-gray-100"
+              className="absolute right-3 bottom-3 p-1.5 text-muted-foreground hover:text-primary transition-colors rounded-lg hover:bg-muted"
             >
               <Paperclip className="w-4 h-4" />
             </Button>
@@ -86,10 +86,10 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
             variant="outline"
             size="sm"
             onClick={() => setIsImageMode(!isImageMode)}
-            className={`p-3 border border-gray-300 rounded-2xl transition-all ${
+            className={`p-3 border-input rounded-2xl transition-all ${
               isImageMode
-                ? "bg-purple-50 text-secondary border-secondary"
-                : "text-gray-400 hover:text-secondary hover:bg-purple-50"
+                ? "bg-secondary/10 text-secondary border-secondary"
+                : "text-muted-foreground hover:text-secondary hover:bg-secondary/10"
             }`}
           >
             <Image className="w-4 h-4" />
@@ -112,7 +112,7 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
               variant="ghost"
               size="sm"
               onClick={() => handleQuickAction(action)}
-              className="px-3 py-1.5 text-sm text-gray-600 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
+              className="px-3 py-1.5 text-sm text-foreground bg-muted rounded-full hover:bg-muted/80 transition-colors"
             >
               {action}
             </Button>

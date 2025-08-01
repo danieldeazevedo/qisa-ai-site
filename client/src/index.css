@@ -162,4 +162,31 @@
   body {
     @apply font-sans antialiased bg-background text-foreground;
   }
+
+  /* Dark mode prose styling for better contrast */
+  .dark .prose strong {
+    color: white !important;
+  }
+  
+  .dark .prose b {
+    color: white !important;
+  }
+  
+  .dark .prose h1,
+  .dark .prose h2,
+  .dark .prose h3,
+  .dark .prose h4,
+  .dark .prose h5,
+  .dark .prose h6 {
+    color: white !important;
+  }
+  
+  .dark .prose code {
+    color: white !important;
+  }
+  
+  .dark .prose pre {
+    background-color: hsl(240, 3.7%, 15.9%) !important;
+    color: white !important;
+  }
 }
