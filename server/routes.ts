@@ -463,6 +463,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { sessionId } = req.params;
       const username = req.headers['x-username'] as string;
       
+      console.log(`🗑️ Delete request for session: ${sessionId} by user: ${username}`);
+      
       if (!username || username.includes('anonymous')) {
         return res.status(401).json({ error: "Login necessário para deletar sessões" });
       }
@@ -472,7 +474,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "Usuário não encontrado" });
       }
       
+      console.log(`🔍 Deleting session ${sessionId} for user ${user.id}`);
       await storage.deleteChatSession(sessionId);
+      console.log(`✅ Session ${sessionId} deleted successfully`);
+      
       res.json({ success: true });
     } catch (error) {
       console.error("Error deleting session:", error);

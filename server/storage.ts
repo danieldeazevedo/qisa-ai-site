@@ -422,29 +422,38 @@ export class RedisStorage implements IStorage {
   async deleteChatSession(sessionId: string): Promise<void> {
     return this.withFallback(
       async () => {
+        console.log(`🔍 Storage: Looking for session ${sessionId}`);
         // Get session to find userId
         const sessionJson = await client!.get(`session:${sessionId}`);
         if (sessionJson) {
           const session: ChatSession = JSON.parse(sessionJson as string);
+          console.log(`📝 Storage: Found session ${sessionId} for user ${session.userId}`);
           
           // Delete chat history for this session
           await this.clearChatHistory(session.userId, sessionId);
+          console.log(`🧹 Storage: Cleared chat history for session ${sessionId}`);
           
           // Delete session record
           await client!.del(`session:${sessionId}`);
           await client!.srem(`user:${session.userId}:sessions`, sessionId);
+          console.log(`🗑️ Storage: Deleted session ${sessionId} from Redis`);
           
           // If this was the current session, switch to another or clear
           const currentSession = await client!.get(`user:${session.userId}:current_session`);
           if (currentSession === sessionId) {
+            console.log(`🔄 Storage: This was the current session, switching...`);
             // Get remaining sessions and set the most recent one as current
             const remainingSessions = await this.getUserSessions(session.userId);
             if (remainingSessions.length > 0) {
               await client!.set(`user:${session.userId}:current_session`, remainingSessions[0].id);
+              console.log(`✅ Storage: Switched to session ${remainingSessions[0].id}`);
             } else {
               await client!.del(`user:${session.userId}:current_session`);
+              console.log(`❌ Storage: No remaining sessions, cleared current session`);
             }
           }
+        } else {
+          console.log(`❌ Storage: Session ${sessionId} not found in Redis`);
         }
       },
       async () => {
