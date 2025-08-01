@@ -360,10 +360,16 @@ export class RedisStorage implements IStorage {
               if (session.updatedAt) session.updatedAt = new Date(session.updatedAt);
               
               return session;
+            } else {
+              // Remove orphaned session ID from set
+              console.log(`🧹 Removing orphaned session ID: ${sessionId}`);
+              await client!.srem(`user:${userId}:sessions`, sessionId);
+              return null;
             }
-            return null;
           } catch (error) {
             console.error('Error getting session:', sessionId, error);
+            // Also remove corrupted session ID from set
+            await client!.srem(`user:${userId}:sessions`, sessionId);
             return null;
           }
         });
@@ -520,8 +526,8 @@ export class RedisStorage implements IStorage {
           
           // Delete session record
           await client!.del(`session:${sessionId}`);
-          await client!.srem(`user:${session.userId}:sessions`, sessionId);
-          console.log(`🗑️ Storage: Deleted session ${sessionId} from Redis`);
+          const removedCount = await client!.srem(`user:${session.userId}:sessions`, sessionId);
+          console.log(`🗑️ Storage: Deleted session ${sessionId} from Redis, removed from set: ${removedCount}`);
           
           // If this was the current session, switch to another or clear
           const currentSession = await client!.get(`user:${session.userId}:current_session`);

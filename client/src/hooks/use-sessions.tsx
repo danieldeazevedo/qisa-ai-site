@@ -126,36 +126,19 @@ export function useSessions() {
     onSuccess: (_, deletedSessionId) => {
       console.log('🎯 Frontend: Delete mutation successful for session:', deletedSessionId);
       
-      // Clear the cache completely and refetch fresh data
-      queryClient.removeQueries({ queryKey: ["/api/chat/sessions"] });
-      queryClient.removeQueries({ queryKey: ["/api/chat/current-session"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/chat/sessions"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/chat/current-session"] });
+      // Clear ALL cache and force immediate reload
+      queryClient.clear();
       
-      // Force refetch immediately
-      queryClient.refetchQueries({ queryKey: ["/api/chat/sessions"] });
-      queryClient.refetchQueries({ queryKey: ["/api/chat/current-session"] });
-      
-      console.log('🔄 Frontend: Cache cleared and refetching data');
-      
-      // Navigate to the first available session, or to root if no sessions
-      const currentSessions = sessions as ChatSession[];
-      const remainingSessions = currentSessions.filter(s => s.id !== deletedSessionId);
-      
-      if (remainingSessions.length > 0) {
-        // Navigate to the first remaining session
-        setLocation(`/chat/${remainingSessions[0].id}`);
-        console.log('🔀 Frontend: Navigating to session:', remainingSessions[0].id);
-      } else {
-        // No sessions left, navigate to root
-        setLocation('/');
-        console.log('🏠 Frontend: No sessions left, navigating to root');
-      }
-      
+      // Show success message
       toast({
         title: "Conversa excluída",
         description: "A conversa foi excluída com sucesso.",
       });
+      
+      // Force page reload to ensure clean state
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     },
     onError: (error: any) => {
       toast({
