@@ -22,7 +22,7 @@ export default function Chat() {
   
   const { user, loading: authLoading, logout } = useAuth();
   const { messages, loading: chatLoading, sendMessage, clearHistory, isSending, isClearing } = useChat(chatId);
-  const { isAuthenticated, sessions, createSession, switchToSession, currentSession } = useSessions();
+  const { isAuthenticated, sessions, createSession, switchToSession, currentSession, isLoading } = useSessions();
   const { theme, toggleTheme } = useTheme();
   const { canGenerateImage } = useQkoins();
   const [showSettings, setShowSettings] = useState(false);
@@ -35,16 +35,13 @@ export default function Chat() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Handle navigation: if authenticated and no chatId, create/navigate to a session
+  // Handle navigation: if authenticated and no chatId, navigate to first session
   useEffect(() => {
-    if (isAuthenticated && !chatId && sessions && sessions.length > 0) {
-      // Navigate to the first session if exists
+    // Only navigate to existing session, don't create automatically
+    if (isAuthenticated && !chatId && sessions && sessions.length > 0 && !isLoading) {
       setLocation(`/chat/${sessions[0].id}`);
-    } else if (isAuthenticated && !chatId && sessions && sessions.length === 0) {
-      // Create first session if none exist
-      createSession("Nova Conversa");
     }
-  }, [isAuthenticated, chatId, sessions, setLocation, createSession]);
+  }, [isAuthenticated, chatId, sessions?.length, isLoading]);
 
   // No authentication required - chat is open to everyone
 
