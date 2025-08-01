@@ -211,18 +211,29 @@ export async function generateImage(prompt: string): Promise<string> {
 
 export async function editImage(imagePath: string, editPrompt: string): Promise<string> {
   try {
+    console.log(`🔧 Starting image edit for: ${imagePath}`);
     const imageBytes = fs.readFileSync(imagePath);
+    console.log(`📸 Image bytes read: ${imageBytes.length} bytes`);
+    
+    // Detect mime type from file extension
+    const extension = imagePath.toLowerCase().split('.').pop();
+    let mimeType = "image/jpeg";
+    if (extension === 'png') mimeType = "image/png";
+    if (extension === 'webp') mimeType = "image/webp";
+    
+    console.log(`🎯 Using mime type: ${mimeType}`);
     
     const contents = [
-      { text: editPrompt },
+      { text: `Edit this image: ${editPrompt}` },
       {
         inlineData: {
-          mimeType: "image/png",
+          mimeType,
           data: imageBytes.toString("base64"),
         },
       },
     ];
 
+    console.log(`🚀 Sending request to Gemini 2.0 Flash Preview...`);
     const response = await ai.models.generateContent({
       model: "gemini-2.0-flash-preview-image-generation",
       contents: contents,
@@ -231,6 +242,7 @@ export async function editImage(imagePath: string, editPrompt: string): Promise<
       },
     });
 
+    console.log(`✅ Gemini response received`);
     const candidates = response.candidates;
     if (!candidates || candidates.length === 0) {
       throw new Error("Não foi possível editar a imagem");
@@ -241,8 +253,13 @@ export async function editImage(imagePath: string, editPrompt: string): Promise<
       throw new Error("Resposta inválida do modelo");
     }
 
+    console.log(`🔍 Processing ${content.parts.length} response parts`);
     for (const part of content.parts) {
+      if (part.text) {
+        console.log(`📝 Text response: ${part.text.substring(0, 100)}...`);
+      }
       if (part.inlineData && part.inlineData.data) {
+        console.log(`🖼️ Image data found, size: ${part.inlineData.data.length} chars`);
         // Return base64 image data
         return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
       }
@@ -250,7 +267,7 @@ export async function editImage(imagePath: string, editPrompt: string): Promise<
 
     throw new Error("Nenhuma imagem editada foi gerada");
   } catch (error) {
-    console.error("Error editing image:", error);
-    throw new Error("Erro ao editar imagem");
+    console.error("❌ Error editing image:", error);
+    throw new Error(`Erro ao editar imagem: ${error.message}`);
   }
 }

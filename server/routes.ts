@@ -233,6 +233,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
 
       if (isImageEditRequest && username && !username.includes('anonymous')) {
+        console.log(`🎨 Image edit request detected for user: ${username}`);
         // Image editing request - use QKoins and return edited image
         const userQkoins = await storage.getUserQkoins(userId);
         if (userQkoins < 1) {
@@ -243,9 +244,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const spent = await storage.spendQkoins(userId, 1, `Edição de imagem: ${content.substring(0, 50)}...`);
             if (spent) {
               const imageAttachment = attachments.find(att => att.type === 'image');
+              console.log(`📸 Found image attachment: ${imageAttachment?.originalName}, path: ${imageAttachment?.filePath}`);
               if (imageAttachment?.filePath) {
                 const { editImage } = await import('../services/gemini.js');
+                console.log(`🔧 Editing image with prompt: ${content}`);
                 imageUrl = await editImage(imageAttachment.filePath, content);
+                console.log(`✅ Image edited successfully, imageUrl length: ${imageUrl?.length || 0}`);
                 response = "Aqui está sua imagem editada:";
               } else {
                 response = "❌ Erro ao processar a imagem anexada.";
@@ -254,6 +258,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               response = "❌ Erro ao processar QKoins. Tente novamente.";
             }
           } catch (error) {
+            console.error("❌ Error editing image:", error);
             // Refund the QKoin if image editing fails
             await storage.addQkoins(userId, 1, 'earned', 'Reembolso: falha na edição de imagem');
             response = "Desculpe, não consegui editar a imagem. Tente novamente com uma descrição diferente. Seu QKoin foi reembolsado.";
