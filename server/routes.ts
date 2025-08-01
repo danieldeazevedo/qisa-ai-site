@@ -112,7 +112,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const session = await storage.getCurrentSession(user.id);
-      res.json(session);
+      res.json(session || null);
     } catch (error) {
       console.error("Error getting current session:", error);
       res.status(500).json({ message: "Internal server error" });

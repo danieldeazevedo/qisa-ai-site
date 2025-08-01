@@ -123,10 +123,22 @@ export function useSessions() {
       const response = await apiRequest("DELETE", `/api/chat/sessions/${sessionId}`);
       return await response.json();
     },
-    onSuccess: () => {
+    onSuccess: (_, deletedSessionId) => {
       // Invalidate sessions list and current session
       queryClient.invalidateQueries({ queryKey: ["/api/chat/sessions"] });
       queryClient.invalidateQueries({ queryKey: ["/api/chat/current-session"] });
+      
+      // Navigate to the first available session, or to root if no sessions
+      const currentSessions = sessions as ChatSession[];
+      const remainingSessions = currentSessions.filter(s => s.id !== deletedSessionId);
+      
+      if (remainingSessions.length > 0) {
+        // Navigate to the first remaining session
+        setLocation(`/chat/${remainingSessions[0].id}`);
+      } else {
+        // No sessions left, navigate to root
+        setLocation('/');
+      }
       
       toast({
         title: "Conversa excluída",

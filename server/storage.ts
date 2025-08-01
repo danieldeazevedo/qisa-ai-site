@@ -11,7 +11,7 @@ export interface IStorage {
   createUser(user: InsertUser & { passwordHash: string }): Promise<User>;
   
   // Chat session methods
-  getCurrentSession(userId: string): Promise<ChatSession>;
+  getCurrentSession(userId: string): Promise<ChatSession | null>;
   getUserSessions(userId: string): Promise<ChatSession[]>;
   createChatSession(session: InsertChatSession): Promise<ChatSession>;
   updateChatSession(sessionId: string, updates: Partial<ChatSession>): Promise<ChatSession>;
@@ -205,7 +205,7 @@ export class RedisStorage implements IStorage {
     );
   }
 
-  async getCurrentSession(userId: string): Promise<ChatSession> {
+  async getCurrentSession(userId: string): Promise<ChatSession | null> {
     return this.withFallback(
       async () => {
         // Get user's current session
@@ -222,11 +222,8 @@ export class RedisStorage implements IStorage {
           }
         }
 
-        // Create new session if none exists
-        return await this.createChatSession({
-          userId,
-          title: "Nova Conversa"
-        });
+        // Return null if no session exists instead of creating automatically
+        return null;
       },
       async () => {
         // Fallback logic
@@ -243,11 +240,8 @@ export class RedisStorage implements IStorage {
           }
         }
 
-        // Create new session if none exists
-        return await this.createChatSession({
-          userId,
-          title: "Nova Conversa"
-        });
+        // Return null if no session exists instead of creating automatically
+        return null;
       }
     );
   }
