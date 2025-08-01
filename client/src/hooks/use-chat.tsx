@@ -41,7 +41,11 @@ export function useChat(chatId?: string) {
 
   // Send message mutation
   const sendMessageMutation = useMutation({
-    mutationFn: async ({ content, isImageRequest }: { content: string; isImageRequest: boolean }) => {
+    mutationFn: async ({ content, isImageRequest, attachments }: { 
+      content: string; 
+      isImageRequest: boolean; 
+      attachments?: import("@shared/schema").FileAttachment[];
+    }) => {
       
       if (isAuthenticated) {
         // Add user message immediately to UI for authenticated users too
@@ -61,7 +65,10 @@ export function useChat(chatId?: string) {
         const response = await apiRequest("POST", "/api/chat/send", {
           content,
           isImageRequest,
-          sessionId
+          sessionId,
+          attachments: attachments || []
+        }, {
+          'x-username': user?.username || 'anonymous',
         });
         return await response.json();
       } else {
@@ -82,6 +89,7 @@ export function useChat(chatId?: string) {
         const response = await apiRequest("POST", "/api/chat/simple-send", {
           content,
           isImageRequest,
+          attachments: attachments || [],
           context: messages.slice(-10).map(msg => ({
             role: msg.role,
             content: msg.content
@@ -157,8 +165,8 @@ export function useChat(chatId?: string) {
     },
   });
 
-  const sendMessage = (content: string, isImageRequest = false) => {
-    sendMessageMutation.mutate({ content, isImageRequest });
+  const sendMessage = (content: string, isImageRequest = false, attachments?: import("@shared/schema").FileAttachment[]) => {
+    sendMessageMutation.mutate({ content, isImageRequest, attachments });
   };
 
   const clearHistory = () => {

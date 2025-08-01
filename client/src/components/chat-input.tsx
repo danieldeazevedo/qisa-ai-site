@@ -1,16 +1,27 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { FileUpload } from "@/components/file-upload";
+import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Send, Image, Paperclip } from "lucide-react";
+import type { FileAttachment } from "@shared/schema";
 
 interface ChatInputProps {
-  onSendMessage: (content: string, isImageRequest: boolean) => void;
+  onSendMessage: (content: string, isImageRequest: boolean, attachments?: FileAttachment[]) => void;
   isLoading: boolean;
 }
 
 export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const [isImageMode, setIsImageMode] = useState(false);
+  const [attachments, setAttachments] = useState<FileAttachment[]>([]);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const quickActions = [
@@ -28,11 +39,21 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (message.trim() && !isLoading) {
-      onSendMessage(message.trim(), isImageMode);
+    if ((message.trim() || attachments.length > 0) && !isLoading) {
+      onSendMessage(message.trim(), isImageMode, attachments.length > 0 ? attachments : undefined);
       setMessage("");
       setIsImageMode(false);
+      setAttachments([]);
     }
+  };
+
+  const handleFilesUploaded = (files: FileAttachment[]) => {
+    setAttachments(prev => [...prev, ...files]);
+    setUploadDialogOpen(false);
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleQuickAction = (action: string) => {
@@ -71,14 +92,24 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
                 }
               }}
             />
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="absolute right-3 bottom-3 p-1.5 text-muted-foreground hover:text-primary transition-colors rounded-lg hover:bg-muted"
-            >
-              <Paperclip className="w-4 h-4" />
-            </Button>
+            <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-3 bottom-3 p-1.5 text-muted-foreground hover:text-primary transition-colors rounded-lg hover:bg-muted"
+                >
+                  <Paperclip className="w-4 h-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Anexar Arquivos</DialogTitle>
+                </DialogHeader>
+                <FileUpload onFilesUploaded={handleFilesUploaded} />
+              </DialogContent>
+            </Dialog>
           </div>
 
           <Button
@@ -97,12 +128,34 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
 
           <Button
             type="submit"
-            disabled={!message.trim() || isLoading}
+            disabled={(!message.trim() && attachments.length === 0) || isLoading}
             className="p-3 bg-gradient-to-r from-primary to-secondary text-white rounded-2xl hover:shadow-lg transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
           >
             <Send className="w-4 h-4" />
           </Button>
         </form>
+
+        {/* Attachments Preview */}
+        {attachments.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-3">
+            {attachments.map((attachment, index) => (
+              <div key={index} className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2">
+                <span className="text-sm font-medium truncate max-w-32">
+                  {attachment.originalName}
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeAttachment(index)}
+                  className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                >
+                  ×
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Quick Actions */}
         <div className="flex flex-wrap gap-2 mt-3">

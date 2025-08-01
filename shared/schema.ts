@@ -25,6 +25,17 @@ export const insertMessageSchema = z.object({
   content: z.string(),
   imageUrl: z.string().nullable().optional(),
   metadata: z.any().nullable().optional(),
+  attachments: z.array(z.object({
+    id: z.string(),
+    filename: z.string(),
+    originalName: z.string(),
+    mimeType: z.string(),
+    size: z.number(),
+    url: z.string(),
+    type: z.enum(['pdf', 'image', 'other']),
+    uploadedAt: z.date(),
+    processedContent: z.string().optional(),
+  })).optional(),
 });
 
 export const qkoinTransactionSchema = z.object({
@@ -67,6 +78,19 @@ export type Message = {
   imageUrl: string | null;
   metadata: any | null;
   createdAt: Date;
+  attachments?: FileAttachment[];
+};
+
+export type FileAttachment = {
+  id: string;
+  filename: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+  url: string;
+  type: 'pdf' | 'image' | 'other';
+  uploadedAt: Date;
+  processedContent?: string;
 };
 
 export type QkoinTransaction = {

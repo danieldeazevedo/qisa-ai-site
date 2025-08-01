@@ -3,8 +3,11 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { client } from "./db";
 import { generateResponse, generateImage } from "./services/gemini";
+import { fileProcessor } from "./services/file-processor";
 import { insertUserSchema, insertMessageSchema, loginUserSchema, insertChatSessionSchema } from "@shared/schema";
 import { z } from "zod";
+import multer from "multer";
+import path from "path";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Register endpoint
@@ -501,9 +504,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(500).json({ error: "Erro interno do servidor" });
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating session:", error);
-      if (error.message === "Session not found") {
+      if (error?.message === "Session not found") {
         return res.status(404).json({ error: "Sessão não encontrada ou foi removida" });
       }
       res.status(500).json({ message: "Internal server error" });
@@ -956,6 +959,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error claiming bonus QKoins:", error);
       res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Configure multer for file uploads
+  const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+      fileSize: 10 * 1024 * 1024, // 10MB limit
+    },
+    fileFilter: (req, file, cb) => {
+      // Allow PDFs and images
+      if (file.mimetype === 'application/pdf' || file.mimetype.startsWith('image/')) {
+        cb(null, true);
+      } else {
+        cb(new Error('Apenas PDFs e imagens são permitidos') as any, false);
+      }
+    }
+  });
+
+  // Upload and process files
+  app.post("/api/files/upload", upload.array('files', 5), async (req, res) => {
+    try {
+      const username = req.headers['x-username'] as string;
+      
+      if (!username || username.includes('anonymous')) {
+        return res.status(401).json({ error: "Login necessário para fazer upload de arquivos" });
+      }
+
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
+        return res.status(401).json({ error: "Usuário não encontrado" });
+      }
+
+      const files = req.files as any[];
+      if (!files || files.length === 0) {
+        return res.status(400).json({ error: "Nenhum arquivo enviado" });
+      }
+
+      const processedFiles = [];
+      for (const file of files) {
+        try {
+          const attachment = await fileProcessor.processFile(file);
+          processedFiles.push(attachment);
+        } catch (error) {
+          console.error(`Error processing file ${file.originalname}:`, error);
+        }
+      }
+
+      res.json({ 
+        success: true, 
+        files: processedFiles,
+        message: `${processedFiles.length} arquivo(s) processado(s) com sucesso`
+      });
+    } catch (error) {
+      console.error("Error uploading files:", error);
+      res.status(500).json({ error: "Erro ao fazer upload dos arquivos" });
+    }
+  });
+
+  // Serve uploaded files
+  app.get("/uploads/:filename", (req, res) => {
+    try {
+      const filename = req.params.filename;
+      const filePath = fileProcessor.getFilePath(filename);
+      
+      if (!fileProcessor.fileExists(filename)) {
+        return res.status(404).json({ error: "Arquivo não encontrado" });
+      }
+
+      res.sendFile(path.resolve(filePath));
+    } catch (error) {
+      console.error("Error serving file:", error);
+      res.status(500).json({ error: "Erro ao servir arquivo" });
+    }
+  });
+
+  // Delete uploaded file
+  app.delete("/api/files/:filename", async (req, res) => {
+    try {
+      const username = req.headers['x-username'] as string;
+      
+      if (!username || username.includes('anonymous')) {
+        return res.status(401).json({ error: "Login necessário" });
+      }
+
+      const filename = req.params.filename;
+      await fileProcessor.deleteFile(filename);
+      
+      res.json({ success: true, message: "Arquivo excluído com sucesso" });
+    } catch (error) {
+      console.error("Error deleting file:", error);
+      res.status(500).json({ error: "Erro ao excluir arquivo" });
     }
   });
 

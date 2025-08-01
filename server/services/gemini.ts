@@ -1,4 +1,6 @@
 import { GoogleGenAI, Modality } from "@google/genai";
+import * as fs from "fs";
+import type { FileAttachment } from "@shared/schema";
 
 const apiKey = process.env.GEMINI_API_KEY;
 if (!apiKey) {
@@ -11,11 +13,14 @@ const ai = new GoogleGenAI({
 
 const SYSTEM_INSTRUCTION = `Você é Qisa, uma assistente de IA avançada, amigável e prestativa. 
 Suas características principais:
-- Você é especializada em conversação natural e geração de imagens
+- Você é especializada em conversação natural, geração de imagens, análise de documentos e processamento de arquivos
 - Sempre responda em português brasileiro
 - Seja cordial, educada e empática
 - Forneça respostas informativas e úteis
 - Quando solicitado para gerar imagens, seja criativa e detalhada
+- Você pode analisar PDFs, imagens e outros documentos fornecidos pelo usuário
+- Para imagens, você pode descrever, analisar, editar ou criar novas versões baseadas em prompts
+- Para PDFs, você pode extrair informações, resumir conteúdo e responder perguntas sobre o documento
 - Mantenha o contexto da conversa e se refira às mensagens anteriores quando relevante
 - Você pode ajudar com qualquer assunto: tecnologia, ciência, arte, educação, entretenimento, etc.
 - Você é criada e treinada pela QisaSeek AI Labs que tem o metroplex como dono`;
@@ -23,30 +28,89 @@ Suas características principais:
 export interface ChatContext {
   role: "user" | "assistant";
   content: string;
+  attachments?: FileAttachment[];
 }
 
 export async function generateResponse(
   message: string,
   context: ChatContext[] = [],
-  username?: string
+  username?: string,
+  attachments?: FileAttachment[]
 ): Promise<string> {
   try {
-    // Build conversation history
-    const contents = context.map(msg => ({
-      role: msg.role === "assistant" ? "model" : msg.role,
-      parts: [{ text: msg.content }]
-    }));
+    // Build conversation history with potential file attachments
+    const contents = context.map(msg => {
+      const parts: any[] = [{ text: msg.content }];
+      
+      // Add file attachments if present
+      if (msg.attachments && msg.attachments.length > 0) {
+        for (const attachment of msg.attachments) {
+          if (attachment.type === 'image' && attachment.filePath && fs.existsSync(attachment.filePath)) {
+            const imageBytes = fs.readFileSync(attachment.filePath);
+            parts.push({
+              inlineData: {
+                data: imageBytes.toString("base64"),
+                mimeType: attachment.mimeType || "image/jpeg",
+              },
+            });
+          } else if (attachment.extractedText) {
+            // For PDFs, add the extracted text as context
+            parts.push({
+              text: `[Conteúdo do arquivo ${attachment.originalName}]:\n${attachment.extractedText}`
+            });
+          }
+        }
+      }
+      
+      return {
+        role: msg.role === "assistant" ? "model" : msg.role,
+        parts
+      };
+    });
 
-    // Add current message
+    // Add current message with username personalization and attachments
+    const userPrompt = username ? 
+      `[${username}]: ${message}` :
+      message;
+      
+    const currentParts: any[] = [{ text: userPrompt }];
+    
+    // Add current message attachments
+    if (attachments && attachments.length > 0) {
+      for (const attachment of attachments) {
+        if (attachment.type === 'image' && attachment.filePath && fs.existsSync(attachment.filePath)) {
+          const imageBytes = fs.readFileSync(attachment.filePath);
+          currentParts.push({
+            inlineData: {
+              data: imageBytes.toString("base64"),
+              mimeType: attachment.mimeType || "image/jpeg",
+            },
+          });
+        } else if (attachment.extractedText) {
+          // For PDFs, add the extracted text as context
+          currentParts.push({
+            text: `[Conteúdo do arquivo ${attachment.originalName}]:\n${attachment.extractedText}`
+          });
+        }
+      }
+    }
+
+
+
+    // Add current message with attachments
     contents.push({
       role: "user",
-      parts: [{ text: message }]
+      parts: currentParts
     });
 
     // Create personalized system instruction
     let systemInstruction = SYSTEM_INSTRUCTION;
     if (username && username !== 'anonymous') {
       systemInstruction += `\n\nO usuário com quem você está conversando se chama ${username}. Use o nome dele naturalmente na conversa quando apropriado.`;
+    }
+
+    if (attachments && attachments.length > 0) {
+      systemInstruction += `\n\nO usuário anexou ${attachments.length} arquivo(s). Analise o conteúdo e responda de acordo com o que foi solicitado.`;
     }
 
     const response = await ai.models.generateContent({
@@ -61,6 +125,32 @@ export async function generateResponse(
   } catch (error) {
     console.error("Error generating response:", error);
     throw new Error("Erro ao gerar resposta");
+  }
+}
+
+export async function analyzeImage(imagePath: string, prompt?: string): Promise<string> {
+  try {
+    const imageBytes = fs.readFileSync(imagePath);
+    
+    const contents = [
+      {
+        inlineData: {
+          data: imageBytes.toString("base64"),
+          mimeType: "image/jpeg",
+        },
+      },
+      prompt || "Analise esta imagem em detalhes e descreva o que você vê.",
+    ];
+
+    const response = await ai.models.generateContent({
+      model: "gemini-1.5-flash",
+      contents: contents,
+    });
+
+    return response.text || "Não foi possível analisar a imagem.";
+  } catch (error) {
+    console.error("Error analyzing image:", error);
+    throw new Error("Erro ao analisar imagem");
   }
 }
 
