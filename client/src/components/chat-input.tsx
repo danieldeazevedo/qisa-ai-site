@@ -116,9 +116,12 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
                   <Paperclip className="w-4 h-4" />
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+              <DialogContent className="max-w-2xl" aria-describedby="upload-dialog-description">
                 <DialogHeader>
                   <DialogTitle>Anexar Arquivos</DialogTitle>
+                  <div id="upload-dialog-description" className="text-sm text-muted-foreground mt-2">
+                    Selecione arquivos para upload (imagens, PDFs, etc.)
+                  </div>
                 </DialogHeader>
                 <FileUpload onFilesUploaded={handleFilesUploaded} />
               </DialogContent>
