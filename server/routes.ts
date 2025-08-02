@@ -8,6 +8,7 @@ import { insertUserSchema, insertMessageSchema, loginUserSchema, insertChatSessi
 import { z } from "zod";
 import multer from "multer";
 import path from "path";
+import fs from "fs";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Register endpoint
@@ -222,18 +223,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let response: string;
       let imageUrl: string | null = null;
 
-      // Check if this is an image edit request (has image attachment + edit prompt)
-      const hasImageAttachment = attachments?.some(att => att.type === 'image');
-      const isImageEditRequest = hasImageAttachment && (
-        content.toLowerCase().includes('editar') ||
-        content.toLowerCase().includes('trocar') ||
-        content.toLowerCase().includes('modificar') ||
-        content.toLowerCase().includes('alterar') ||
-        content.toLowerCase().includes('mudar')
-      );
+      // Check if there are image attachments
+      const imageAttachments = attachments?.filter(att => 
+        att.type === 'image' && 
+        att.mimeType && 
+        att.mimeType.startsWith('image/') &&
+        att.filePath
+      ) || [];
 
-      if (isImageEditRequest && username && !username.includes('anonymous')) {
-        console.log(`🎨 Image edit request detected for user: ${username}`);
+      console.log(`📎 Processing ${attachments?.length || 0} attachments, ${imageAttachments.length} are images`);
+
+      // Check for image editing keywords
+      const editKeywords = ['editar', 'trocar', 'modificar', 'alterar', 'mudar', 'pinte', 'mude', 'troque'];
+      const isEditRequest = editKeywords.some(keyword => content.toLowerCase().includes(keyword));
+      
+      // Check for image analysis keywords
+      const analyzeKeywords = ['analisar', 'analise', 'descreva', 'descrever', 'o que', 'que tem', 'vejo', 'mostrar'];
+      const isAnalyzeRequest = analyzeKeywords.some(keyword => content.toLowerCase().includes(keyword));
+
+      if (imageAttachments.length > 0 && isEditRequest && username && !username.includes('anonymous')) {
+        console.log(`🎨 Image EDIT request detected for user: ${username}`);
+        console.log(`🎨 Edit keywords found in: "${content}"`);
+        console.log(`🎨 Image to edit: ${imageAttachments[0].originalName}`);
+        
         // Image editing request - use QKoins and return edited image
         const userQkoins = await storage.getUserQkoins(userId);
         if (userQkoins < 1) {
@@ -243,16 +255,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Spend 1 QKoin for image editing
             const spent = await storage.spendQkoins(userId, 1, `Edição de imagem: ${content.substring(0, 50)}...`);
             if (spent) {
-              const imageAttachment = attachments.find(att => att.type === 'image');
-              console.log(`📸 Found image attachment: ${imageAttachment?.originalName}, path: ${imageAttachment?.filePath}`);
-              if (imageAttachment?.filePath) {
+              const imageAttachment = imageAttachments[0];
+              console.log(`📸 Editing image: ${imageAttachment.originalName}, MIME: ${imageAttachment.mimeType}, path: ${imageAttachment.filePath}`);
+              
+              if (imageAttachment.filePath && fs.existsSync(imageAttachment.filePath)) {
                 const { editImage } = await import('../services/gemini.js');
-                console.log(`🔧 Editing image with prompt: ${content}`);
+                console.log(`🔧 Calling editImage with prompt: "${content}"`);
                 imageUrl = await editImage(imageAttachment.filePath, content);
-                console.log(`✅ Image edited successfully, imageUrl length: ${imageUrl?.length || 0}`);
-                response = "Aqui está sua imagem editada:";
+                console.log(`✅ Image edited successfully, imageUrl: ${imageUrl ? 'RECEIVED' : 'NULL'}`);
+                
+                if (imageUrl) {
+                  response = "Aqui está sua imagem editada:";
+                } else {
+                  response = "❌ Não foi possível gerar a imagem editada. Seu QKoin foi reembolsado.";
+                  await storage.addQkoins(userId, 1, 'earned', 'Reembolso: imagem não gerada');
+                }
               } else {
-                response = "❌ Erro ao processar a imagem anexada.";
+                response = "❌ Arquivo de imagem não encontrado no servidor.";
+                await storage.addQkoins(userId, 1, 'earned', 'Reembolso: arquivo não encontrado');
               }
             } else {
               response = "❌ Erro ao processar QKoins. Tente novamente.";
@@ -263,6 +283,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
             await storage.addQkoins(userId, 1, 'earned', 'Reembolso: falha na edição de imagem');
             response = "Desculpe, não consegui editar a imagem. Tente novamente com uma descrição diferente. Seu QKoin foi reembolsado.";
           }
+        }
+      } else if (imageAttachments.length > 0 && (isAnalyzeRequest || (!isEditRequest && !isImageRequest))) {
+        console.log(`🔍 Image ANALYSIS request detected for user: ${username}`);
+        console.log(`🔍 Analyze keywords found in: "${content}"`);
+        
+        // Image analysis - free, just text response
+        try {
+          const actualUsername = username && !username.includes('anonymous') ? user.username : undefined;
+          response = await generateResponse(content, context, actualUsername, attachments);
+          console.log(`✅ Image analysis completed`);
+        } catch (error) {
+          console.error("❌ Error analyzing image:", error);
+          response = "Desculpe, não consegui analisar a imagem. Tente novamente.";
         }
       } else if (isImageRequest) {
         // Check if user has enough QKoins for image generation
