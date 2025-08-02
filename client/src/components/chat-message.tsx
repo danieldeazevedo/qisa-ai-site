@@ -22,11 +22,12 @@ export function ChatMessage({ message, isLatest = false }: ChatMessageProps) {
 
   // Apply typewriter effect only to the latest AI message
   const shouldAnimate = !isUser && isLatest;
-  const { displayedText, isComplete } = useTypewriter({
+  const { displayedText, isComplete, isAnimating } = useTypewriter({
     text: message.content,
     speed: 25, // Faster typing speed
-    lineDelay: 300, // Pause between lines
-    enabled: shouldAnimate
+    lineDelay: 150, // Pause between lines
+    enabled: shouldAnimate,
+    messageId: message.id // Track message changes
   });
 
   // Use typewriter text if animating, otherwise use full content
@@ -56,7 +57,7 @@ export function ChatMessage({ message, isLatest = false }: ChatMessageProps) {
               >
                 {contentToDisplay}
               </ReactMarkdown>
-              {shouldAnimate && !isComplete && (
+              {shouldAnimate && isAnimating && (
                 <span className="inline-block w-2 h-4 bg-current ml-1 animate-pulse" />
               )}
             </div>
@@ -77,7 +78,7 @@ export function ChatMessage({ message, isLatest = false }: ChatMessageProps) {
             >
               {contentToDisplay}
             </ReactMarkdown>
-            {shouldAnimate && !isComplete && (
+            {shouldAnimate && isAnimating && (
               <span className="inline-block w-2 h-4 bg-current ml-1 animate-pulse" />
             )}
           </div>

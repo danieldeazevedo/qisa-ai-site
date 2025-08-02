@@ -2,81 +2,105 @@ import { useState, useEffect, useRef } from "react";
 
 interface UseTypewriterProps {
   text: string;
-  speed?: number; // milliseconds per character
-  lineDelay?: number; // milliseconds to pause between lines
+  speed?: number;
+  lineDelay?: number;
   enabled?: boolean;
+  messageId?: string;
 }
 
 export function useTypewriter({ 
   text, 
-  speed = 30, 
-  lineDelay = 200, 
-  enabled = true 
+  speed = 25, 
+  lineDelay = 150, 
+  enabled = true,
+  messageId
 }: UseTypewriterProps) {
   const [displayedText, setDisplayedText] = useState("");
-  const [currentLineIndex, setCurrentLineIndex] = useState(0);
-  const [currentCharIndex, setCurrentCharIndex] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout>();
-
-  // Split text into lines for line-by-line animation
-  const lines = text.split('\n');
+  const lastMessageIdRef = useRef<string>();
 
   useEffect(() => {
-    if (!enabled) {
-      setDisplayedText(text);
-      setIsComplete(true);
-      return;
-    }
-
-    // Reset state when text changes
-    setDisplayedText("");
-    setCurrentLineIndex(0);
-    setCurrentCharIndex(0);
-    setIsComplete(false);
-
+    // Clear any existing timeout
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
 
-    const typeText = () => {
-      if (currentLineIndex >= lines.length) {
-        setIsComplete(true);
-        return;
-      }
+    // If not enabled or no text, show immediately
+    if (!enabled || !text) {
+      setDisplayedText(text);
+      setIsComplete(true);
+      setIsAnimating(false);
+      return;
+    }
 
-      const currentLine = lines[currentLineIndex];
+    // Check if this is a new message
+    const isNewMessage = messageId && messageId !== lastMessageIdRef.current;
+    
+    if (isNewMessage) {
+      lastMessageIdRef.current = messageId;
       
-      if (currentCharIndex >= currentLine.length) {
-        // Finished current line, move to next after delay
-        timeoutRef.current = setTimeout(() => {
-          setCurrentLineIndex(prev => prev + 1);
-          setCurrentCharIndex(0);
-          setDisplayedText(prev => prev + '\n');
-        }, lineDelay);
-      } else {
-        // Type next character
-        const nextChar = currentLine[currentCharIndex];
-        setDisplayedText(prev => prev + nextChar);
-        setCurrentCharIndex(prev => prev + 1);
-        
-        timeoutRef.current = setTimeout(typeText, speed);
-      }
-    };
+      // Start animation for new message
+      setDisplayedText("");
+      setIsComplete(false);
+      setIsAnimating(true);
 
-    // Start typing
-    timeoutRef.current = setTimeout(typeText, 100);
+      let currentIndex = 0;
+      const lines = text.split('\n');
+      let currentLineIndex = 0;
+      let currentCharIndex = 0;
+
+      const typeNextChar = () => {
+        if (currentLineIndex >= lines.length) {
+          setIsComplete(true);
+          setIsAnimating(false);
+          return;
+        }
+
+        const currentLine = lines[currentLineIndex];
+        
+        if (currentCharIndex >= currentLine.length) {
+          // End of line - add newline and move to next line
+          setDisplayedText(prev => prev + '\n');
+          currentLineIndex++;
+          currentCharIndex = 0;
+          
+          if (currentLineIndex < lines.length) {
+            timeoutRef.current = setTimeout(typeNextChar, lineDelay);
+          } else {
+            setIsComplete(true);
+            setIsAnimating(false);
+          }
+        } else {
+          // Add next character
+          const nextChar = currentLine[currentCharIndex];
+          setDisplayedText(prev => prev + nextChar);
+          currentCharIndex++;
+          timeoutRef.current = setTimeout(typeNextChar, speed);
+        }
+      };
+
+      // Start typing after small delay
+      timeoutRef.current = setTimeout(typeNextChar, 200);
+      
+    } else {
+      // Old message - show immediately without animation
+      setDisplayedText(text);
+      setIsComplete(true);
+      setIsAnimating(false);
+    }
 
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [text, speed, lineDelay, enabled, currentLineIndex, currentCharIndex, lines]);
+  }, [text, enabled, messageId, speed, lineDelay]);
 
   return {
     displayedText,
     isComplete,
-    progress: text.length > 0 ? displayedText.length / text.length : 1
+    isAnimating
   };
 }
