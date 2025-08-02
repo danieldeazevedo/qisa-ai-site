@@ -109,6 +109,13 @@ export function useChat(chatId?: string) {
     onSuccess: (data) => {
       const isAuthenticated = user?.username && !user.username.includes('anonymous');
       
+      console.log('🎯 Received response data:', {
+        response: data.response?.substring(0, 50) + '...',
+        hasImageUrl: !!data.imageUrl,
+        imageUrlLength: data.imageUrl?.length,
+        imageUrlStart: data.imageUrl?.substring(0, 50)
+      });
+      
       // Add AI response to UI immediately for both authenticated and anonymous users
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -120,6 +127,7 @@ export function useChat(chatId?: string) {
         createdAt: new Date(),
       };
       
+      console.log('💬 Creating assistant message with imageUrl:', !!assistantMessage.imageUrl);
       setMessages(prev => [...prev, assistantMessage]);
       
       if (isAuthenticated && data.saved) {

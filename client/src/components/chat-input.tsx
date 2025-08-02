@@ -71,7 +71,15 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
   };
 
   // Check if there are image attachments to show edit mode button
-  const hasImageAttachments = attachments.some(att => att.type === 'image');
+  const hasImageAttachments = attachments.some(att => 
+    att.type === 'image' || att.mimeType?.startsWith('image/')
+  );
+  
+  console.log('🖼️ Checking attachments for images:', {
+    attachments: attachments.length,
+    hasImages: hasImageAttachments,
+    attachmentTypes: attachments.map(att => ({ type: att.type, mimeType: att.mimeType }))
+  });
 
   return (
     <div className="bg-background border-t border-border px-4 sm:px-6 lg:px-8 py-4">

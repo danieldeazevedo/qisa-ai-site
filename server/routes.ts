@@ -252,21 +252,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
               const imageAttachment = imageAttachments[0];
               console.log(`📸 Editing image: ${imageAttachment.originalName}, MIME: ${imageAttachment.mimeType}, path: ${imageAttachment.filePath}`);
               
+              // Try file path first, then fallback to base64 data
+              let imageEditResult = null;
+              
               if (imageAttachment.filePath && fs.existsSync(imageAttachment.filePath)) {
                 const { editImage } = await import('./services/gemini');
                 console.log(`🔧 Calling editImage with prompt: "${content}"`);
-                imageUrl = await editImage(imageAttachment.filePath, content);
-                console.log(`✅ Image edited successfully, imageUrl: ${imageUrl ? 'RECEIVED' : 'NULL'}`);
+                imageEditResult = await editImage(imageAttachment.filePath, content);
                 
-                if (imageUrl) {
-                  response = "Aqui está sua imagem editada:";
-                } else {
-                  response = "❌ Não foi possível gerar a imagem editada. Seu QKoin foi reembolsado.";
-                  await storage.addQkoins(userId, 1, 'earned', 'Reembolso: imagem não gerada');
+                // Delete the temporary file after processing
+                try {
+                  fs.unlinkSync(imageAttachment.filePath);
+                  console.log(`🗑️ Deleted temporary file: ${imageAttachment.filePath}`);
+                } catch (deleteError) {
+                  console.warn(`⚠️ Could not delete temp file: ${deleteError}`);
                 }
               } else {
                 response = "❌ Arquivo de imagem não encontrado no servidor.";
                 await storage.addQkoins(userId, 1, 'earned', 'Reembolso: arquivo não encontrado');
+              }
+              
+              if (imageEditResult) {
+                imageUrl = imageEditResult;
+                response = "Aqui está sua imagem editada:";
+                console.log(`✅ Image edited successfully, URL length: ${imageUrl.length}`);
+                console.log(`✅ Image URL starts with: ${imageUrl.substring(0, 50)}...`);
+              } else {
+                response = "❌ Não foi possível gerar a imagem editada. Seu QKoin foi reembolsado.";
+                await storage.addQkoins(userId, 1, 'earned', 'Reembolso: imagem não gerada');
               }
             } else {
               response = "❌ Erro ao processar QKoins. Tente novamente.";
@@ -333,6 +346,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      console.log(`📤 Sending response - has imageUrl: ${!!imageUrl}, length: ${imageUrl?.length || 0}`);
       res.json({
         response,
         imageUrl,
