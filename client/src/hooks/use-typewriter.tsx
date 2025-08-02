@@ -10,8 +10,8 @@ interface UseTypewriterProps {
 
 export function useTypewriter({ 
   text, 
-  speed = 15, // Much faster
-  lineDelay = 50, // Much faster line breaks
+  speed = 15, // Base speed
+  lineDelay = 50, // Base line delay
   enabled = true,
   messageId
 }: UseTypewriterProps) {
@@ -20,6 +20,24 @@ export function useTypewriter({
   const [isAnimating, setIsAnimating] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout>();
   const lastMessageIdRef = useRef<string>();
+
+  // Calculate adaptive speed based on text length
+  // Target: 6 seconds maximum for any text
+  const calculateAdaptiveSpeed = (textLength: number): { speed: number; lineDelay: number } => {
+    const maxDuration = 6000; // 6 seconds in milliseconds
+    const minSpeed = 5; // Minimum speed (fastest)
+    const maxSpeed = 30; // Maximum speed (slowest for short texts)
+    
+    if (textLength === 0) return { speed: maxSpeed, lineDelay: 100 };
+    
+    // Calculate speed to fit within 6 seconds
+    const targetSpeed = Math.max(minSpeed, Math.min(maxSpeed, maxDuration / textLength));
+    
+    // Also calculate proportional line delay
+    const adaptiveLineDelay = Math.max(20, Math.min(100, targetSpeed * 2));
+    
+    return { speed: Math.round(targetSpeed), lineDelay: Math.round(adaptiveLineDelay) };
+  };
 
   useEffect(() => {
     // Clear any existing timeout
@@ -41,12 +59,14 @@ export function useTypewriter({
     if (isNewMessage) {
       lastMessageIdRef.current = messageId;
       
+      // Calculate adaptive speeds based on text length
+      const { speed: adaptiveSpeed, lineDelay: adaptiveLineDelay } = calculateAdaptiveSpeed(text.length);
+      
       // Start animation for new message
       setDisplayedText("");
       setIsComplete(false);
       setIsAnimating(true);
 
-      let currentIndex = 0;
       const lines = text.split('\n');
       let currentLineIndex = 0;
       let currentCharIndex = 0;
@@ -67,7 +87,7 @@ export function useTypewriter({
           currentCharIndex = 0;
           
           if (currentLineIndex < lines.length) {
-            timeoutRef.current = setTimeout(typeNextChar, lineDelay);
+            timeoutRef.current = setTimeout(typeNextChar, adaptiveLineDelay);
           } else {
             setIsComplete(true);
             setIsAnimating(false);
@@ -77,12 +97,12 @@ export function useTypewriter({
           const nextChar = currentLine[currentCharIndex];
           setDisplayedText(prev => prev + nextChar);
           currentCharIndex++;
-          timeoutRef.current = setTimeout(typeNextChar, speed);
+          timeoutRef.current = setTimeout(typeNextChar, adaptiveSpeed);
         }
       };
 
       // Start typing immediately
-      timeoutRef.current = setTimeout(typeNextChar, 100);
+      timeoutRef.current = setTimeout(typeNextChar, 50);
       
     } else {
       // Old message - show immediately without animation

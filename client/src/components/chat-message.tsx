@@ -24,8 +24,6 @@ export function ChatMessage({ message, isLatest = false }: ChatMessageProps) {
   const shouldAnimate = !isUser && isLatest;
   const { displayedText, isComplete, isAnimating } = useTypewriter({
     text: message.content,
-    speed: 15, // Much faster typing
-    lineDelay: 50, // Much faster line breaks
     enabled: shouldAnimate,
     messageId: message.id // Track message changes
   });
