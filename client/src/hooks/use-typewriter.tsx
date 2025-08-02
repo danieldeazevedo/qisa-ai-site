@@ -22,19 +22,19 @@ export function useTypewriter({
   const lastMessageIdRef = useRef<string>();
 
   // Calculate adaptive speed based on text length
-  // Target: 6 seconds maximum for any text
+  // Target: Much faster animation, max 3 seconds
   const calculateAdaptiveSpeed = (textLength: number): { speed: number; lineDelay: number } => {
-    const maxDuration = 6000; // 6 seconds in milliseconds
-    const minSpeed = 5; // Minimum speed (fastest)
-    const maxSpeed = 30; // Maximum speed (slowest for short texts)
+    const maxDuration = 3000; // 3 seconds maximum
+    const minSpeed = 2; // Super fast
+    const maxSpeed = 8; // Still fast for short texts
     
-    if (textLength === 0) return { speed: maxSpeed, lineDelay: 100 };
+    if (textLength === 0) return { speed: maxSpeed, lineDelay: 10 };
     
-    // Calculate speed to fit within 6 seconds
+    // Calculate speed to fit within 3 seconds
     const targetSpeed = Math.max(minSpeed, Math.min(maxSpeed, maxDuration / textLength));
     
-    // Also calculate proportional line delay
-    const adaptiveLineDelay = Math.max(20, Math.min(100, targetSpeed * 2));
+    // Very fast line delays
+    const adaptiveLineDelay = Math.max(5, Math.min(15, targetSpeed));
     
     return { speed: Math.round(targetSpeed), lineDelay: Math.round(adaptiveLineDelay) };
   };
@@ -102,7 +102,7 @@ export function useTypewriter({
       };
 
       // Start typing immediately
-      timeoutRef.current = setTimeout(typeNextChar, 50);
+      timeoutRef.current = setTimeout(typeNextChar, 20);
       
     } else {
       // Old message - show immediately without animation
