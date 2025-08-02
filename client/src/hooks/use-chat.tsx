@@ -123,7 +123,7 @@ export function useChat(chatId?: string) {
         role: "assistant", 
         content: data.response,
         imageUrl: data.imageUrl || null,
-        metadata: null,
+        metadata: { isNewMessage: true }, // Mark as new for animation
         createdAt: new Date(),
       };
       

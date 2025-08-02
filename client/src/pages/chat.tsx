@@ -283,11 +283,12 @@ export default function Chat() {
               </div>
             ) : (
               Array.isArray(messages) && messages.map((message, index) => {
-                // Find the last AI message to apply typewriter effect
+                // Only animate if it's the latest AI message AND marked as new
                 const aiMessages = messages.filter(m => m.role === 'assistant');
                 const isLatestAI = message.role === 'assistant' && 
                                    aiMessages.length > 0 && 
-                                   message.id === aiMessages[aiMessages.length - 1].id;
+                                   message.id === aiMessages[aiMessages.length - 1].id &&
+                                   message.metadata?.isNewMessage === true;
                 
                 return (
                   <ChatMessage 

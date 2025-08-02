@@ -10,8 +10,8 @@ interface UseTypewriterProps {
 
 export function useTypewriter({ 
   text, 
-  speed = 25, 
-  lineDelay = 150, 
+  speed = 15, // Much faster
+  lineDelay = 50, // Much faster line breaks
   enabled = true,
   messageId
 }: UseTypewriterProps) {
@@ -35,8 +35,8 @@ export function useTypewriter({
       return;
     }
 
-    // Check if this is a new message
-    const isNewMessage = messageId && messageId !== lastMessageIdRef.current;
+    // Check if this is a new message (enabled and messageId changed)
+    const isNewMessage = enabled && messageId && messageId !== lastMessageIdRef.current;
     
     if (isNewMessage) {
       lastMessageIdRef.current = messageId;
@@ -81,8 +81,8 @@ export function useTypewriter({
         }
       };
 
-      // Start typing after small delay
-      timeoutRef.current = setTimeout(typeNextChar, 200);
+      // Start typing immediately
+      timeoutRef.current = setTimeout(typeNextChar, 100);
       
     } else {
       // Old message - show immediately without animation
