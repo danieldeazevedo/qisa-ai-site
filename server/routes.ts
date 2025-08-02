@@ -259,7 +259,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               console.log(`📸 Editing image: ${imageAttachment.originalName}, MIME: ${imageAttachment.mimeType}, path: ${imageAttachment.filePath}`);
               
               if (imageAttachment.filePath && fs.existsSync(imageAttachment.filePath)) {
-                const { editImage } = await import('../services/gemini.js');
+                const { editImage } = await import('./services/gemini');
                 console.log(`🔧 Calling editImage with prompt: "${content}"`);
                 imageUrl = await editImage(imageAttachment.filePath, content);
                 console.log(`✅ Image edited successfully, imageUrl: ${imageUrl ? 'RECEIVED' : 'NULL'}`);
