@@ -62,13 +62,18 @@ export function useChat(chatId?: string) {
         setMessages(prev => [...prev, userMessage]);
 
         // Use the new API with history persistence
-        const response = await apiRequest("POST", "/api/chat/send", {
-          content,
-          isImageRequest,
-          sessionId,
-          attachments: attachments || []
-        }, {
-          'x-username': user?.username || 'anonymous',
+        const response = await fetch("/api/chat/send", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            'x-username': user?.username || 'anonymous'
+          },
+          body: JSON.stringify({
+            content,
+            isImageRequest,
+            sessionId,
+            attachments: attachments || []
+          })
         });
         return await response.json();
       } else {

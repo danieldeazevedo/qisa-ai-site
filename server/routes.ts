@@ -502,7 +502,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (sessionData) {
             let session;
             try {
-              session = JSON.parse(sessionData);
+              session = JSON.parse(sessionData as string);
             } catch (parseError) {
               console.log(`❌ JSON parse error, recreating session data`);
               // If data is corrupted, recreate minimal session object
@@ -815,7 +815,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       for (const sessionId of sessionIdsSet) {
         const sessionData = await client!.get(`session:${sessionId}`);
         if (sessionData) {
-          const session = JSON.parse(sessionData);
+          const session = JSON.parse(sessionData as string);
           sessionDetails.push(session);
         } else {
           // Remove orphaned session ID

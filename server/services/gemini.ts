@@ -268,6 +268,6 @@ export async function editImage(imagePath: string, editPrompt: string): Promise<
     throw new Error("Nenhuma imagem editada foi gerada");
   } catch (error) {
     console.error("❌ Error editing image:", error);
-    throw new Error(`Erro ao editar imagem: ${error.message}`);
+    throw new Error(`Erro ao editar imagem: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
