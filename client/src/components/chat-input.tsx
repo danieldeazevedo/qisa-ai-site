@@ -9,6 +9,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Send, Image, Paperclip, Edit3 } from "lucide-react";
 import type { FileAttachment } from "@shared/schema";
 
@@ -23,6 +33,7 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
   const [isEditMode, setIsEditMode] = useState(false);
   const [attachments, setAttachments] = useState<FileAttachment[]>([]);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [imageModeDialogOpen, setImageModeDialogOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const quickActions = [
@@ -52,6 +63,16 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
   const handleFilesUploaded = (files: FileAttachment[]) => {
     setAttachments(prev => [...prev, ...files]);
     setUploadDialogOpen(false);
+    
+    // Check if any uploaded file is an image
+    const hasNewImages = files.some(file => 
+      file.type === 'image' || file.mimeType?.startsWith('image/')
+    );
+    
+    if (hasNewImages) {
+      // Show image mode selection dialog
+      setImageModeDialogOpen(true);
+    }
   };
 
   const removeAttachment = (index: number) => {
@@ -75,21 +96,13 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
     att.type === 'image' || att.mimeType?.startsWith('image/')
   );
   
-  // Debug logs to understand why buttons aren't showing
-  console.log('🖼️ DEBUGGING: Attachments detection:', {
-    totalAttachments: attachments.length,
-    hasImageAttachments,
-    attachmentDetails: attachments.map(att => ({
-      id: att.id,
-      originalName: att.originalName,
-      type: att.type,
-      mimeType: att.mimeType,
-      size: att.size
-    }))
-  });
-  
-  // Force display for debugging - remove this after testing
-  const debugForceShow = attachments.length > 0;
+  // Visual indicator of edit mode in textarea placeholder
+  const getPlaceholder = () => {
+    if (isImageMode) return "Descreva a imagem que você quer gerar...";
+    if (hasImageAttachments && isEditMode) return "Descreva como editar a imagem (custará 1 QKoin)...";
+    if (hasImageAttachments && !isEditMode) return "Faça uma pergunta sobre a imagem (grátis)...";
+    return "Digite sua mensagem para a Qisa...";
+  };
 
   return (
     <div className="bg-background border-t border-border px-4 sm:px-6 lg:px-8 py-4">
@@ -100,11 +113,7 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
               ref={textareaRef}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder={
-                isImageMode
-                  ? "Descreva a imagem que você quer gerar..."
-                  : "Digite sua mensagem para a Qisa..."
-              }
+              placeholder={getPlaceholder()}
               className="resize-none border-input bg-background text-foreground rounded-2xl px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent max-h-32 min-h-[48px] placeholder:text-muted-foreground"
               rows={1}
               disabled={isLoading}
@@ -183,33 +192,23 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
               ))}
             </div>
             
-            {/* Edit Mode Toggle for Images - Using debug force show temporarily */}
-            {(hasImageAttachments || debugForceShow) && (
-              <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg border border-border">
-                <Edit3 className="w-5 h-5 text-primary" />
-                <div className="flex-1">
-                  <div className="text-sm font-medium mb-1">Escolha o modo:</div>
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant={!isEditMode ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setIsEditMode(false)}
-                      className="h-7 px-3 text-xs"
-                    >
-                      📖 Analisar (Grátis)
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={isEditMode ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setIsEditMode(true)}
-                      className="h-7 px-3 text-xs"
-                    >
-                      ✏️ Editar (1 QKoin)
-                    </Button>
-                  </div>
-                </div>
+            {/* Mode indicator for images */}
+            {hasImageAttachments && (
+              <div className="flex items-center gap-2 p-2 bg-muted/30 rounded-lg text-xs">
+                {isEditMode ? (
+                  <span className="text-blue-600 font-medium">✏️ Modo: Editar Imagem (1 QKoin)</span>
+                ) : (
+                  <span className="text-green-600 font-medium">📖 Modo: Analisar Imagem (Grátis)</span>
+                )}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setImageModeDialogOpen(true)}
+                  className="h-5 px-2 text-xs hover:bg-muted"
+                >
+                  Trocar
+                </Button>
               </div>
             )}
           </div>
@@ -229,6 +228,38 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
             </Button>
           ))}
         </div>
+
+        {/* Image Mode Selection Dialog */}
+        <AlertDialog open={imageModeDialogOpen} onOpenChange={setImageModeDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Escolha o modo para sua imagem</AlertDialogTitle>
+              <AlertDialogDescription>
+                Como você gostaria de processar a imagem anexada?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+              <AlertDialogAction
+                onClick={() => {
+                  setIsEditMode(false);
+                  setImageModeDialogOpen(false);
+                }}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                📖 Analisar Imagem (Grátis)
+              </AlertDialogAction>
+              <AlertDialogAction
+                onClick={() => {
+                  setIsEditMode(true);
+                  setImageModeDialogOpen(false);
+                }}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                ✏️ Editar Imagem (1 QKoin)
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
