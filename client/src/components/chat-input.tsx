@@ -175,18 +175,31 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
             
             {/* Edit Mode Toggle for Images */}
             {hasImageAttachments && (
-              <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg">
-                <Edit3 className="w-4 h-4 text-primary" />
-                <span className="text-sm font-medium">Modo de edição:</span>
-                <Button
-                  type="button"
-                  variant={isEditMode ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setIsEditMode(!isEditMode)}
-                  className="h-6 px-3 text-xs"
-                >
-                  {isEditMode ? "Editar Imagem (1 QKoin)" : "Analisar Imagem (Grátis)"}
-                </Button>
+              <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg border border-border">
+                <Edit3 className="w-5 h-5 text-primary" />
+                <div className="flex-1">
+                  <div className="text-sm font-medium mb-1">Escolha o modo:</div>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant={!isEditMode ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setIsEditMode(false)}
+                      className="h-7 px-3 text-xs"
+                    >
+                      📖 Analisar (Grátis)
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={isEditMode ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setIsEditMode(true)}
+                      className="h-7 px-3 text-xs"
+                    >
+                      ✏️ Editar (1 QKoin)
+                    </Button>
+                  </div>
+                </div>
               </div>
             )}
           </div>
