@@ -282,9 +282,21 @@ export default function Chat() {
                 <span className="ml-2 text-gray-600">Carregando mensagens...</span>
               </div>
             ) : (
-              Array.isArray(messages) && messages.map((message) => (
-                <ChatMessage key={message.id} message={message} />
-              ))
+              Array.isArray(messages) && messages.map((message, index) => {
+                // Find the last AI message to apply typewriter effect
+                const aiMessages = messages.filter(m => m.role === 'assistant');
+                const isLatestAI = message.role === 'assistant' && 
+                                   aiMessages.length > 0 && 
+                                   message.id === aiMessages[aiMessages.length - 1].id;
+                
+                return (
+                  <ChatMessage 
+                    key={message.id} 
+                    message={message} 
+                    isLatest={isLatestAI}
+                  />
+                );
+              })
             )}
 
             {/* Loading Message */}

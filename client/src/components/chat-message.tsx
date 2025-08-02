@@ -6,17 +6,31 @@ import ReactMarkdown from "react-markdown";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
+import { useTypewriter } from "@/hooks/use-typewriter";
 
 interface ChatMessageProps {
   message: Message;
+  isLatest?: boolean; // To identify if this is the latest AI message for typewriter effect
 }
 
-export function ChatMessage({ message }: ChatMessageProps) {
+export function ChatMessage({ message, isLatest = false }: ChatMessageProps) {
   const isUser = message.role === "user";
   const timestamp = formatDistanceToNow(message.createdAt ? new Date(message.createdAt) : new Date(), {
     addSuffix: true,
     locale: ptBR,
   });
+
+  // Apply typewriter effect only to the latest AI message
+  const shouldAnimate = !isUser && isLatest;
+  const { displayedText, isComplete } = useTypewriter({
+    text: message.content,
+    speed: 25, // Faster typing speed
+    lineDelay: 300, // Pause between lines
+    enabled: shouldAnimate
+  });
+
+  // Use typewriter text if animating, otherwise use full content
+  const contentToDisplay = shouldAnimate ? displayedText : message.content;
 
   return (
     <div className={`flex items-start space-x-3 mb-6 animate-fade-in ${isUser ? "justify-end" : ""}`}>
@@ -40,14 +54,20 @@ export function ChatMessage({ message }: ChatMessageProps) {
                 remarkPlugins={[remarkMath]}
                 rehypePlugins={[rehypeKatex]}
               >
-                {message.content}
+                {contentToDisplay}
               </ReactMarkdown>
+              {shouldAnimate && !isComplete && (
+                <span className="inline-block w-2 h-4 bg-current ml-1 animate-pulse" />
+              )}
             </div>
-            <img
-              src={message.imageUrl}
-              alt="Generated image"
-              className="rounded-xl w-full h-auto transition-transform duration-300 hover:scale-105"
-            />
+            {/* Only show image when text animation is complete or not animating */}
+            {(!shouldAnimate || isComplete) && (
+              <img
+                src={message.imageUrl}
+                alt="Generated image"
+                className="rounded-xl w-full h-auto transition-transform duration-300 hover:scale-105 animate-fade-in"
+              />
+            )}
           </div>
         ) : (
           <div className={`prose prose-sm max-w-none ${isUser ? "prose-invert text-white" : "text-foreground"}`}>
@@ -55,8 +75,11 @@ export function ChatMessage({ message }: ChatMessageProps) {
               remarkPlugins={[remarkMath]}
               rehypePlugins={[rehypeKatex]}
             >
-              {message.content}
+              {contentToDisplay}
             </ReactMarkdown>
+            {shouldAnimate && !isComplete && (
+              <span className="inline-block w-2 h-4 bg-current ml-1 animate-pulse" />
+            )}
           </div>
         )}
         <span
