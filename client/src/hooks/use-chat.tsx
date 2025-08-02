@@ -41,10 +41,11 @@ export function useChat(chatId?: string) {
 
   // Send message mutation
   const sendMessageMutation = useMutation({
-    mutationFn: async ({ content, isImageRequest, attachments }: { 
+    mutationFn: async ({ content, isImageRequest, attachments, isImageEditMode }: { 
       content: string; 
       isImageRequest: boolean; 
       attachments?: import("@shared/schema").FileAttachment[];
+      isImageEditMode?: boolean;
     }) => {
       
       if (isAuthenticated) {
@@ -72,7 +73,8 @@ export function useChat(chatId?: string) {
             content,
             isImageRequest,
             sessionId,
-            attachments: attachments || []
+            attachments: attachments || [],
+            isImageEditMode: isImageEditMode || false
           })
         });
         return await response.json();
@@ -170,8 +172,8 @@ export function useChat(chatId?: string) {
     },
   });
 
-  const sendMessage = (content: string, isImageRequest = false, attachments?: import("@shared/schema").FileAttachment[]) => {
-    sendMessageMutation.mutate({ content, isImageRequest, attachments });
+  const sendMessage = (content: string, isImageRequest = false, attachments?: import("@shared/schema").FileAttachment[], isImageEditMode = false) => {
+    sendMessageMutation.mutate({ content, isImageRequest, attachments, isImageEditMode });
   };
 
   const clearHistory = () => {

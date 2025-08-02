@@ -156,9 +156,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isImageRequest: z.boolean().default(false),
         sessionId: z.string(),
         attachments: z.array(z.any()).default([]),
+        isImageEditMode: z.boolean().default(false),
       });
 
-      const { content, isImageRequest, sessionId, attachments } = sendMessageSchema.parse(req.body);
+      const { content, isImageRequest, sessionId, attachments, isImageEditMode } = sendMessageSchema.parse(req.body);
       console.log('📨 Received message with attachments:', attachments?.length || 0);
 
       // Get username from headers
@@ -232,18 +233,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ) || [];
 
       console.log(`📎 Processing ${attachments?.length || 0} attachments, ${imageAttachments.length} are images`);
+      console.log(`🎛️ Image edit mode explicitly set: ${isImageEditMode}`);
 
-      // Check for image editing keywords
-      const editKeywords = ['editar', 'trocar', 'modificar', 'alterar', 'mudar', 'pinte', 'mude', 'troque'];
-      const isEditRequest = editKeywords.some(keyword => content.toLowerCase().includes(keyword));
-      
-      // Check for image analysis keywords
-      const analyzeKeywords = ['analisar', 'analise', 'descreva', 'descrever', 'o que', 'que tem', 'vejo', 'mostrar'];
-      const isAnalyzeRequest = analyzeKeywords.some(keyword => content.toLowerCase().includes(keyword));
-
-      if (imageAttachments.length > 0 && isEditRequest && username && !username.includes('anonymous')) {
-        console.log(`🎨 Image EDIT request detected for user: ${username}`);
-        console.log(`🎨 Edit keywords found in: "${content}"`);
+      if (imageAttachments.length > 0 && isImageEditMode && username && !username.includes('anonymous')) {
+        console.log(`🎨 Image EDIT mode EXPLICITLY SELECTED for user: ${username}`);
+        console.log(`🎨 Edit prompt: "${content}"`);
         console.log(`🎨 Image to edit: ${imageAttachments[0].originalName}`);
         
         // Image editing request - use QKoins and return edited image
@@ -284,9 +278,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             response = "Desculpe, não consegui editar a imagem. Tente novamente com uma descrição diferente. Seu QKoin foi reembolsado.";
           }
         }
-      } else if (imageAttachments.length > 0 && (isAnalyzeRequest || (!isEditRequest && !isImageRequest))) {
-        console.log(`🔍 Image ANALYSIS request detected for user: ${username}`);
-        console.log(`🔍 Analyze keywords found in: "${content}"`);
+      } else if (imageAttachments.length > 0 && !isImageEditMode) {
+        console.log(`🔍 Image ANALYSIS mode (default) for user: ${username}`);
+        console.log(`🔍 Analysis prompt: "${content}"`);
         
         // Image analysis - free, just text response
         try {

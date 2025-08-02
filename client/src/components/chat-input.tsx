@@ -9,17 +9,18 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Send, Image, Paperclip } from "lucide-react";
+import { Send, Image, Paperclip, Edit3 } from "lucide-react";
 import type { FileAttachment } from "@shared/schema";
 
 interface ChatInputProps {
-  onSendMessage: (content: string, isImageRequest: boolean, attachments?: FileAttachment[]) => void;
+  onSendMessage: (content: string, isImageRequest: boolean, attachments?: FileAttachment[], isImageEditMode?: boolean) => void;
   isLoading: boolean;
 }
 
 export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const [isImageMode, setIsImageMode] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
   const [attachments, setAttachments] = useState<FileAttachment[]>([]);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -40,9 +41,10 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if ((message.trim() || attachments.length > 0) && !isLoading) {
-      onSendMessage(message.trim(), isImageMode, attachments.length > 0 ? attachments : undefined);
+      onSendMessage(message.trim(), isImageMode, attachments.length > 0 ? attachments : undefined, isEditMode);
       setMessage("");
       setIsImageMode(false);
+      setIsEditMode(false);
       setAttachments([]);
     }
   };
@@ -67,6 +69,9 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
     const isImage = action.includes("Gerar") || action.includes("logo");
     onSendMessage(prompt, isImage);
   };
+
+  // Check if there are image attachments to show edit mode button
+  const hasImageAttachments = attachments.some(att => att.type === 'image');
 
   return (
     <div className="bg-background border-t border-border px-4 sm:px-6 lg:px-8 py-4">
@@ -137,23 +142,42 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
 
         {/* Attachments Preview */}
         {attachments.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-3">
-            {attachments.map((attachment, index) => (
-              <div key={index} className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2">
-                <span className="text-sm font-medium truncate max-w-32">
-                  {attachment.originalName}
-                </span>
+          <div className="space-y-3 mt-3">
+            <div className="flex flex-wrap gap-2">
+              {attachments.map((attachment, index) => (
+                <div key={index} className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2">
+                  <span className="text-sm font-medium truncate max-w-32">
+                    {attachment.originalName}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeAttachment(index)}
+                    className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                  >
+                    ×
+                  </Button>
+                </div>
+              ))}
+            </div>
+            
+            {/* Edit Mode Toggle for Images */}
+            {hasImageAttachments && (
+              <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg">
+                <Edit3 className="w-4 h-4 text-primary" />
+                <span className="text-sm font-medium">Modo de edição:</span>
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant={isEditMode ? "default" : "outline"}
                   size="sm"
-                  onClick={() => removeAttachment(index)}
-                  className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                  onClick={() => setIsEditMode(!isEditMode)}
+                  className="h-6 px-3 text-xs"
                 >
-                  ×
+                  {isEditMode ? "Editar Imagem (1 QKoin)" : "Analisar Imagem (Grátis)"}
                 </Button>
               </div>
-            ))}
+            )}
           </div>
         )}
 
