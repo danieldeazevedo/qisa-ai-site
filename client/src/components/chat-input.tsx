@@ -75,11 +75,21 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
     att.type === 'image' || att.mimeType?.startsWith('image/')
   );
   
-  console.log('🖼️ Checking attachments for images:', {
-    attachments: attachments.length,
-    hasImages: hasImageAttachments,
-    attachmentTypes: attachments.map(att => ({ type: att.type, mimeType: att.mimeType }))
+  // Debug logs to understand why buttons aren't showing
+  console.log('🖼️ DEBUGGING: Attachments detection:', {
+    totalAttachments: attachments.length,
+    hasImageAttachments,
+    attachmentDetails: attachments.map(att => ({
+      id: att.id,
+      originalName: att.originalName,
+      type: att.type,
+      mimeType: att.mimeType,
+      size: att.size
+    }))
   });
+  
+  // Force display for debugging - remove this after testing
+  const debugForceShow = attachments.length > 0;
 
   return (
     <div className="bg-background border-t border-border px-4 sm:px-6 lg:px-8 py-4">
@@ -173,8 +183,8 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
               ))}
             </div>
             
-            {/* Edit Mode Toggle for Images */}
-            {hasImageAttachments && (
+            {/* Edit Mode Toggle for Images - Using debug force show temporarily */}
+            {(hasImageAttachments || debugForceShow) && (
               <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg border border-border">
                 <Edit3 className="w-5 h-5 text-primary" />
                 <div className="flex-1">
