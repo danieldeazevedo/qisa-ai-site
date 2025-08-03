@@ -42,7 +42,12 @@ import {
   Server,
   UserX,
   Eye,
-  Download
+  Download,
+  Wrench,
+  AlertTriangle,
+  Clock,
+  PlayCircle,
+  StopCircle
 } from "lucide-react";
 
 interface AdminUser {
@@ -72,6 +77,35 @@ interface SystemStatus {
   systemLoad: number;
 }
 
+interface SystemConfig {
+  maintenanceMode: boolean;
+  maintenanceMessage: string;
+}
+
+interface UserChat {
+  user: {
+    id: string;
+    username: string;
+    email: string;
+    displayName: string | null;
+  };
+  sessions: Array<{
+    id: string;
+    title: string;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+  messageCount: number;
+}
+
+interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  createdAt: string;
+  imageUrl?: string | null;
+}
+
 export default function AdminPanel() {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -99,6 +133,29 @@ export default function AdminPanel() {
     queryKey: ['/api/admin/logs'],
     enabled: isAdmin,
   });
+
+  // New queries for maintenance and chat viewing
+  const { data: systemConfig, isLoading: configLoading } = useQuery<SystemConfig>({
+    queryKey: ['/api/admin/system/config'],
+    enabled: isAdmin,
+  });
+
+  const { data: userChats, isLoading: chatsLoading } = useQuery<UserChat[]>({
+    queryKey: ['/api/admin/chats'],
+    enabled: isAdmin,
+  });
+
+  // State for maintenance mode and chat viewing
+  const [maintenanceMessage, setMaintenanceMessage] = useState("");
+  const [selectedUserChat, setSelectedUserChat] = useState<string>("");
+  const [selectedSession, setSelectedSession] = useState<string>("");
+
+  // Update maintenance message when config loads
+  React.useEffect(() => {
+    if (systemConfig) {
+      setMaintenanceMessage(systemConfig.maintenanceMessage);
+    }
+  }, [systemConfig]);
 
   // Admin mutations - define all hooks before any conditional returns
   const deleteUserMutation = useMutation({
@@ -198,6 +255,36 @@ export default function AdminPanel() {
         variant: "destructive",
       });
     },
+  });
+
+  // Maintenance mode mutations
+  const toggleMaintenanceMutation = useMutation({
+    mutationFn: async ({ enabled, message }: { enabled: boolean; message: string }) => {
+      const response = await apiRequest('PATCH', '/api/admin/system/maintenance', {
+        body: JSON.stringify({ enabled, message }),
+      });
+      return await response.json();
+    },
+    onSuccess: (data, variables) => {
+      toast({ 
+        title: variables.enabled ? "Modo manutenção ativado" : "Modo manutenção desativado",
+        description: variables.enabled ? "Apenas você pode acessar o sistema" : "Sistema liberado para todos os usuários"
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/system/config'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro",
+        description: error.message || "Não foi possível alterar modo de manutenção",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Chat viewing queries
+  const { data: chatMessages, isLoading: messagesLoading } = useQuery<ChatMessage[]>({
+    queryKey: ['/api/admin/chats', selectedUserChat, selectedSession],
+    enabled: isAdmin && !!selectedUserChat && !!selectedSession,
   });
 
   // Check if user is admin (daniel08) - render after all hooks
@@ -315,9 +402,11 @@ export default function AdminPanel() {
         </div>
 
         <Tabs defaultValue="users" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="users">Usuários</TabsTrigger>
             <TabsTrigger value="system">Sistema</TabsTrigger>
+            <TabsTrigger value="maintenance">Manutenção</TabsTrigger>
+            <TabsTrigger value="chats">Chat Usuários</TabsTrigger>
             <TabsTrigger value="logs">Logs</TabsTrigger>
             <TabsTrigger value="database">Database</TabsTrigger>
           </TabsList>
@@ -523,6 +612,232 @@ export default function AdminPanel() {
                     </div>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Maintenance Mode */}
+          <TabsContent value="maintenance" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Wrench className="w-5 h-5" />
+                  <span>Modo de Manutenção</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="bg-muted/50 p-4 rounded-lg">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className={`w-3 h-3 rounded-full ${systemConfig?.maintenanceMode ? 'bg-orange-500' : 'bg-green-500'}`} />
+                    <span className="font-medium">
+                      Status: {systemConfig?.maintenanceMode ? 'Manutenção Ativa' : 'Sistema Normal'}
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {systemConfig?.maintenanceMode 
+                      ? 'O sistema está em modo de manutenção. Apenas você (daniel08) pode acessar.'
+                      : 'O sistema está funcionando normalmente para todos os usuários.'
+                    }
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Mensagem de Manutenção</label>
+                    <Textarea
+                      placeholder="Digite a mensagem que será exibida aos usuários durante a manutenção..."
+                      value={maintenanceMessage}
+                      onChange={(e) => setMaintenanceMessage(e.target.value)}
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="flex items-center space-x-4">
+                    <Button
+                      onClick={() => toggleMaintenanceMutation.mutate({ 
+                        enabled: !systemConfig?.maintenanceMode, 
+                        message: maintenanceMessage 
+                      })}
+                      disabled={toggleMaintenanceMutation.isPending || configLoading}
+                      variant={systemConfig?.maintenanceMode ? "default" : "destructive"}
+                      className="min-w-[160px]"
+                    >
+                      {systemConfig?.maintenanceMode ? (
+                        <>
+                          <PlayCircle className="w-4 h-4 mr-2" />
+                          Desativar Manutenção
+                        </>
+                      ) : (
+                        <>
+                          <StopCircle className="w-4 h-4 mr-2" />
+                          Ativar Manutenção
+                        </>
+                      )}
+                    </Button>
+                    
+                    {systemConfig?.maintenanceMode && (
+                      <div className="flex items-center space-x-2 text-orange-600">
+                        <AlertTriangle className="w-4 h-4" />
+                        <span className="text-sm font-medium">
+                          Apenas você pode acessar o sistema
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                  <h4 className="font-medium mb-2 flex items-center">
+                    <Clock className="w-4 h-4 mr-2" />
+                    Como funciona o modo de manutenção:
+                  </h4>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li>• Quando ativado, todos os usuários (exceto daniel08) verão a página de manutenção</li>
+                    <li>• As APIs também retornarão erro 503 para usuários não autorizados</li>
+                    <li>• Você pode personalizar a mensagem exibida aos usuários</li>
+                    <li>• O sistema continuará funcionando normalmente para você</li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* User Chats Viewer */}
+          <TabsContent value="chats" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <MessageSquare className="w-5 h-5" />
+                  <span>Visualizador de Chat dos Usuários</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {chatsLoading ? (
+                  <p>Carregando conversas...</p>
+                ) : userChats && userChats.length > 0 ? (
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {/* User List */}
+                    <div className="space-y-2">
+                      <h4 className="font-medium mb-3">Usuários com Conversas</h4>
+                      <div className="max-h-96 overflow-y-auto space-y-2">
+                        {userChats.map((userChat) => (
+                          <div
+                            key={userChat.user.id}
+                            className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                              selectedUserChat === userChat.user.id
+                                ? 'bg-primary/10 border-primary'
+                                : 'hover:bg-muted/50'
+                            }`}
+                            onClick={() => {
+                              setSelectedUserChat(userChat.user.id);
+                              setSelectedSession('');
+                            }}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="font-medium">{userChat.user.username}</p>
+                                <p className="text-sm text-muted-foreground">{userChat.user.email}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm font-medium">{userChat.sessions.length} sessões</p>
+                                <p className="text-xs text-muted-foreground">{userChat.messageCount} mensagens</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Sessions and Messages */}
+                    <div className="space-y-4">
+                      {selectedUserChat ? (
+                        <>
+                          {/* Sessions List */}
+                          <div>
+                            <h4 className="font-medium mb-3">Sessões de Chat</h4>
+                            <div className="space-y-2 max-h-48 overflow-y-auto">
+                              {userChats.find(uc => uc.user.id === selectedUserChat)?.sessions.map((session) => (
+                                <div
+                                  key={session.id}
+                                  className={`p-2 border rounded cursor-pointer transition-colors ${
+                                    selectedSession === session.id
+                                      ? 'bg-primary/10 border-primary'
+                                      : 'hover:bg-muted/50'
+                                  }`}
+                                  onClick={() => setSelectedSession(session.id)}
+                                >
+                                  <p className="font-medium text-sm">{session.title}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {new Date(session.updatedAt).toLocaleString()}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Messages */}
+                          {selectedSession && (
+                            <div>
+                              <h4 className="font-medium mb-3">Mensagens</h4>
+                              <div className="border rounded-lg p-4 max-h-64 overflow-y-auto space-y-3">
+                                {messagesLoading ? (
+                                  <p className="text-sm text-muted-foreground">Carregando mensagens...</p>
+                                ) : chatMessages && chatMessages.length > 0 ? (
+                                  chatMessages.map((message) => (
+                                    <div
+                                      key={message.id}
+                                      className={`p-3 rounded-lg ${
+                                        message.role === 'user'
+                                          ? 'bg-blue-50 dark:bg-blue-900/20 ml-4'
+                                          : 'bg-gray-50 dark:bg-gray-800/50 mr-4'
+                                      }`}
+                                    >
+                                      <div className="flex items-center justify-between mb-2">
+                                        <span className={`text-xs font-medium ${
+                                          message.role === 'user' ? 'text-blue-600' : 'text-gray-600'
+                                        }`}>
+                                          {message.role === 'user' ? 'Usuário' : 'Assistente'}
+                                        </span>
+                                        <span className="text-xs text-muted-foreground">
+                                          {new Date(message.createdAt).toLocaleString()}
+                                        </span>
+                                      </div>
+                                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                                      {message.imageUrl && (
+                                        <img 
+                                          src={message.imageUrl} 
+                                          alt="Anexo"
+                                          className="mt-2 max-w-xs rounded"
+                                        />
+                                      )}
+                                    </div>
+                                  ))
+                                ) : (
+                                  <p className="text-sm text-muted-foreground text-center">Nenhuma mensagem encontrada</p>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <div className="text-center py-8">
+                          <Eye className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
+                          <p className="text-muted-foreground">
+                            Selecione um usuário para visualizar suas conversas
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <MessageSquare className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+                    <h3 className="text-lg font-medium mb-2">Nenhuma conversa encontrada</h3>
+                    <p className="text-muted-foreground">
+                      Quando os usuários iniciarem conversas, elas aparecerão aqui.
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

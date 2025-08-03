@@ -105,3 +105,11 @@ export type QkoinTransaction = {
 };
 
 export type InsertQkoinTransaction = z.infer<typeof qkoinTransactionSchema>;
+
+// System configuration schema
+export const systemConfigSchema = z.object({
+  maintenanceMode: z.boolean().default(false),
+  maintenanceMessage: z.string().default("Estamos em manutenção. Tente novamente mais tarde."),
+});
+
+export type SystemConfig = z.infer<typeof systemConfigSchema>;

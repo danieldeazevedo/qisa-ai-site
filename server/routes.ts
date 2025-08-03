@@ -11,6 +11,41 @@ import path from "path";
 import fs from "fs";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Middleware to check maintenance mode
+  app.use(async (req, res, next) => {
+    // Skip maintenance check for admin routes and static files
+    if (req.path.startsWith('/api/admin') || 
+        req.path.startsWith('/assets') || 
+        req.path.startsWith('/favicon') ||
+        req.path.includes('.')) {
+      return next();
+    }
+
+    try {
+      const config = await storage.getSystemConfig();
+      if (config.maintenanceMode) {
+        const username = req.headers['x-username'] as string;
+        
+        // Allow daniel08 to access during maintenance
+        if (username !== 'daniel08') {
+          // For API routes, return JSON
+          if (req.path.startsWith('/api')) {
+            return res.status(503).json({ 
+              error: "Sistema em manutenção", 
+              message: config.maintenanceMessage 
+            });
+          }
+          // For web routes, we'll handle this in the frontend
+          req.headers['maintenance-mode'] = 'true';
+          req.headers['maintenance-message'] = config.maintenanceMessage;
+        }
+      }
+    } catch (error) {
+      console.error('Error checking maintenance mode:', error);
+    }
+
+    next();
+  });
   // Register endpoint
   app.post("/api/auth/register", async (req, res) => {
     try {
@@ -806,6 +841,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Toggle system online/offline
+  // Get system configuration
+  app.get("/api/admin/system/config", checkAdmin, async (req, res) => {
+    try {
+      const config = await storage.getSystemConfig();
+      res.json(config);
+    } catch (error) {
+      console.error("Error getting system config:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Toggle maintenance mode
+  app.patch("/api/admin/system/maintenance", checkAdmin, async (req, res) => {
+    try {
+      const { enabled, message } = req.body;
+      
+      await storage.setMaintenanceMode(enabled, message);
+      await storage.addSystemLog('info', `Maintenance mode ${enabled ? 'enabled' : 'disabled'}`, `Action by daniel08`);
+      
+      res.json({ 
+        success: true, 
+        message: enabled ? "Modo manutenção ativado" : "Modo manutenção desativado" 
+      });
+    } catch (error) {
+      console.error("Error toggling maintenance mode:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get all user chat sessions for admin viewing
+  app.get("/api/admin/chats", checkAdmin, async (req, res) => {
+    try {
+      const userChats = await storage.getAllUserChatSessions();
+      res.json(userChats);
+    } catch (error) {
+      console.error("Error getting user chats:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get specific user chat messages
+  app.get("/api/admin/chats/:userId/:sessionId", checkAdmin, async (req, res) => {
+    try {
+      const { userId, sessionId } = req.params;
+      const messages = await storage.getUserChatMessagesForAdmin(userId, sessionId);
+      res.json(messages);
+    } catch (error) {
+      console.error("Error getting user chat messages:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.patch("/api/admin/system/toggle", checkAdmin, async (req, res) => {
     try {
       const { online } = req.body;

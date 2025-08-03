@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type ChatSession, type InsertChatSession, type Message, type InsertMessage, type QkoinTransaction, type InsertQkoinTransaction } from "@shared/schema";
+import { type User, type InsertUser, type ChatSession, type InsertChatSession, type Message, type InsertMessage, type QkoinTransaction, type InsertQkoinTransaction, type SystemConfig } from "@shared/schema";
 import { client, connectRedis } from "./db";
 import { randomUUID } from "crypto";
 
@@ -32,6 +32,24 @@ export interface IStorage {
   checkDailyReward(userId: string): Promise<boolean>;
   claimDailyReward(userId: string): Promise<boolean>;
   getQkoinTransactions(userId: string): Promise<QkoinTransaction[]>;
+  
+  // Admin methods
+  getAllUsers(): Promise<User[]>;
+  getUserMessageCount(userId: string): Promise<number>;
+  getTotalMessageCount(): Promise<number>;
+  updateUserBanStatus(userId: string, banned: boolean): Promise<void>;
+  clearUserChatHistory(userId: string): Promise<void>;
+  getSystemLogs(): Promise<any[]>;
+  addSystemLog(level: string, message: string, details?: string): Promise<void>;
+  setSystemStatus(online: boolean): Promise<void>;
+  
+  // System configuration methods
+  getSystemConfig(): Promise<SystemConfig>;
+  setMaintenanceMode(enabled: boolean, message?: string): Promise<void>;
+  
+  // Chat viewing methods
+  getAllUserChatSessions(): Promise<Array<{ user: User; sessions: ChatSession[]; messageCount: number }>>;
+  getUserChatMessagesForAdmin(userId: string, sessionId: string): Promise<Message[]>;
 }
 
 
@@ -1258,6 +1276,66 @@ export class RedisStorage implements IStorage {
         this.fallbackStorage.delete('system:logs');
       }
     );
+  }
+
+  // System configuration methods
+  async getSystemConfig(): Promise<SystemConfig> {
+    return this.withFallback(
+      async () => {
+        const configJson = await client!.get('system:config');
+        if (configJson) {
+          return typeof configJson === 'string' ? JSON.parse(configJson) : configJson;
+        }
+        return { maintenanceMode: false, maintenanceMessage: "Estamos em manutenção. Tente novamente mais tarde." };
+      },
+      () => {
+        const configJson = this.fallbackStorage.get('system:config');
+        if (configJson) {
+          return typeof configJson === 'string' ? JSON.parse(configJson) : configJson;
+        }
+        return { maintenanceMode: false, maintenanceMessage: "Estamos em manutenção. Tente novamente mais tarde." };
+      }
+    );
+  }
+
+  async setMaintenanceMode(enabled: boolean, message?: string): Promise<void> {
+    const config: SystemConfig = {
+      maintenanceMode: enabled,
+      maintenanceMessage: message || "Estamos em manutenção. Tente novamente mais tarde."
+    };
+
+    return this.withFallback(
+      async () => {
+        await client!.set('system:config', JSON.stringify(config));
+      },
+      () => {
+        this.fallbackStorage.set('system:config', JSON.stringify(config));
+      }
+    );
+  }
+
+  // Chat viewing methods for admin
+  async getAllUserChatSessions(): Promise<Array<{ user: User; sessions: ChatSession[]; messageCount: number }>> {
+    const users = await this.getAllUsers();
+    const result = [];
+
+    for (const user of users) {
+      if (user.username && !user.username.includes('anonymous')) {
+        const sessions = await this.getUserSessions(user.id);
+        const messageCount = await this.getUserMessageCount(user.id);
+        result.push({
+          user,
+          sessions,
+          messageCount
+        });
+      }
+    }
+
+    return result;
+  }
+
+  async getUserChatMessagesForAdmin(userId: string, sessionId: string): Promise<Message[]> {
+    return this.getChatHistory(userId, sessionId);
   }
 }
 
