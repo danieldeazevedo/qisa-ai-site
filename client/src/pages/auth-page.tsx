@@ -103,7 +103,7 @@ export default function AuthPage() {
               <MessageCircle className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-3xl font-bold text-foreground">Qisa</h1>
-            <p className="text-muted-foreground mt-2">Sua assistente de IA pessoal</p>
+            <p className="text-muted-enhanced mt-2">Sua assistente de IA pessoal</p>
             
             {/* Theme Toggle */}
             <Button

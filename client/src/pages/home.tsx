@@ -179,7 +179,7 @@ export default function Home() {
           </FadeInUp>
           
           <div className="mb-8">
-            <p className="text-xl sm:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-xl sm:text-2xl text-muted-enhanced mb-8 max-w-3xl mx-auto leading-relaxed">
               <TypewriterText 
                 text="Sua assistente de IA avançada que conversa naturalmente e gera imagens incríveis a partir de suas ideias." 
                 delay={30}
@@ -200,7 +200,7 @@ export default function Home() {
                   </Button>
                 </Link>
                 <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground animate-fade-in">
+                  <p className="text-sm text-muted-enhanced animate-fade-in">
                     <Shield className="inline w-4 h-4 mr-1" />
                     Suas conversas são seguras e privadas
                   </p>

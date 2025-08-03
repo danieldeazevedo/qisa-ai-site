@@ -62,7 +62,7 @@ export default function About() {
             <h1 className="text-4xl sm:text-5xl font-bold text-foreground mb-6 leading-tight">
               <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Qisa</span> — Sua Nova Companheira de IA
             </h1>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+            <p className="text-xl text-muted-enhanced max-w-3xl mx-auto leading-relaxed">
               Uma inteligência artificial avançada desenvolvida pela QisaSeek AI Labs para transformar 
               a maneira como interagimos com a tecnologia. Mais do que uma assistente: 
               <strong> uma presença digital inteligente, empática e criativa</strong>.
@@ -73,7 +73,7 @@ export default function About() {
           <div className="mb-16 animate-fade-in">
             <h2 className="text-3xl font-bold text-foreground mb-8 text-center">O que é a Qisa?</h2>
             <div className="mb-12 text-center">
-              <p className="text-lg text-muted-foreground max-w-4xl mx-auto leading-relaxed">
+              <p className="text-lg text-muted-enhanced max-w-4xl mx-auto leading-relaxed">
                 Treinada com um <strong>vasto volume de informações</strong> de múltiplos domínios — incluindo 
                 <strong> ciência, arte, história, linguagem, tecnologia e cultura</strong> — a Qisa possui uma base de 
                 conhecimento sólida, abrangente e em constante evolução. Isso permite respostas coerentes, 
@@ -90,7 +90,7 @@ export default function About() {
                   <h3 className="text-xl font-semibold text-foreground mb-3">
                     Inteligência que Entende Você
                   </h3>
-                  <p className="text-muted-foreground">
+                  <p className="text-description">
                     Utiliza técnicas avançadas de <strong>Processamento de Linguagem Natural (PLN)</strong> e 
                     aprendizado de máquina, compreendendo a intenção por trás das mensagens e se adaptando 
                     ao seu estilo para conversas naturais e envolventes.
@@ -106,7 +106,7 @@ export default function About() {
                   <h3 className="text-xl font-semibold text-foreground mb-3">
                     Criação de Imagens Extraordinária
                   </h3>
-                  <p className="text-muted-foreground">
+                  <p className="text-description">
                     Capacidade extraordinária de <strong>criar imagens realistas ou artísticas</strong> a partir 
                     de descrições em texto. Personagens únicos, paisagens imaginárias, conceitos visuais e 
                     artes em diferentes estilos: pintura a óleo, anime, sketch, realismo fotográfico.
@@ -122,7 +122,7 @@ export default function About() {
                   <h3 className="text-xl font-semibold text-foreground mb-3">
                     Resolução de Problemas Complexos
                   </h3>
-                  <p className="text-muted-foreground">
+                  <p className="text-description">
                     Se destaca em <strong>resolução de problemas complexos, interpretação lógica e habilidade 
                     matemática</strong>, auxiliando desde cálculos simples até explicações detalhadas de 
                     conceitos avançados.
@@ -138,7 +138,7 @@ export default function About() {
                   <h3 className="text-xl font-semibold text-foreground mb-3">
                     Criatividade Além do Visual
                   </h3>
-                  <p className="text-muted-foreground">
+                  <p className="text-description">
                     Parceira criativa para <strong>músicos, escritores e artistas</strong>. Escreve letras de 
                     músicas, compõe poesias, histórias curtas, roteiros e ajuda com estruturação de 
                     argumentos e geração de conteúdo original.
@@ -161,14 +161,14 @@ export default function About() {
                 <h3 className="text-2xl font-bold text-foreground text-center mb-4">
                   Laboratório de Pesquisa e Desenvolvimento
                 </h3>
-                <p className="text-muted-foreground text-center mb-6 text-lg leading-relaxed">
+                <p className="text-muted-enhanced text-center mb-6 text-lg leading-relaxed">
                   A <strong>QisaSeek AI Labs</strong> é um laboratório de pesquisa e desenvolvimento dedicado à criação de 
                   <strong> inteligências artificiais humanizadas, sensíveis, criativas e úteis</strong>. Combina ciência de dados, 
                   aprendizado de máquina, design centrado no usuário e responsabilidade ética para construir 
                   tecnologias que aproximam humanos e máquinas de forma significativa e confiável.
                 </p>
                 <div className="text-center mb-6">
-                  <p className="text-muted-foreground">
+                  <p className="text-description">
                     O desenvolvimento da Qisa é fruto de <strong>anos de pesquisa, testes práticos e refinamento contínuo</strong>, 
                     resultando em um sistema que aprende, evolui e se adapta às necessidades das pessoas.
                   </p>

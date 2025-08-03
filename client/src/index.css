@@ -6,7 +6,9 @@
   --background: hsl(0, 0%, 100%);
   --foreground: hsl(20, 14.3%, 4.1%);
   --muted: hsl(60, 4.8%, 95.9%);
-  --muted-foreground: hsl(25, 5.3%, 44.7%);
+  --muted-foreground: hsl(25, 5.3%, 35%);
+  --description-text: hsl(20, 14.3%, 25%);
+  --enhanced-text: hsl(20, 14.3%, 15%);
   --popover: hsl(0, 0%, 100%);
   --popover-foreground: hsl(20, 14.3%, 4.1%);
   --card: hsl(0, 0%, 100%);
@@ -29,7 +31,9 @@
   --background: hsl(240, 10%, 3.9%);
   --foreground: hsl(0, 0%, 98%);
   --muted: hsl(240, 3.7%, 15.9%);
-  --muted-foreground: hsl(240, 5%, 64.9%);
+  --muted-foreground: hsl(240, 5%, 75%);
+  --description-text: hsl(0, 0%, 85%);
+  --enhanced-text: hsl(0, 0%, 95%);
   --popover: hsl(240, 10%, 3.9%);
   --popover-foreground: hsl(0, 0%, 98%);
   --card: hsl(240, 10%, 3.9%);
@@ -395,14 +399,46 @@
   animation: floating-orb 18s ease-in-out infinite;
 }
 
-.animate-gradient-shift {
-  animation: gradient-shift 10s ease-in-out infinite;
+/* Enhanced text contrast classes for animated backgrounds */
+.text-description {
+  color: hsl(var(--description-text));
+  font-weight: 500;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-.animate-gradient-pulse {
-  animation: gradient-pulse 6s ease-in-out infinite;
+.dark .text-description {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-.animate-floating-orb {
-  animation: floating-orb 18s ease-in-out infinite;
+.text-enhanced {
+  color: hsl(var(--enhanced-text));
+  font-weight: 600;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.dark .text-enhanced {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.text-muted-enhanced {
+  color: hsl(var(--muted-foreground));
+  font-weight: 500;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.dark .text-muted-enhanced {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Card content with better background for readability */
+.card-enhanced {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.dark .card-enhanced {
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
