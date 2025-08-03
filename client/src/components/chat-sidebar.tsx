@@ -128,7 +128,7 @@ export function ChatSidebar({ isOpen, onToggle, className = "" }: ChatSidebarPro
 
       {/* Sidebar */}
       <div
-        className={`fixed left-0 top-0 bottom-0 w-80 bg-gradient-to-b from-background via-background/98 to-background/95 border-r border-border/50 backdrop-blur-sm shadow-2xl transform transition-all duration-300 ease-in-out z-40 ${
+        className={`fixed left-0 top-0 bottom-0 w-80 bg-gradient-to-b from-background/95 via-background/90 to-background/85 border-r border-border/30 backdrop-blur-xl shadow-2xl transform transition-all duration-300 ease-in-out z-40 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         } ${className}`}
       >

@@ -73,7 +73,23 @@ export default function Chat() {
   // No authentication checks - everyone can use the chat
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen relative overflow-hidden text-foreground">
+      {/* Animated Background Gradient */}
+      <div className="fixed inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 via-purple-50/20 to-pink-50/30 dark:from-blue-950/20 dark:via-purple-950/15 dark:to-pink-950/20"></div>
+        <div className="absolute inset-0 bg-gradient-to-tl from-background/95 via-background/90 to-background/95"></div>
+        
+        {/* Floating gradient orbs with enhanced animations */}
+        <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-blue-400/12 to-purple-400/8 rounded-full blur-3xl animate-gradient-flow opacity-70"></div>
+        <div className="absolute top-1/3 right-0 w-80 h-80 bg-gradient-to-bl from-purple-400/10 to-pink-400/12 rounded-full blur-3xl animate-float opacity-60" style={{animationDelay: '2s'}}></div>
+        <div className="absolute bottom-0 left-1/4 w-72 h-72 bg-gradient-to-tr from-pink-400/12 to-blue-400/8 rounded-full blur-3xl animate-drift opacity-65" style={{animationDelay: '4s'}}></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-blue-300/6 via-purple-300/8 to-pink-300/6 rounded-full blur-2xl animate-spin opacity-50" style={{animationDuration: '30s'}}></div>
+        
+        {/* Additional moving elements */}
+        <div className="absolute top-3/4 right-1/4 w-56 h-56 bg-gradient-to-bl from-indigo-400/8 to-cyan-400/6 rounded-full blur-2xl animate-float opacity-40" style={{animationDelay: '6s', animationDuration: '18s'}}></div>
+        <div className="absolute top-1/4 left-3/4 w-48 h-48 bg-gradient-to-tr from-rose-400/10 to-orange-400/8 rounded-full blur-3xl animate-drift opacity-45" style={{animationDelay: '1s', animationDuration: '22s'}}></div>
+      </div>
+      
       {/* Chat Sidebar */}
       <ChatSidebar 
         isOpen={sidebarOpen} 
@@ -81,11 +97,11 @@ export default function Chat() {
       />
 
       {/* Main Chat Container */}
-      <div className={`min-h-screen flex flex-col transition-all duration-300 ${
+      <div className={`min-h-screen flex flex-col transition-all duration-300 relative ${
         sidebarOpen && isAuthenticated ? "lg:ml-80" : ""
       }`}>
       {/* Chat Header */}
-      <header className="bg-gradient-to-r from-background/95 via-background/90 to-background/95 backdrop-blur-lg shadow-lg border-b border-border/50 sticky top-0 z-10 animate-fade-in">
+      <header className="bg-gradient-to-r from-background/90 via-background/85 to-background/90 backdrop-blur-xl shadow-lg border-b border-border/30 sticky top-0 z-10 animate-fade-in">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-18 py-2">
             <div className="flex items-center space-x-4">
@@ -253,7 +269,7 @@ export default function Chat() {
       </header>
 
       {/* Chat Messages */}
-      <main className="flex-1 overflow-hidden flex flex-col bg-gradient-to-b from-background/50 to-background">
+      <main className="flex-1 overflow-hidden flex flex-col bg-gradient-to-b from-transparent via-background/30 to-background/50 backdrop-blur-sm">
         <div className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="max-w-4xl mx-auto">
             {/* Enhanced Welcome Section */}
