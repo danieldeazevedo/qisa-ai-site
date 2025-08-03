@@ -114,7 +114,22 @@ Preferred communication style: Simple, everyday language.
 - **Added comprehensive logging and verification system for Redis operations**
 - **Session deletion now works completely removing conversations from interface**
 - **Session renaming handles JSON parsing errors and recreates minimal session data when needed**
-- All core features working: custom auth, persistent chat history, image generation, personalized AI responses, theme system, markdown/math support, about page, enhanced home with typewriter cursor, QKoins virtual currency system, comprehensive admin panel, SEO optimization, robust session management, Vercel deployment ready
+
+**2025-08-03**:
+- **ENHANCED ADMIN PANEL WITH MAINTENANCE MODE & CHAT MONITORING** ✅ NOVO
+- **Added comprehensive maintenance mode system with custom messages and user blocking**
+- **Only "daniel08" can access system during maintenance mode**
+- **Created maintenance page for blocked users with personalized messaging**
+- **Added real-time chat monitoring allowing admin to view all user conversations**
+- **Enhanced admin panel to 6 tabs: Users, System, Maintenance, Chat Viewer, Logs, Database**
+- **IMPROVED CHAT USER EXPERIENCE WITH VISUAL ENHANCEMENTS** ✅ NOVO
+- **Enhanced chat sidebar with gradient highlighting for active chat session**
+- **Added border-left accent and ring effect for currently selected conversation**
+- **Implemented informative popups for image and attachment buttons**
+- **Auto-showing popups: "teste e crie suas imagens" for image button (4 seconds)**
+- **Auto-showing popups: "a qisa tbm lê seus pdf's e imagens" for attachment button (4 seconds)**
+- **Popups appear automatically 1-1.5 seconds after chat opens to guide new users**
+- All core features working: custom auth, persistent chat history, image generation, personalized AI responses, theme system, markdown/math support, about page, enhanced home with typewriter cursor, QKoins virtual currency system, comprehensive admin panel with maintenance mode, enhanced UX with visual chat highlights and helpful popups, SEO optimization, robust session management, Vercel deployment ready
 
 ## System Architecture
 

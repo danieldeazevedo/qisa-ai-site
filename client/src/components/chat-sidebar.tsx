@@ -201,8 +201,8 @@ export function ChatSidebar({ isOpen, onToggle, className = "" }: ChatSidebarPro
                     key={session.id}
                     className={`group relative rounded-lg p-3 cursor-pointer transition-all duration-200 ${
                       (currentSession as ChatSession)?.id === session.id
-                        ? "bg-primary/10 border border-primary/20"
-                        : "hover:bg-muted"
+                        ? "bg-gradient-to-r from-primary/15 to-secondary/10 border-l-4 border-primary shadow-sm ring-1 ring-primary/20"
+                        : "hover:bg-muted/70 hover:shadow-sm"
                     }`}
                     onClick={() => {
                       if ((currentSession as ChatSession)?.id !== session.id) {

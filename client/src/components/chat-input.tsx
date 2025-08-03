@@ -22,6 +22,37 @@ import {
 import { Send, Image, Paperclip, Edit3 } from "lucide-react";
 import type { FileAttachment } from "@shared/schema";
 
+// Componente de popup informativo
+function InfoPopup({ 
+  message, 
+  show, 
+  onHide 
+}: { 
+  message: string; 
+  show: boolean; 
+  onHide: () => void;
+}) {
+  useEffect(() => {
+    if (show) {
+      const timer = setTimeout(() => {
+        onHide();
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [show, onHide]);
+
+  if (!show) return null;
+
+  return (
+    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-50">
+      <div className="bg-primary text-primary-foreground px-3 py-2 rounded-lg text-sm font-medium shadow-lg animate-fade-in">
+        {message}
+        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-primary"></div>
+      </div>
+    </div>
+  );
+}
+
 interface ChatInputProps {
   onSendMessage: (content: string, isImageRequest: boolean, attachments?: FileAttachment[], isImageEditMode?: boolean) => void;
   isLoading: boolean;
@@ -34,6 +65,8 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
   const [attachments, setAttachments] = useState<FileAttachment[]>([]);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [imageModeDialogOpen, setImageModeDialogOpen] = useState(false);
+  const [showImagePopup, setShowImagePopup] = useState(false);
+  const [showAttachmentPopup, setShowAttachmentPopup] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const quickActions = [
@@ -48,6 +81,22 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
   }, [message]);
+
+  // Show popups on component mount
+  useEffect(() => {
+    const timer1 = setTimeout(() => {
+      setShowImagePopup(true);
+    }, 1000);
+
+    const timer2 = setTimeout(() => {
+      setShowAttachmentPopup(true);
+    }, 1500);
+
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+    };
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,14 +175,21 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
             />
             <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
               <DialogTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-3 bottom-3 p-1.5 text-muted-foreground hover:text-primary transition-colors rounded-lg hover:bg-muted"
-                >
-                  <Paperclip className="w-4 h-4" />
-                </Button>
+                <div className="absolute right-3 bottom-3">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="p-1.5 text-muted-foreground hover:text-primary transition-colors rounded-lg hover:bg-muted"
+                  >
+                    <Paperclip className="w-4 h-4" />
+                  </Button>
+                  <InfoPopup 
+                    message="a qisa tbm lê seus pdf's e imagens"
+                    show={showAttachmentPopup}
+                    onHide={() => setShowAttachmentPopup(false)}
+                  />
+                </div>
               </DialogTrigger>
               <DialogContent className="max-w-2xl" aria-describedby="upload-dialog-description">
                 <DialogHeader>
@@ -147,19 +203,26 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
             </Dialog>
           </div>
 
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setIsImageMode(!isImageMode)}
-            className={`p-3 border-input rounded-2xl transition-all ${
-              isImageMode
-                ? "bg-secondary/10 text-secondary border-secondary"
-                : "text-muted-foreground hover:text-secondary hover:bg-secondary/10"
-            }`}
-          >
-            <Image className="w-4 h-4" />
-          </Button>
+          <div className="relative">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsImageMode(!isImageMode)}
+              className={`p-3 border-input rounded-2xl transition-all ${
+                isImageMode
+                  ? "bg-secondary/10 text-secondary border-secondary"
+                  : "text-muted-foreground hover:text-secondary hover:bg-secondary/10"
+              }`}
+            >
+              <Image className="w-4 h-4" />
+            </Button>
+            <InfoPopup 
+              message="teste e crie suas imagens"
+              show={showImagePopup}
+              onHide={() => setShowImagePopup(false)}
+            />
+          </div>
 
           <Button
             type="submit"
