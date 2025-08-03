@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
 import { useQkoins } from "@/hooks/use-qkoins";
 import { QkoinDisplay } from "@/components/qkoin-display";
+import AnimatedBackground from "@/components/AnimatedBackground";
 
 // Componente de texto animado com efeito de digitação
 function TypewriterText({ text, delay = 50, className = "", showCursor = true }: { text: string; delay?: number; className?: string; showCursor?: boolean }) {
@@ -71,7 +72,8 @@ export default function Home() {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground">
+    <div className="min-h-screen flex flex-col relative text-foreground">
+      <AnimatedBackground opacity="medium" />
       {/* Header */}
       <header className="bg-background/80 backdrop-blur-md shadow-sm border-b border-border sticky top-0 z-50 animate-fade-in">
         <div className="max-w-7xl mx-auto">

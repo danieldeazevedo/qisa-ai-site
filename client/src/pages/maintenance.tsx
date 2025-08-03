@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Settings, Clock } from "lucide-react";
+import AnimatedBackground from "@/components/AnimatedBackground";
 
 interface MaintenancePageProps {
   message?: string;
@@ -9,7 +10,8 @@ export default function MaintenancePage({ message }: MaintenancePageProps) {
   const maintenanceMessage = message || "Estamos em manutenção. Tente novamente mais tarde.";
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen w-full relative flex items-center justify-center">
+      <AnimatedBackground opacity="light" />
       <div className="max-w-md w-full mx-4">
         <Card className="border-orange-200 dark:border-orange-800 shadow-lg">
           <CardContent className="pt-8 pb-6 text-center">

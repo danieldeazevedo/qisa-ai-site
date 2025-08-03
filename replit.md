@@ -17,7 +17,7 @@ Preferred communication style: Simple, everyday language.
 - **State Management**: TanStack Query (React Query)
 - **Routing**: Wouter
 - **Build Tool**: Vite
-- **UI/UX Decisions**: Smooth theme toggles, enhanced UI animations (fade-in, scale-in, bounce-subtle, pulse-gentle), responsive design, typewriter animation with blinking cursor, visual chat highlights with accent and ring effects for active sessions, informative popups for guiding new users (e.g., image/attachment buttons). Prose styling for markdown and math. Advanced dynamic background animations in chat page with moving gradients (gradient-wave, gradient-morph, gradient-shift, gradient-pulse, floating-orb animations) creating immersive visual experience.
+- **UI/UX Decisions**: Smooth theme toggles, enhanced UI animations (fade-in, scale-in, bounce-subtle, pulse-gentle), responsive design, typewriter animation with blinking cursor, visual chat highlights with accent and ring effects for active sessions, informative popups for guiding new users (e.g., image/attachment buttons). Prose styling for markdown and math. Advanced dynamic background animations applied to all pages with moving gradients (gradient-wave, gradient-morph, gradient-shift, gradient-pulse, floating-orb animations) creating immersive visual experience throughout the entire application. Reusable AnimatedBackground component with configurable opacity levels.
 
 ### Backend
 - **Framework**: Express.js with TypeScript

@@ -9,6 +9,7 @@ import { MessageCircle, Lock, User, Mail, Moon, Sun } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
 import { useToast } from "@/hooks/use-toast";
+import AnimatedBackground from "@/components/AnimatedBackground";
 
 export default function AuthPage() {
   const [, setLocation] = useLocation();
@@ -92,7 +93,8 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-background to-purple-50 dark:from-slate-900 dark:via-background dark:to-slate-800 flex animate-fade-in">
+    <div className="min-h-screen relative flex animate-fade-in">
+      <AnimatedBackground opacity="light" />
       {/* Left side - Auth forms */}
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md">

@@ -24,6 +24,7 @@ import {
   Zap,
   Clock
 } from "lucide-react";
+import AnimatedBackground from "@/components/AnimatedBackground";
 
 export default function Profile() {
   const { user, logout } = useAuth();
@@ -76,7 +77,8 @@ export default function Profile() {
 
   if (!user || user.username?.includes('anonymous')) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-background to-purple-50 dark:from-slate-900 dark:via-background dark:to-slate-800 flex items-center justify-center">
+      <div className="min-h-screen relative flex items-center justify-center">
+        <AnimatedBackground opacity="light" />
         <Card className="w-full max-w-md mx-4">
           <CardContent className="p-6 text-center">
             <User className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
@@ -99,7 +101,8 @@ export default function Profile() {
   const recentTransactions = transactions?.slice(0, 5) || [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-background to-purple-50 dark:from-slate-900 dark:via-background dark:to-slate-800">
+    <div className="min-h-screen relative">
+      <AnimatedBackground opacity="medium" />
       {/* Header */}
       <div className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">

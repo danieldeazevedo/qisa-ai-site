@@ -49,6 +49,7 @@ import {
   PlayCircle,
   StopCircle
 } from "lucide-react";
+import AnimatedBackground from "@/components/AnimatedBackground";
 
 interface AdminUser {
   id: string;
@@ -290,7 +291,8 @@ export default function AdminPanel() {
   // Check if user is admin (daniel08) - render after all hooks
   if (!user || !isAdmin) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 via-background to-red-100 dark:from-red-900 dark:via-background dark:to-red-800 flex items-center justify-center">
+      <div className="min-h-screen relative flex items-center justify-center">
+        <AnimatedBackground opacity="light" />
         <Card className="w-full max-w-md mx-4">
           <CardContent className="p-6 text-center">
             <Shield className="w-12 h-12 mx-auto mb-4 text-red-500" />
@@ -313,7 +315,8 @@ export default function AdminPanel() {
   ) || [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-background to-purple-50 dark:from-slate-900 dark:via-background dark:to-slate-800">
+    <div className="min-h-screen relative">
+      <AnimatedBackground opacity="strong" />
       {/* Header */}
       <div className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">

@@ -3,12 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Bot, ArrowLeft, Users, Brain, Shield, Zap, Heart, Lightbulb, Moon, Sun } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
+import AnimatedBackground from "@/components/AnimatedBackground";
 
 export default function About() {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground">
+    <div className="min-h-screen flex flex-col relative text-foreground">
+      <AnimatedBackground opacity="medium" />
       {/* Header */}
       <header className="bg-background/80 backdrop-blur-md shadow-sm border-b border-border sticky top-0 z-50 animate-fade-in">
         <div className="max-w-7xl mx-auto">
