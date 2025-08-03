@@ -60,7 +60,7 @@ interface ChatInputProps {
 
 export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
   const [message, setMessage] = useState("");
-  const [isImageMode, setIsImageMode] = useState(true);
+  const [isImageMode, setIsImageMode] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [attachments, setAttachments] = useState<FileAttachment[]>([]);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
@@ -137,6 +137,12 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
     
     const prompt = prompts[action] || action;
     const isImage = action.includes("Gerar") || action.includes("logo");
+    
+    // Se for uma ação de geração de imagem, habilitar o modo de imagem
+    if (isImage) {
+      setIsImageMode(true);
+    }
+    
     onSendMessage(prompt, isImage);
   };
 
