@@ -154,7 +154,7 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
   };
 
   return (
-    <div className="bg-gradient-to-t from-background/95 via-background/90 to-background/85 border-t border-border/30 backdrop-blur-xl px-4 sm:px-6 lg:px-8 py-4 shadow-2xl">
+    <div className="bg-gradient-to-t from-background/85 via-background/75 to-background/70 border-t border-border/20 backdrop-blur-xl px-4 sm:px-6 lg:px-8 py-4 shadow-2xl">
       <div className="max-w-4xl mx-auto">
         <form onSubmit={handleSubmit} className="flex items-end space-x-4">
           <div className="flex-1 relative">
