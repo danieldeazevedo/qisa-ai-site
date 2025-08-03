@@ -34,6 +34,7 @@ Preferred communication style: Simple, everyday language.
 ### Core Features
 - **AI Integration**: Google Gemini for text conversation (context-aware, Portuguese Brazilian language) and image generation. AI responses are personalized with the user's username.
 - **Chat System**: Multiple chat sessions similar to ChatGPT, with persistent history per session, session creation, renaming, deletion, and switching. Support for markdown and mathematical expressions (KaTeX).
+- **Voice Features**: Speech recognition for voice input (Portuguese Brazilian) and text-to-speech for AI responses with browser Web Speech API integration.
 - **Authentication**: Custom username/password authentication.
 - **Virtual Currency (QKoins)**: System for earning and spending QKoins, integrated with image generation.
 - **Theme System**: Dark/light mode toggle with adaptive colors.

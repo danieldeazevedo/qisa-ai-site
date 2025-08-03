@@ -1,5 +1,5 @@
 import { Message } from "@shared/schema";
-import { Bot, User } from "lucide-react";
+import { Bot, User, Volume2, VolumeX } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import ReactMarkdown from "react-markdown";
@@ -7,6 +7,8 @@ import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
 import { useTypewriter } from "@/hooks/use-typewriter";
+import { useVoice } from "@/hooks/use-voice";
+import { Button } from "@/components/ui/button";
 
 interface ChatMessageProps {
   message: Message;
@@ -31,6 +33,17 @@ export function ChatMessage({ message, isLatest = false }: ChatMessageProps) {
   // Use typewriter text if animating, otherwise use full content
   const contentToDisplay = shouldAnimate ? displayedText : message.content;
 
+  // Voice functionality for AI messages
+  const { speak, stopSpeaking, isSpeaking, isSupported: voiceSupported } = useVoice();
+
+  const handleSpeak = () => {
+    if (isSpeaking) {
+      stopSpeaking();
+    } else {
+      speak(message.content);
+    }
+  };
+
   return (
     <div className={`flex items-start space-x-3 mb-6 animate-fade-in ${isUser ? "justify-end" : ""}`}>
       {!isUser && (
@@ -40,12 +53,27 @@ export function ChatMessage({ message, isLatest = false }: ChatMessageProps) {
       )}
       
       <div
-        className={`max-w-md px-4 py-3 rounded-2xl animate-slide-in transition-all duration-300 ${
+        className={`max-w-md px-4 py-3 rounded-2xl animate-slide-in transition-all duration-300 relative group ${
           isUser
             ? "bg-gradient-to-r from-primary to-secondary text-white rounded-tr-md shadow-lg"
             : "bg-card shadow-sm border border-border rounded-tl-md hover:shadow-md"
         }`}
       >
+        {/* Text-to-Speech Button for AI messages */}
+        {!isUser && voiceSupported && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleSpeak}
+            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 h-6 w-6 hover:bg-muted"
+          >
+            {isSpeaking ? (
+              <VolumeX className="w-3 h-3" />
+            ) : (
+              <Volume2 className="w-3 h-3" />
+            )}
+          </Button>
+        )}
         {message.imageUrl ? (
           <div className="space-y-3">
             <div className={`prose prose-sm max-w-none ${isUser ? "prose-invert text-white" : "text-foreground"}`}>

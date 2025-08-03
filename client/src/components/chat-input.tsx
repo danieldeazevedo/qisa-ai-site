@@ -19,8 +19,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Send, Image, Paperclip, Edit3 } from "lucide-react";
+import { Send, Image, Paperclip, Edit3, Mic, MicOff, Volume2, VolumeX } from "lucide-react";
 import type { FileAttachment } from "@shared/schema";
+import { useVoice } from "@/hooks/use-voice";
 
 // Componente de popup informativo
 function InfoPopup({ 
@@ -67,7 +68,18 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
   const [imageModeDialogOpen, setImageModeDialogOpen] = useState(false);
   const [showImagePopup, setShowImagePopup] = useState(false);
   const [showAttachmentPopup, setShowAttachmentPopup] = useState(false);
+  const [showVoicePopup, setShowVoicePopup] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  
+  // Voice functionality
+  const { 
+    isListening, 
+    transcript, 
+    isSupported: voiceSupported, 
+    startListening, 
+    stopListening, 
+    clearTranscript 
+  } = useVoice();
 
   const quickActions = [
     "Explicar IA",
@@ -82,6 +94,13 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
     }
   }, [message]);
 
+  // Update message when voice transcript changes
+  useEffect(() => {
+    if (transcript && isListening) {
+      setMessage(transcript);
+    }
+  }, [transcript, isListening]);
+
   // Show popups on component mount
   useEffect(() => {
     const timer1 = setTimeout(() => {
@@ -92,11 +111,18 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
       setShowAttachmentPopup(true);
     }, 1500);
 
+    const timer3 = setTimeout(() => {
+      if (voiceSupported) {
+        setShowVoicePopup(true);
+      }
+    }, 2000);
+
     return () => {
       clearTimeout(timer1);
       clearTimeout(timer2);
+      clearTimeout(timer3);
     };
-  }, []);
+  }, [voiceSupported]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,6 +132,15 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
       setIsImageMode(false);
       setIsEditMode(false);
       setAttachments([]);
+      clearTranscript();
+    }
+  };
+
+  const handleVoiceToggle = () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
     }
   };
 
@@ -229,6 +264,31 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
               onHide={() => setShowImagePopup(false)}
             />
           </div>
+
+          {/* Voice Input Button */}
+          {voiceSupported && (
+            <div className="relative">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleVoiceToggle}
+                disabled={isLoading}
+                className={`p-3 border-input rounded-2xl transition-all ${
+                  isListening
+                    ? "bg-red-500/10 text-red-500 border-red-500 animate-pulse"
+                    : "text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10"
+                }`}
+              >
+                {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+              </Button>
+              <InfoPopup 
+                message="Fale sua mensagem"
+                show={showVoicePopup}
+                onHide={() => setShowVoicePopup(false)}
+              />
+            </div>
+          )}
 
           <Button
             type="submit"
