@@ -60,7 +60,7 @@ interface ChatInputProps {
 
 export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
   const [message, setMessage] = useState("");
-  const [isImageMode, setIsImageMode] = useState(false);
+  const [isImageMode, setIsImageMode] = useState(true);
   const [isEditMode, setIsEditMode] = useState(false);
   const [attachments, setAttachments] = useState<FileAttachment[]>([]);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
