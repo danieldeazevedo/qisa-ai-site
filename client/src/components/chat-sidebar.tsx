@@ -128,20 +128,20 @@ export function ChatSidebar({ isOpen, onToggle, className = "" }: ChatSidebarPro
 
       {/* Sidebar */}
       <div
-        className={`fixed left-0 top-0 bottom-0 w-80 bg-background border-r border-border transform transition-transform duration-300 ease-in-out z-40 ${
+        className={`fixed left-0 top-0 bottom-0 w-80 bg-gradient-to-b from-background via-background/98 to-background/95 border-r border-border/50 backdrop-blur-sm shadow-2xl transform transition-all duration-300 ease-in-out z-40 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         } ${className}`}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="p-4 border-b border-border">
+          <div className="p-5 border-b border-border/50 bg-gradient-to-r from-primary/5 to-secondary/5">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Conversas</h2>
+              <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Suas Conversas</h2>
               <Dialog open={newSessionDialogOpen} onOpenChange={setNewSessionDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button size="sm" disabled={isCreating}>
+                  <Button size="sm" disabled={isCreating} className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl">
                     <Plus className="w-4 h-4 mr-1" />
-                    Nova
+                    Nova Conversa
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
@@ -185,24 +185,27 @@ export function ChatSidebar({ isOpen, onToggle, className = "" }: ChatSidebarPro
           {/* Sessions List */}
           <ScrollArea className="flex-1 p-2">
             {isLoading ? (
-              <div className="p-4 text-center text-muted-foreground">
-                Carregando conversas...
+              <div className="p-6 text-center text-muted-foreground">
+                <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-3"></div>
+                <p className="text-sm">Carregando suas conversas...</p>
               </div>
             ) : typedSessions.length === 0 ? (
-              <div className="p-4 text-center text-muted-foreground">
-                <MessageCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                <p>Nenhuma conversa ainda</p>
-                <p className="text-xs">Crie uma nova conversa para começar</p>
+              <div className="p-6 text-center text-muted-foreground">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <MessageCircle className="w-8 h-8 text-blue-500 dark:text-blue-400" />
+                </div>
+                <p className="font-medium mb-1">Nenhuma conversa ainda</p>
+                <p className="text-xs text-muted-foreground/70">Crie uma nova conversa para começar a chatear com a Qisa</p>
               </div>
             ) : (
               <div className="space-y-1">
                 {typedSessions.map((session) => (
                   <div
                     key={session.id}
-                    className={`group relative rounded-lg p-3 cursor-pointer transition-all duration-200 ${
+                    className={`group relative rounded-lg p-3 cursor-pointer transition-all duration-300 ${
                       (currentSession as ChatSession)?.id === session.id
-                        ? "bg-gradient-to-r from-primary/15 to-secondary/10 border-l-4 border-primary shadow-sm ring-1 ring-primary/20"
-                        : "hover:bg-muted/70 hover:shadow-sm"
+                        ? "bg-gradient-to-r from-blue-500/20 via-purple-500/15 to-pink-500/10 border-l-4 border-blue-500 shadow-lg ring-2 ring-blue-500/30 transform scale-[1.02]"
+                        : "hover:bg-muted/70 hover:shadow-md hover:transform hover:scale-[1.01]"
                     }`}
                     onClick={() => {
                       if ((currentSession as ChatSession)?.id !== session.id) {
@@ -252,10 +255,14 @@ export function ChatSidebar({ isOpen, onToggle, className = "" }: ChatSidebarPro
                       <>
                         <div className="flex items-center justify-between">
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-medium text-sm truncate">
+                            <h3 className={`font-semibold text-sm truncate transition-colors duration-200 ${
+                              (currentSession as ChatSession)?.id === session.id
+                                ? "text-blue-700 dark:text-blue-300"
+                                : "text-foreground group-hover:text-primary"
+                            }`}>
                               {session.title}
                             </h3>
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-xs text-muted-foreground/80 mt-0.5">
                               {formatSessionDate(session.updatedAt)}
                             </p>
                           </div>

@@ -154,16 +154,16 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
   };
 
   return (
-    <div className="bg-background border-t border-border px-4 sm:px-6 lg:px-8 py-4">
+    <div className="bg-gradient-to-t from-background via-background/98 to-background/95 border-t border-border/50 backdrop-blur-sm px-4 sm:px-6 lg:px-8 py-4 shadow-lg">
       <div className="max-w-4xl mx-auto">
-        <form onSubmit={handleSubmit} className="flex items-end space-x-3">
+        <form onSubmit={handleSubmit} className="flex items-end space-x-4">
           <div className="flex-1 relative">
             <Textarea
               ref={textareaRef}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder={getPlaceholder()}
-              className="resize-none border-input bg-background text-foreground rounded-2xl px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent max-h-32 min-h-[48px] placeholder:text-muted-foreground"
+              className="resize-none border-input/50 bg-background/80 backdrop-blur-sm text-foreground rounded-2xl px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/30 focus:bg-background shadow-lg max-h-32 min-h-[52px] placeholder:text-muted-foreground/70 transition-all duration-300"
               rows={1}
               disabled={isLoading}
               onKeyDown={(e) => {
@@ -185,7 +185,7 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
                     <Paperclip className="w-4 h-4" />
                   </Button>
                   <InfoPopup 
-                    message="a qisa tbm lê seus pdf's e imagens"
+                    message="A Qisa também lê seus PDFs e imagens"
                     show={showAttachmentPopup}
                     onHide={() => setShowAttachmentPopup(false)}
                   />
@@ -218,7 +218,7 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
               <Image className="w-4 h-4" />
             </Button>
             <InfoPopup 
-              message="teste e crie suas imagens"
+              message="Teste e crie suas imagens"
               show={showImagePopup}
               onHide={() => setShowImagePopup(false)}
             />
@@ -227,9 +227,9 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
           <Button
             type="submit"
             disabled={(!message.trim() && attachments.length === 0) || isLoading}
-            className="p-3 bg-gradient-to-r from-primary to-secondary text-white rounded-2xl hover:shadow-lg transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            className="p-3.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white rounded-2xl hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg"
           >
-            <Send className="w-4 h-4" />
+            <Send className="w-5 h-5" />
           </Button>
         </form>
 
