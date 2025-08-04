@@ -124,8 +124,35 @@ export function useVoice() {
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'pt-BR';
     utterance.rate = 0.9;
-    utterance.pitch = 1;
+    utterance.pitch = 1.1; // Slightly higher pitch for more feminine sound
     utterance.volume = 0.8;
+
+    // Try to find a female Portuguese voice
+    const voices = synthRef.current.getVoices();
+    const femaleVoice = voices.find(voice => 
+      voice.lang.startsWith('pt') && 
+      (voice.name.toLowerCase().includes('female') || 
+       voice.name.toLowerCase().includes('feminina') ||
+       voice.name.toLowerCase().includes('woman') ||
+       voice.name.toLowerCase().includes('mulher') ||
+       voice.name.toLowerCase().includes('lucia') ||
+       voice.name.toLowerCase().includes('maria') ||
+       voice.name.toLowerCase().includes('joana') ||
+       voice.name.toLowerCase().includes('ana'))
+    );
+
+    // If no specific female voice found, try to get any Portuguese voice that sounds female
+    const portugueseVoice = femaleVoice || voices.find(voice => 
+      voice.lang.startsWith('pt') && 
+      !voice.name.toLowerCase().includes('male') &&
+      !voice.name.toLowerCase().includes('masculina') &&
+      !voice.name.toLowerCase().includes('man') &&
+      !voice.name.toLowerCase().includes('homem')
+    );
+
+    if (portugueseVoice) {
+      utterance.voice = portugueseVoice;
+    }
 
     utterance.onstart = () => setIsSpeaking(true);
     utterance.onend = () => setIsSpeaking(false);
