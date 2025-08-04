@@ -14,7 +14,7 @@ import { useQkoins } from "@/hooks/use-qkoins";
 import { QkoinDisplay } from "@/components/qkoin-display";
 import { ArrowLeft, Bot, Settings, Download, Trash2, User, LogOut, Moon, Sun, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import AnimatedBackground from "@/components/AnimatedBackground";
+
 
 export default function Chat() {
   const params = useParams();
@@ -74,8 +74,7 @@ export default function Chat() {
   // No authentication checks - everyone can use the chat
 
   return (
-    <div className="min-h-screen relative overflow-hidden text-foreground">
-      <AnimatedBackground opacity="medium" />
+    <div className="min-h-screen relative text-foreground bg-background">{/* Removed AnimatedBackground */}
       
       {/* Chat Sidebar */}
       <ChatSidebar 
