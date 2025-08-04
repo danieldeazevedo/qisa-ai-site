@@ -6,6 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { ChatMessage } from "@/components/chat-message";
 import { ChatInput } from "@/components/chat-input";
 import { ChatSidebar } from "@/components/chat-sidebar";
+import { ChatSearch } from "@/components/chat-search";
 import { useAuth } from "@/hooks/use-auth";
 import { useChat } from "@/hooks/use-chat";
 import { useSessions } from "@/hooks/use-sessions";
@@ -69,6 +70,16 @@ export default function Chat() {
       title: "Histórico exportado",
       description: "Seu histórico de conversa foi baixado.",
     });
+  };
+
+  const handleSearchMessageClick = (sessionId: string, messageId: string) => {
+    // Navigate to the session if different from current
+    if (sessionId !== chatId) {
+      setLocation(`/chat/${sessionId}`);
+    }
+    
+    // Scroll to message (if needed in the future)
+    // For now, just navigate to the session
   };
 
   // No authentication checks - everyone can use the chat
@@ -136,6 +147,11 @@ export default function Chat() {
               </div>
             </div>
             <div className="flex items-center space-x-3">
+              {/* Search Button - only for authenticated users */}
+              {isAuthenticated && (
+                <ChatSearch onMessageClick={handleSearchMessageClick} />
+              )}
+
               {/* About Button */}
               <Link href="/about">
                 <Button

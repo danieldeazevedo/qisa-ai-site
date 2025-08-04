@@ -440,6 +440,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Search chat history
+  app.get("/api/chat/search", async (req, res) => {
+    try {
+      const { query } = req.query;
+      const username = req.headers['x-username'] as string;
+
+      if (!username || username.includes('anonymous')) {
+        return res.json([]);
+      }
+
+      if (!query || typeof query !== 'string') {
+        return res.status(400).json({ error: "Query parameter is required" });
+      }
+
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
+        return res.status(401).json({ error: "Usuário não encontrado" });
+      }
+
+      const results = await storage.searchChatHistory(user.id, query);
+      res.json(results);
+    } catch (error) {
+      console.error("Error searching chat history:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Simple send message without persistence (fallback for anonymous users)
   app.post("/api/chat/simple-send", async (req, res) => {
     try {

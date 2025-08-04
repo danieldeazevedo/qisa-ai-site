@@ -24,6 +24,7 @@ export interface IStorage {
   saveMessageToHistory(userId: string, sessionId: string, message: InsertMessage): Promise<Message>;
   getChatHistory(userId: string, sessionId: string): Promise<Message[]>;
   clearChatHistory(userId: string, sessionId: string): Promise<void>;
+  searchChatHistory(userId: string, query: string): Promise<Array<Message & { sessionTitle?: string }>>;
   
   // QKoin methods
   getUserQkoins(userId: string): Promise<number>;
@@ -814,6 +815,65 @@ export class RedisStorage implements IStorage {
         
         // Clear the history
         this.fallbackStorage.delete(historyKey);
+      }
+    );
+  }
+
+  async searchChatHistory(userId: string, query: string): Promise<Array<Message & { sessionTitle?: string }>> {
+    const searchTerm = query.toLowerCase().trim();
+    if (!searchTerm) return [];
+
+    return this.withFallback(
+      async () => {
+        // Get all user sessions
+        const sessions = await this.getUserSessions(userId);
+        const results: Array<Message & { sessionTitle?: string }> = [];
+
+        for (const session of sessions) {
+          try {
+            // Get all messages for this session
+            const messages = await this.getChatHistory(userId, session.id);
+            
+            // Search through messages
+            for (const message of messages) {
+              if (message.content.toLowerCase().includes(searchTerm)) {
+                results.push({
+                  ...message,
+                  sessionTitle: session.title
+                });
+              }
+            }
+          } catch (error) {
+            console.error(`Error searching session ${session.id}:`, error);
+          }
+        }
+
+        // Sort by date (most recent first)
+        return results.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      },
+      async () => {
+        // Fallback - search in memory storage
+        const sessions = await this.getUserSessions(userId);
+        const results: Array<Message & { sessionTitle?: string }> = [];
+
+        for (const session of sessions) {
+          try {
+            const messages = await this.getChatHistory(userId, session.id);
+            
+            for (const message of messages) {
+              if (message.content.toLowerCase().includes(searchTerm)) {
+                results.push({
+                  ...message,
+                  sessionTitle: session.title
+                });
+              }
+            }
+          } catch (error) {
+            console.error(`Error searching session ${session.id}:`, error);
+          }
+        }
+
+        return results.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       }
     );
   }
