@@ -4,6 +4,8 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useMaintenance } from "@/hooks/use-maintenance";
+import { useTheme } from "@/hooks/use-theme";
+import { useEffect } from "react";
 import Home from "@/pages/home";
 import Chat from "@/pages/chat";
 import AuthPage from "@/pages/auth-page";
@@ -15,6 +17,14 @@ import NotFound from "@/pages/not-found";
 
 function Router() {
   const { isMaintenanceMode, maintenanceMessage, isAdmin } = useMaintenance();
+  const { theme } = useTheme();
+
+  // Ensure theme is applied to document element
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.remove('light', 'dark');
+    root.classList.add(theme);
+  }, [theme]);
 
   // Show maintenance page if enabled and user is not admin
   if (isMaintenanceMode && !isAdmin) {

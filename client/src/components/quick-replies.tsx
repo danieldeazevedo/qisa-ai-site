@@ -22,13 +22,23 @@ export function QuickReplies({ onReplySelect, context }: QuickRepliesProps) {
       ];
     }
     
-    // Creative/Image related
-    if (lowerContext.includes('imagem') || lowerContext.includes('desenho') || lowerContext.includes('arte') || lowerContext.includes('criativo')) {
+    // Image generation related - only show when AI actually talked about images
+    if (lowerContext.includes('imagem') || lowerContext.includes('desenho') || lowerContext.includes('arte') || lowerContext.includes('visual') || lowerContext.includes('gerei') || lowerContext.includes('criando')) {
       return [
         "Gere uma imagem similar",
-        "Mude o estilo para mais realista",
+        "Mude o estilo para mais realista", 
         "Adicione mais detalhes",
         "Faça uma versão cartoon"
+      ];
+    }
+    
+    // Creative ideas (not image generation)
+    if (lowerContext.includes('criativo') || lowerContext.includes('ideia') || lowerContext.includes('inspiração') || lowerContext.includes('sugestão')) {
+      return [
+        "Me dê mais ideias criativas",
+        "Como posso ser mais criativo?",
+        "Que outras opções existem?",
+        "Inspire-me com algo novo"
       ];
     }
     
