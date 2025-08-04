@@ -3,6 +3,7 @@
 @tailwind utilities;
 
 :root {
+  /* Default theme colors */
   --background: hsl(0, 0%, 100%);
   --foreground: hsl(20, 14.3%, 4.1%);
   --muted: hsl(60, 4.8%, 95.9%);
@@ -25,6 +26,10 @@
   --destructive-foreground: hsl(60, 9.1%, 97.8%);
   --ring: hsl(20, 14.3%, 4.1%);
   --radius: 0.5rem;
+  
+  /* Custom theme support - will be overridden by theme customizer */
+  --surface: var(--card);
+  --text: var(--foreground);
 }
 
 .dark {
@@ -441,4 +446,43 @@
   background: rgba(15, 23, 42, 0.95);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Theme-specific gradient classes */
+.theme-ocean .bg-gradient-chat {
+  background: linear-gradient(to right, #06b6d4, #3b82f6, #6366f1);
+}
+
+.theme-sunset .bg-gradient-chat {
+  background: linear-gradient(to right, #f97316, #ef4444, #ec4899);
+}
+
+.theme-forest .bg-gradient-chat {
+  background: linear-gradient(to right, #10b981, #059669, #0d9488);
+}
+
+.theme-lavender .bg-gradient-chat {
+  background: linear-gradient(to right, #8b5cf6, #7c3aed, #6366f1);
+}
+
+.theme-midnight .bg-gradient-chat {
+  background: linear-gradient(to right, #3b82f6, #8b5cf6, #6366f1);
+}
+
+/* Dynamic theme gradient utilities */
+.bg-gradient-chat {
+  background: linear-gradient(to right, #6366f1, #8b5cf6, #ec4899);
+}
+
+/* Bounce animation for typing indicator */
+@keyframes bounce-dot {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-4px);
+  }
+  60% {
+    transform: translateY(-2px);
+  }
 }

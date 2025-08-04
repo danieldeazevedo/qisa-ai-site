@@ -22,6 +22,7 @@ import {
 import { Send, Image, Paperclip, Edit3, Mic, MicOff, Volume2, VolumeX } from "lucide-react";
 import type { FileAttachment } from "@shared/schema";
 import { useVoice } from "@/hooks/use-voice";
+import { useCommandHistory } from "@/hooks/use-command-history";
 
 // Componente de popup informativo
 function InfoPopup({ 
@@ -70,6 +71,9 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
   const [showAttachmentPopup, setShowAttachmentPopup] = useState(false);
   const [showVoicePopup, setShowVoicePopup] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  
+  // Command history
+  const { addToHistory, navigateHistory, saveDraft } = useCommandHistory();
   
   // Voice functionality
   const { 
@@ -127,12 +131,38 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if ((message.trim() || attachments.length > 0) && !isLoading) {
-      onSendMessage(message.trim(), isImageMode, attachments.length > 0 ? attachments : undefined, isEditMode);
+      const messageText = message.trim();
+      
+      // Add to command history
+      if (messageText) {
+        addToHistory(messageText);
+      }
+      
+      onSendMessage(messageText, isImageMode, attachments.length > 0 ? attachments : undefined, isEditMode);
       setMessage("");
       setIsImageMode(false);
       setIsEditMode(false);
       setAttachments([]);
       clearTranscript();
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Command history navigation
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      const direction = e.key === 'ArrowUp' ? 'up' : 'down';
+      const historyMessage = navigateHistory(direction, message);
+      if (historyMessage !== null) {
+        setMessage(historyMessage);
+      }
+    }
+    
+    // Auto-save draft
+    if (e.key !== 'Enter' && e.key !== 'ArrowUp' && e.key !== 'ArrowDown') {
+      setTimeout(() => {
+        saveDraft(message);
+      }, 100);
     }
   };
 
@@ -211,6 +241,8 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
                   handleSubmit(e);
+                } else {
+                  handleKeyDown(e);
                 }
               }}
             />

@@ -23,6 +23,11 @@ import { useQkoins } from "@/hooks/use-qkoins";
 import { QkoinDisplay } from "@/components/qkoin-display";
 import { ArrowLeft, Bot, Settings, Download, Trash2, User, LogOut, Moon, Sun, Shield, ChevronDown, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { ThemeCustomizer } from "@/components/theme-customizer";
+import { TypingIndicator } from "@/components/typing-indicator";
+import { QuickReplies } from "@/components/quick-replies";
+import { useCommandHistory } from "@/hooks/use-command-history";
+import { useThemeCustomization } from "@/hooks/use-theme-customization";
 
 
 export default function Chat() {
@@ -35,15 +40,41 @@ export default function Chat() {
   const { isAuthenticated, sessions, createSession, switchToSession, currentSession, isLoading } = useSessions();
   const { theme, toggleTheme } = useTheme();
   const { canGenerateImage } = useQkoins();
+  const { getThemeGradients } = useThemeCustomization();
+  const { addToHistory, navigateHistory, saveDraft } = useCommandHistory();
   const [showSettings, setShowSettings] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isTyping, setIsTyping] = useState(false);
+  const [showQuickReplies, setShowQuickReplies] = useState(true);
+  const [lastAiMessage, setLastAiMessage] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
-  // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll to bottom when new messages arrive and track AI responses
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    
+    // Find the last AI message for context in quick replies
+    const lastAi = messages.findLast(msg => msg.role === 'assistant');
+    if (lastAi && lastAi.content !== lastAiMessage) {
+      setLastAiMessage(lastAi.content);
+      setShowQuickReplies(true);
+    }
+  }, [messages, lastAiMessage]);
+
+  // Handle typing indicator during message sending
+  useEffect(() => {
+    if (isSending) {
+      setIsTyping(true);
+      setShowQuickReplies(false);
+    } else {
+      // Delay hiding typing indicator to make it feel more natural
+      const timeout = setTimeout(() => {
+        setIsTyping(false);
+      }, 500);
+      return () => clearTimeout(timeout);
+    }
+  }, [isSending]);
 
   // Handle navigation: if authenticated and no chatId, navigate to first session
   useEffect(() => {
@@ -262,6 +293,10 @@ export default function Chat() {
                       <span>Configurações</span>
                     </DropdownMenuItem>
                     
+                    <DropdownMenuItem>
+                      <ThemeCustomizer />
+                    </DropdownMenuItem>
+                    
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={logout} className="text-red-600 dark:text-red-400">
                       <LogOut className="mr-2 h-4 w-4" />
@@ -400,31 +435,19 @@ export default function Chat() {
               })
             )}
 
-            {/* Loading Message */}
-            {isSending && (
-              <div className="flex items-start space-x-3 mb-6 animate-fade-in">
-                <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center flex-shrink-0 animate-pulse-gentle">
-                  <Bot className="text-white text-sm" />
-                </div>
-                <div className="bg-card rounded-2xl rounded-tl-md px-4 py-3 shadow-sm border border-border animate-scale-in">
-                  <div className="flex items-center space-x-2">
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"></div>
-                      <div
-                        className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"
-                        style={{ animationDelay: "0.1s" }}
-                      ></div>
-                      <div
-                        className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"
-                        style={{ animationDelay: "0.2s" }}
-                      ></div>
-                    </div>
-                    <span className="text-muted-foreground text-sm">
-                      Qisa está digitando...
-                    </span>
-                  </div>
-                </div>
-              </div>
+            {/* Typing Indicator */}
+            {isTyping && <TypingIndicator />}
+
+            {/* Quick Replies */}
+            {showQuickReplies && messages.length > 0 && !isTyping && (
+              <QuickReplies 
+                onReplySelect={(message) => {
+                  addToHistory(message);
+                  sendMessage(message, false);
+                  setShowQuickReplies(false);
+                }}
+                context={lastAiMessage}
+              />
             )}
 
             <div ref={messagesEndRef} />
