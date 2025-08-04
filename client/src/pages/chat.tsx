@@ -3,6 +3,14 @@ import { Link, useParams, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 import { ChatMessage } from "@/components/chat-message";
 import { ChatInput } from "@/components/chat-input";
 import { ChatSidebar } from "@/components/chat-sidebar";
@@ -13,7 +21,7 @@ import { useSessions } from "@/hooks/use-sessions";
 import { useTheme } from "@/hooks/use-theme";
 import { useQkoins } from "@/hooks/use-qkoins";
 import { QkoinDisplay } from "@/components/qkoin-display";
-import { ArrowLeft, Bot, Settings, Download, Trash2, User, LogOut, Moon, Sun, Shield } from "lucide-react";
+import { ArrowLeft, Bot, Settings, Download, Trash2, User, LogOut, Moon, Sun, Shield, ChevronDown, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 
@@ -99,17 +107,18 @@ export default function Chat() {
       }`}>
       {/* Chat Header */}
       <header className="bg-gradient-to-r from-background/80 via-background/70 to-background/80 backdrop-blur-xl shadow-lg border-b border-border/20 sticky top-0 z-10 animate-fade-in">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-18 py-2">
-            <div className="flex items-center space-x-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
+          <div className="flex justify-between items-center h-16 py-2">
+            {/* Left Section - Compact */}
+            <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
               {isAuthenticated && (
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setSidebarOpen(!sidebarOpen)}
-                  className="p-2.5 text-muted-foreground hover:text-primary transition-all duration-300 rounded-xl hover:bg-primary/10 hover:shadow-md animate-scale-in group"
+                  className="p-2 text-muted-foreground hover:text-primary transition-all duration-300 rounded-xl hover:bg-primary/10 flex-shrink-0"
                 >
-                  <svg className="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                   </svg>
                 </Button>
@@ -119,72 +128,54 @@ export default function Chat() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="p-2.5 text-muted-foreground hover:text-primary transition-all duration-300 rounded-xl hover:bg-primary/10 hover:shadow-md animate-scale-in group"
+                    className="p-2 text-muted-foreground hover:text-primary transition-all duration-300 rounded-xl hover:bg-primary/10 flex-shrink-0"
                   >
-                    <ArrowLeft className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                    <ArrowLeft className="w-4 h-4" />
                   </Button>
                 </Link>
               )}
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg animate-scale-in hover:shadow-xl transition-all duration-300">
-                <Bot className="text-white w-6 h-6" />
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+                <Bot className="text-white w-5 h-5" />
               </div>
-              <div className="flex-1">
-                <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent animate-slide-in">
+              <div className="min-w-0 flex-1">
+                <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent truncate">
                   {(currentSession as any)?.title || "Qisa"}
                 </h1>
                 {isAuthenticated && (
-                  <div className="flex items-center space-x-1">
+                  <div className="hidden sm:flex items-center space-x-1">
                     <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <p className="text-xs text-green-600 dark:text-green-400 font-medium">Histórico sendo salvo automaticamente</p>
+                    <p className="text-xs text-green-600 dark:text-green-400 font-medium">Histórico salvo</p>
                   </div>
                 )}
                 {!isAuthenticated && (
-                  <div className="flex items-center space-x-1">
+                  <div className="hidden sm:flex items-center space-x-1">
                     <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
-                    <p className="text-xs text-orange-600 dark:text-orange-400 font-medium">Modo anônimo - sem histórico</p>
+                    <p className="text-xs text-orange-600 dark:text-orange-400 font-medium">Modo anônimo</p>
                   </div>
                 )}
               </div>
             </div>
-            <div className="flex items-center space-x-3">
-              {/* Search Button - only for authenticated users */}
+
+            {/* Right Section - Responsive */}
+            <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+              {/* QKoin Display - Hidden on mobile */}
+              <div className="hidden md:block">
+                <QkoinDisplay compact={true} />
+              </div>
+
+              {/* Search Button - only for authenticated users, hidden on mobile */}
               {isAuthenticated && (
-                <ChatSearch onMessageClick={handleSearchMessageClick} />
+                <div className="hidden sm:block">
+                  <ChatSearch onMessageClick={handleSearchMessageClick} />
+                </div>
               )}
 
-              {/* About Button */}
-              <Link href="/about">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-muted-foreground hover:text-primary transition-all duration-300 rounded-lg hover:bg-muted animate-scale-in"
-                >
-                  Sobre
-                </Button>
-              </Link>
-
-              {/* Profile Button - only for authenticated users */}
-              {user?.username && !user.username.includes('anonymous') && (
-                <Link href="/profile">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-muted-foreground hover:text-primary transition-all duration-300 rounded-lg hover:bg-muted animate-scale-in"
-                  >
-                    Perfil
-                  </Button>
-                </Link>
-              )}
-              
-              {/* QKoin Display */}
-              <QkoinDisplay compact={true} />
-              
               {/* Theme Toggle */}
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={toggleTheme}
-                className="p-2 text-muted-foreground hover:text-primary transition-all duration-300 rounded-lg hover:bg-muted animate-scale-in"
+                className="p-2 text-muted-foreground hover:text-primary transition-all duration-300 rounded-lg hover:bg-muted"
               >
                 {theme === 'dark' ? (
                   <Sun className="w-4 h-4" />
@@ -193,78 +184,105 @@ export default function Chat() {
                 )}
               </Button>
 
-              {/* User Profile Section */}
+              {/* User Menu Dropdown */}
               {user ? (
-                <div className="flex items-center space-x-2 bg-muted/50 rounded-lg px-3 py-2 animate-slide-in">
-                  {user.photoURL ? (
-                    <img 
-                      src={user.photoURL} 
-                      alt={user.displayName || 'Usuário'} 
-                      className="w-8 h-8 rounded-full border-2 border-primary/20"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                      <User className="w-4 h-4 text-white" />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="flex items-center space-x-2 bg-muted/50 rounded-lg px-2 py-2 hover:bg-muted/70 transition-all duration-300"
+                    >
+                      {user.photoURL ? (
+                        <img 
+                          src={user.photoURL} 
+                          alt={user.displayName || 'Usuário'} 
+                          className="w-7 h-7 rounded-full border-2 border-primary/20"
+                        />
+                      ) : (
+                        <div className="w-7 h-7 bg-primary rounded-full flex items-center justify-center">
+                          <User className="w-4 h-4 text-white" />
+                        </div>
+                      )}
+                      <span className="hidden lg:block text-sm font-medium text-foreground truncate max-w-20">
+                        {user.displayName || 'Usuário'}
+                      </span>
+                      <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium">{user.displayName || 'Usuário'}</p>
+                        <p className="text-xs text-muted-foreground">{user.email}</p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    
+                    {/* Mobile-only items */}
+                    <div className="sm:hidden">
+                      <DropdownMenuItem>
+                        <QkoinDisplay compact={true} />
+                      </DropdownMenuItem>
+                      {isAuthenticated && (
+                        <DropdownMenuItem>
+                          <ChatSearch onMessageClick={handleSearchMessageClick} />
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuSeparator />
                     </div>
-                  )}
-                  <div className="hidden sm:block">
-                    <p className="text-sm font-medium text-foreground">
-                      {user.displayName || 'Usuário'}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {user.email}
-                    </p>
-                  </div>
-                  {user.username && !user.username.includes('anonymous') && (
-                    <Link href="/profile">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="p-1 text-muted-foreground hover:text-primary transition-all duration-300 rounded-lg hover:bg-primary/10"
-                        title="Meu Perfil"
-                      >
-                        <User className="w-4 h-4" />
-                      </Button>
-                    </Link>
-                  )}
-                  {user.username === 'daniel08' && (
-                    <Link href="/admin">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="p-1 text-muted-foreground hover:text-blue-500 transition-all duration-300 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950"
-                        title="Painel Administrativo"
-                      >
-                        <Shield className="w-4 h-4" />
-                      </Button>
-                    </Link>
-                  )}
+
+                    <DropdownMenuItem asChild>
+                      <Link href="/about" className="flex items-center">
+                        <Info className="mr-2 h-4 w-4" />
+                        <span>Sobre</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    
+                    {user?.username && !user.username.includes('anonymous') && (
+                      <DropdownMenuItem asChild>
+                        <Link href="/profile" className="flex items-center">
+                          <User className="mr-2 h-4 w-4" />
+                          <span>Perfil</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    
+                    {user.username === 'daniel08' && (
+                      <DropdownMenuItem asChild>
+                        <Link href="/admin" className="flex items-center">
+                          <Shield className="mr-2 h-4 w-4" />
+                          <span>Admin</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    
+                    <DropdownMenuItem onClick={() => setShowSettings(true)}>
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Configurações</span>
+                    </DropdownMenuItem>
+                    
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={logout} className="text-red-600 dark:text-red-400">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Sair</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <div className="flex items-center space-x-2 text-muted-foreground">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce-subtle"></div>
+                  <span className="text-sm hidden sm:block">Anônimo</span>
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={logout}
-                    className="p-1 text-muted-foreground hover:text-red-500 transition-all duration-300 rounded-lg hover:bg-red-50 dark:hover:bg-red-950"
-                    data-testid="button-logout-chat"
+                    onClick={() => setShowSettings(true)}
+                    className="p-2 text-muted-foreground hover:text-primary transition-all duration-300 rounded-lg hover:bg-muted"
                   >
-                    <LogOut className="w-4 h-4" />
+                    <Settings className="w-4 h-4" />
                   </Button>
                 </div>
-              ) : (
-                <div className="flex items-center space-x-2 text-muted-foreground animate-pulse-gentle">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce-subtle"></div>
-                  <span className="text-sm">Modo Anônimo</span>
-                </div>
               )}
-              
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowSettings(true)}
-                className="p-2 text-muted-foreground hover:text-primary transition-all duration-300 rounded-lg hover:bg-muted animate-scale-in"
-                data-testid="button-settings"
-              >
-                <Settings className="w-4 h-4" />
-              </Button>
             </div>
           </div>
         </div>
