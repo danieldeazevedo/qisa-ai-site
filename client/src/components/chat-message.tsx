@@ -56,7 +56,7 @@ export function ChatMessage({ message, isLatest = false }: ChatMessageProps) {
         className={`max-w-md px-4 py-3 rounded-2xl animate-slide-in transition-all duration-300 relative group ${
           isUser
             ? "bg-gradient-to-r from-primary to-secondary text-white rounded-tr-md shadow-lg"
-            : "bg-card shadow-sm border border-border rounded-tl-md hover:shadow-md"
+            : "bg-white shadow-sm border border-gray-200 rounded-tl-md hover:shadow-md"
         }`}
       >
         {/* Text-to-Speech Button for AI messages */}
@@ -76,7 +76,7 @@ export function ChatMessage({ message, isLatest = false }: ChatMessageProps) {
         )}
         {message.imageUrl ? (
           <div className="space-y-3">
-            <div className={`prose prose-sm max-w-none ${isUser ? "prose-invert text-white" : "text-foreground"}`}>
+            <div className={`prose prose-sm max-w-none ${isUser ? "prose-invert text-white" : "text-gray-800"}`}>
               <ReactMarkdown 
                 remarkPlugins={[remarkMath]}
                 rehypePlugins={[rehypeKatex]}
@@ -97,7 +97,7 @@ export function ChatMessage({ message, isLatest = false }: ChatMessageProps) {
             )}
           </div>
         ) : (
-          <div className={`prose prose-sm max-w-none ${isUser ? "prose-invert text-white" : "text-foreground"}`}>
+          <div className={`prose prose-sm max-w-none ${isUser ? "prose-invert text-white" : "text-gray-800"}`}>
             <ReactMarkdown 
               remarkPlugins={[remarkMath]}
               rehypePlugins={[rehypeKatex]}
@@ -111,7 +111,7 @@ export function ChatMessage({ message, isLatest = false }: ChatMessageProps) {
         )}
         <span
           className={`text-xs mt-2 block transition-opacity duration-300 ${
-            isUser ? "text-white/80" : "text-muted-foreground"
+            isUser ? "text-white/80" : "text-gray-600"
           }`}
         >
           {timestamp}
