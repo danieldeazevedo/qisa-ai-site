@@ -438,8 +438,8 @@ export default function Chat() {
             {/* Typing Indicator */}
             {isTyping && <TypingIndicator />}
 
-            {/* Quick Replies */}
-            {showQuickReplies && messages.length > 0 && !isTyping && (
+            {/* Quick Replies - only show when there's actually a recent AI message */}
+            {showQuickReplies && messages.length > 0 && !isTyping && lastAiMessage && (
               <QuickReplies 
                 onReplySelect={(message) => {
                   addToHistory(message);

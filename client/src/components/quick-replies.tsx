@@ -8,22 +8,12 @@ interface QuickRepliesProps {
 
 export function QuickReplies({ onReplySelect, context }: QuickRepliesProps) {
   const getContextualSuggestions = () => {
-    if (!context) return [];
+    if (!context || context.length < 20) return []; // Only show for substantial AI responses
     
     const lowerContext = context.toLowerCase();
     
-    // Programming related
-    if (lowerContext.includes('código') || lowerContext.includes('programação') || lowerContext.includes('javascript') || lowerContext.includes('python')) {
-      return [
-        "Pode me dar um exemplo prático?",
-        "Como posso implementar isso?",
-        "Quais são as melhores práticas?",
-        "Me explique o erro mais comum"
-      ];
-    }
-    
-    // Image generation related - only show when AI actually talked about images
-    if (lowerContext.includes('imagem') || lowerContext.includes('desenho') || lowerContext.includes('arte') || lowerContext.includes('visual') || lowerContext.includes('gerei') || lowerContext.includes('criando')) {
+    // Image generation related - only show when AI actually generated/talked about images
+    if (lowerContext.includes('gerei') || lowerContext.includes('criei') || lowerContext.includes('gerando') || lowerContext.includes('criando uma imagem')) {
       return [
         "Gere uma imagem similar",
         "Mude o estilo para mais realista", 
@@ -32,18 +22,28 @@ export function QuickReplies({ onReplySelect, context }: QuickRepliesProps) {
       ];
     }
     
-    // Creative ideas (not image generation)
-    if (lowerContext.includes('criativo') || lowerContext.includes('ideia') || lowerContext.includes('inspiração') || lowerContext.includes('sugestão')) {
+    // Programming related
+    if (lowerContext.includes('código') || lowerContext.includes('programação') || lowerContext.includes('javascript') || lowerContext.includes('python') || lowerContext.includes('function') || lowerContext.includes('algoritmo')) {
+      return [
+        "Pode me dar um exemplo prático?",
+        "Como posso implementar isso?",
+        "Quais são as melhores práticas?",
+        "Me explique possíveis erros"
+      ];
+    }
+    
+    // Creative ideas (not image generation) - when AI gives creative suggestions
+    if (lowerContext.includes('sugestões') || lowerContext.includes('ideias') || lowerContext.includes('criativo') || lowerContext.includes('inspiração')) {
       return [
         "Me dê mais ideias criativas",
         "Como posso ser mais criativo?",
         "Que outras opções existem?",
-        "Inspire-me com algo novo"
+        "Inspire-me com algo diferente"
       ];
     }
     
-    // Learning/Educational
-    if (lowerContext.includes('explicar') || lowerContext.includes('aprender') || lowerContext.includes('entender') || lowerContext.includes('conceito')) {
+    // Learning/Educational - when AI explains concepts
+    if (lowerContext.includes('funciona') || lowerContext.includes('explicação') || lowerContext.includes('conceito') || lowerContext.includes('entender') || lowerContext.includes('resumo')) {
       return [
         "Pode dar mais exemplos?",
         "Simplifique a explicação",
@@ -52,13 +52,23 @@ export function QuickReplies({ onReplySelect, context }: QuickRepliesProps) {
       ];
     }
     
-    // Problem solving
-    if (lowerContext.includes('problema') || lowerContext.includes('erro') || lowerContext.includes('dificuldade') || lowerContext.includes('não funciona')) {
+    // Problem solving - when AI helps with issues
+    if (lowerContext.includes('solução') || lowerContext.includes('resolver') || lowerContext.includes('problema') || lowerContext.includes('erro') || lowerContext.includes('dificuldade')) {
       return [
         "Como posso resolver isso?",
         "Quais são as alternativas?",
-        "Me ajude a depurar",
+        "Me ajude a implementar",
         "Onde posso encontrar mais ajuda?"
+      ];
+    }
+    
+    // AI/Technology explanations
+    if (lowerContext.includes('inteligência artificial') || lowerContext.includes('machine learning') || lowerContext.includes('dados') || lowerContext.includes('algoritmo')) {
+      return [
+        "Pode dar exemplos práticos?",
+        "Como isso afeta o dia a dia?",
+        "Quais são as limitações?",
+        "Me explique mais sobre isso"
       ];
     }
     
@@ -79,9 +89,11 @@ export function QuickReplies({ onReplySelect, context }: QuickRepliesProps) {
   const allSuggestions = contextualSuggestions.length > 0 
     ? [
         ...contextualSuggestions.map(text => ({ text, contextual: true })),
-        ...defaultSuggestions.slice(0, 2)
+        // Add a couple general suggestions only if we have contextual ones
+        { icon: Lightbulb, text: "Me dê uma ideia criativa", category: "Criativo" },
+        { icon: HelpCircle, text: "Explique algo diferente", category: "Ajuda" }
       ]
-    : defaultSuggestions;
+    : []; // Don't show default suggestions if no context
 
   return (
     <div className="mb-4 animate-slide-in">
