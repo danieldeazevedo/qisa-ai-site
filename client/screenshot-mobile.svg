@@ -1,0 +1,32 @@
+<svg width="375" height="812" viewBox="0 0 375 812" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="375" height="812" fill="#0a0a0a"/>
+  
+  <!-- Header -->
+  <rect x="0" y="0" width="375" height="60" fill="url(#headerGradient)"/>
+  <text x="187.5" y="35" text-anchor="middle" fill="white" font-size="18" font-weight="bold">Qisa</text>
+  
+  <!-- Chat messages -->
+  <rect x="20" y="80" width="280" height="40" rx="20" fill="#1e1e1e"/>
+  <text x="30" y="102" fill="#ffffff" font-size="14">Olá! Como posso ajudá-lo hoje?</text>
+  
+  <rect x="75" y="140" width="280" height="40" rx="20" fill="#6366f1"/>
+  <text x="85" y="162" fill="#ffffff" font-size="14">Gere uma imagem de um pôr do sol</text>
+  
+  <!-- Image placeholder -->
+  <rect x="20" y="200" width="335" height="200" rx="8" fill="#2a2a2a"/>
+  <circle cx="187.5" cy="300" r="30" fill="#6366f1" opacity="0.5"/>
+  <text x="187.5" y="306" text-anchor="middle" fill="#ffffff" font-size="12">🖼️</text>
+  
+  <!-- Input area -->
+  <rect x="20" y="750" width="280" height="40" rx="20" fill="#1e1e1e" stroke="#333" stroke-width="1"/>
+  <text x="30" y="772" fill="#999" font-size="14">Digite sua mensagem...</text>
+  <circle cx="330" cy="770" r="20" fill="#6366f1"/>
+  <text x="330" y="775" text-anchor="middle" fill="white" font-size="12">→</text>
+  
+  <defs>
+    <linearGradient id="headerGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#6366f1"/>
+      <stop offset="100%" style="stop-color:#8b5cf6"/>
+    </linearGradient>
+  </defs>
+</svg>

@@ -670,3 +670,204 @@ html.dark {
     transform: translateY(-2px);
   }
 }
+
+/* PWA Specific Styles */
+
+/* PWA Install Button Animation */
+@keyframes slideInFromBottom {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.pwa-install-enter {
+  animation: slideInFromBottom 0.3s ease-out;
+}
+
+/* Network Status Animation */
+@keyframes slideInFromTop {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.network-status-enter {
+  animation: slideInFromTop 0.3s ease-out;
+}
+
+/* PWA App-like appearance */
+@media (display-mode: standalone) {
+  body {
+    /* Remove any browser-specific padding/margin */
+    padding: 0;
+    margin: 0;
+    
+    /* Prevent rubber band scrolling on iOS */
+    overscroll-behavior: none;
+    
+    /* Make it feel more native */
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  
+  /* Remove outline on focused elements in PWA mode */
+  *:focus {
+    outline: none;
+  }
+  
+  /* Better touch targets for PWA */
+  button, a, input, textarea, select {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+  
+  /* Ensure proper viewport handling */
+  html {
+    height: 100vh;
+    width: 100vw;
+    overflow-x: hidden;
+  }
+}
+
+/* iOS Safari PWA specific fixes */
+@media (display-mode: standalone) and (-webkit-device-pixel-ratio: 2) {
+  /* Fix for iOS status bar */
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+/* Android Chrome PWA specific */
+@media (display-mode: standalone) and (orientation: portrait) {
+  /* Ensure proper scaling on Android */
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+}
+
+/* Offline indicator styles */
+.offline-indicator {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  background: linear-gradient(90deg, #f59e0b, #f97316);
+  color: white;
+  text-align: center;
+  padding: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Add visual feedback for offline state */
+body.offline {
+  filter: grayscale(20%);
+}
+
+body.offline::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.05);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* PWA splash screen styles */
+.pwa-splash {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  color: white;
+}
+
+.pwa-splash.hiding {
+  animation: fadeOut 0.5s ease-out forwards;
+}
+
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+/* Improved scroll behavior for PWA */
+html {
+  scroll-behavior: smooth;
+}
+
+/* PWA specific button hover states */
+@media (hover: none) {
+  /* Remove hover effects on touch devices */
+  .hover\:bg-primary\/10:hover {
+    background-color: transparent;
+  }
+  
+  .hover\:scale-105:hover {
+    transform: none;
+  }
+}
+
+/* Enhanced focus states for accessibility in PWA */
+@media (display-mode: standalone) {
+  *:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+/* Prevent text selection in PWA mode for better UX */
+@media (display-mode: standalone) {
+  .prevent-select {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+}
+
+/* PWA update notification */
+.pwa-update-notification {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--primary);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 24px;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  z-index: 1000;
+  animation: slideInFromBottom 0.3s ease-out;
+}

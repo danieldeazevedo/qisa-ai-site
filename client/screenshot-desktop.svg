@@ -1,0 +1,47 @@
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1920" height="1080" fill="#0a0a0a"/>
+  
+  <!-- Sidebar -->
+  <rect x="0" y="0" width="300" height="1080" fill="#111111"/>
+  <text x="150" y="40" text-anchor="middle" fill="white" font-size="24" font-weight="bold">Qisa</text>
+  
+  <!-- Chat sessions -->
+  <rect x="20" y="80" width="260" height="50" rx="8" fill="#1e1e1e"/>
+  <text x="30" y="105" fill="#ffffff" font-size="16">Nova Conversa</text>
+  
+  <rect x="20" y="140" width="260" height="50" rx="8" fill="#262626"/>
+  <text x="30" y="165" fill="#cccccc" font-size="14">Geração de Imagens</text>
+  
+  <!-- Main chat area -->
+  <rect x="300" y="0" width="1620" height="1080" fill="#0a0a0a"/>
+  
+  <!-- Header -->
+  <rect x="300" y="0" width="1620" height="70" fill="url(#desktopHeaderGradient)"/>
+  <text x="1110" y="42" text-anchor="middle" fill="white" font-size="20" font-weight="bold">Qisa - Assistente de IA</text>
+  
+  <!-- Chat messages -->
+  <rect x="350" y="120" width="600" height="60" rx="30" fill="#1e1e1e"/>
+  <text x="370" y="152" fill="#ffffff" font-size="16">Olá! Sou a Qisa, sua assistente de IA.</text>
+  
+  <rect x="970" y="200" width="600" height="60" rx="30" fill="#6366f1"/>
+  <text x="990" y="232" fill="#ffffff" font-size="16">Crie uma imagem de uma paisagem futurista</text>
+  
+  <!-- Large image placeholder -->
+  <rect x="350" y="280" width="800" height="500" rx="12" fill="#2a2a2a"/>
+  <circle cx="750" cy="530" r="60" fill="#6366f1" opacity="0.5"/>
+  <text x="750" y="540" text-anchor="middle" fill="#ffffff" font-size="24">🎨</text>
+  
+  <!-- Input area -->
+  <rect x="350" y="1000" width="1100" height="60" rx="30" fill="#1e1e1e" stroke="#333" stroke-width="2"/>
+  <text x="380" y="1035" fill="#999" font-size="18">Digite sua mensagem ou comando...</text>
+  <circle cx="1500" cy="1030" r="25" fill="#6366f1"/>
+  <text x="1500" y="1037" text-anchor="middle" fill="white" font-size="16">→</text>
+  
+  <defs>
+    <linearGradient id="desktopHeaderGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#6366f1"/>
+      <stop offset="50%" style="stop-color:#8b5cf6"/>
+      <stop offset="100%" style="stop-color:#06b6d4"/>
+    </linearGradient>
+  </defs>
+</svg>
