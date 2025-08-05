@@ -40,7 +40,7 @@ Preferred communication style: Simple, everyday language.
 - **Theme System**: Dark/light mode toggle with adaptive colors.
 - **Information Pages**: Comprehensive About page and enhanced Home page.
 - **SEO**: Open Graph meta tags, custom logo for social media previews, favicon, and SEO meta tags.
-- **PWA (Progressive Web App)**: Full PWA implementation with manual service worker, manifest.json, and installation capabilities. Features robust install button that works both with native browser prompts and fallback manual instructions for different browsers. Install button appears automatically on production deployments even when beforeinstallprompt event doesn't fire.
+- **PWA (Progressive Web App)**: Full PWA implementation with vite-plugin-pwa integration for optimized service worker generation and manifest handling. Features automated build process that combines custom service worker functionality with Workbox optimizations. Includes automatic SW registration, strategic caching (NetworkFirst for APIs, CacheFirst for images), and robust install capabilities that work across different browsers and deployment environments.
 
 ## External Dependencies
 
@@ -52,7 +52,7 @@ Preferred communication style: Simple, everyday language.
 - **Tailwind CSS**: Styling.
 - **TanStack Query**: Server state management.
 - **Wouter**: Client-side routing.
-- **Vite**: Build tool.
+- **Vite**: Build tool with vite-plugin-pwa integration for PWA optimization.
 - **bcrypt**: Password hashing.
 - **react-markdown**: Markdown rendering.
 - **rehype-katex**: KaTeX for mathematical expressions.
