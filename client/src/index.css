@@ -62,6 +62,68 @@
   transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
+/* Ensure proper theme application */
+html, body {
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+/* Force dark mode styles when dark class is present */
+.dark {
+  color-scheme: dark;
+}
+
+.dark * {
+  border-color: var(--border);
+}
+
+/* Override any hardcoded colors in dark mode */
+.dark .bg-white {
+  background-color: var(--background) !important;
+}
+
+.dark .text-black {
+  color: var(--foreground) !important;
+}
+
+.dark .bg-gray-50 {
+  background-color: var(--muted) !important;
+}
+
+.dark .text-gray-900 {
+  color: var(--foreground) !important;
+}
+
+.dark .text-gray-600 {
+  color: var(--muted-foreground) !important;
+}
+
+/* Fix specific elements that might have hardcoded colors */
+.dark .bg-gradient-to-b,
+.dark .bg-gradient-to-t,
+.dark .bg-gradient-to-r,
+.dark .bg-gradient-to-l {
+  background: var(--background) !important;
+}
+
+/* Ensure chat area has proper dark background */
+.dark main {
+  background: var(--background) !important;
+}
+
+.dark .backdrop-blur-sm {
+  background-color: var(--background) !important;
+}
+
+/* Fix any remaining light backgrounds */
+.dark [class*="bg-background"] {
+  background-color: var(--background) !important;
+}
+
+.dark [class*="text-foreground"] {
+  color: var(--foreground) !important;
+}
+
 /* Animações customizadas e suaves */
 @keyframes gradient {
   0% { background-position: 0% 50%; }
