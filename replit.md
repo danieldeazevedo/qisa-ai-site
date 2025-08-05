@@ -17,7 +17,7 @@ Preferred communication style: Simple, everyday language.
 - **State Management**: TanStack Query (React Query)
 - **Routing**: Wouter
 - **Build Tool**: Vite
-- **UI/UX Decisions**: Smooth theme toggles, enhanced UI animations (fade-in, scale-in, bounce-subtle, pulse-gentle), responsive design, typewriter animation with blinking cursor, visual chat highlights with accent and ring effects for active sessions, informative popups for guiding new users (e.g., image/attachment buttons). Prose styling for markdown and math. Advanced dynamic background animations applied to all pages with moving gradients (gradient-wave, gradient-morph, gradient-shift, gradient-pulse, floating-orb animations) creating immersive visual experience throughout the entire application. Reusable AnimatedBackground component with configurable opacity levels.
+- **UI/UX Decisions**: Smooth theme toggles, enhanced UI animations (fade-in, scale-in, bounce-subtle, pulse-gentle), responsive design, typewriter animation with blinking cursor, visual chat highlights with accent and ring effects for active sessions, informative popups for guiding new users (e.g., image/attachment buttons). Prose styling for markdown and math. Advanced dynamic background animations applied to all pages except /chat with intense moving gradients (gradient-aurora, gradient-spiral, gradient-kaleidoscope, gradient-nebula, gradient-plasma animations) creating immersive visual experience. Reusable AnimatedBackground component with configurable opacity levels. PWA install buttons and user guidance for app installation.
 
 ### Backend
 - **Framework**: Express.js with TypeScript
@@ -40,6 +40,7 @@ Preferred communication style: Simple, everyday language.
 - **Theme System**: Dark/light mode toggle with adaptive colors.
 - **Information Pages**: Comprehensive About page and enhanced Home page.
 - **SEO**: Open Graph meta tags, custom logo for social media previews, favicon, and SEO meta tags.
+- **PWA (Progressive Web App)**: Full PWA implementation with manual service worker, manifest.json, and installation capabilities. Includes install buttons and prompts for users to add the app to their home screen.
 
 ## External Dependencies
 

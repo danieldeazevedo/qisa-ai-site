@@ -1,13 +1,15 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Bot, MessageCircle, Image, Shield, LogIn, LogOut, User, Moon, Sun, Coins } from "lucide-react";
+import { Bot, MessageCircle, Image, Shield, LogIn, LogOut, User, Moon, Sun, Coins, Download, Smartphone } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
 import { useQkoins } from "@/hooks/use-qkoins";
 import { QkoinDisplay } from "@/components/qkoin-display";
 import AnimatedBackground from "@/components/AnimatedBackground";
+import { PWAInstallButton, usePWAStatus } from "@/components/PWAInstallButton";
+import { installPWA, isPWA, isPWASupported } from "@/lib/pwa";
 
 // Componente de texto animado com efeito de digitação
 function TypewriterText({ text, delay = 50, className = "", showCursor = true }: { text: string; delay?: number; className?: string; showCursor?: boolean }) {
@@ -70,6 +72,19 @@ function FadeInUp({ children, delay = 0, className = "" }: { children: React.Rea
 export default function Home() {
   const { user, loading, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { isPWAInstalled, isPWASupportedBrowser } = usePWAStatus();
+  const [isInstallingPWA, setIsInstallingPWA] = useState(false);
+
+  const handleInstallPWA = async () => {
+    setIsInstallingPWA(true);
+    try {
+      await installPWA();
+    } catch (error) {
+      console.error('Erro ao instalar PWA:', error);
+    } finally {
+      setIsInstallingPWA(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col relative text-foreground">
@@ -199,6 +214,21 @@ export default function Home() {
                     Conversar com a Qisa
                   </Button>
                 </Link>
+                
+                {/* PWA Install Button */}
+                {isPWASupportedBrowser && !isPWAInstalled && (
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    onClick={handleInstallPWA}
+                    disabled={isInstallingPWA}
+                    className="inline-flex items-center justify-center px-6 py-3 border-2 border-primary/30 text-primary hover:bg-primary/10 font-semibold rounded-xl transition-all duration-300 hover:scale-105"
+                  >
+                    <Smartphone className="mr-2 w-5 h-5" />
+                    {isInstallingPWA ? 'Instalando...' : 'Instalar App'}
+                  </Button>
+                )}
+                
                 <div className="space-y-2">
                   <p className="text-sm text-muted-enhanced animate-fade-in">
                     <Shield className="inline w-4 h-4 mr-1" />
@@ -207,6 +237,16 @@ export default function Home() {
                   {!user && (
                     <p className="text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg px-3 py-2">
                       💡 O chat funciona sem login! Faça login para salvar seu histórico.
+                    </p>
+                  )}
+                  {isPWASupportedBrowser && !isPWAInstalled && (
+                    <p className="text-xs text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg px-3 py-2">
+                      📱 Instale como app para acesso rápido e uso offline!
+                    </p>
+                  )}
+                  {isPWAInstalled && (
+                    <p className="text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg px-3 py-2">
+                      ✨ App instalado! Acesse através do ícone na sua tela inicial.
                     </p>
                   )}
                 </div>
@@ -311,6 +351,9 @@ export default function Home() {
           </p>
         </div>
       </footer>
+      
+      {/* PWA Install Prompt */}
+      <PWAInstallButton />
     </div>
   );
 }
