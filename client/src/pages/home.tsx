@@ -78,9 +78,39 @@ export default function Home() {
   const handleInstallPWA = async () => {
     setIsInstallingPWA(true);
     try {
-      await installPWA();
+      // Verificar se já está instalado
+      if (isPWA()) {
+        alert('O app já está instalado! Verifique sua tela inicial.');
+        return;
+      }
+
+      // Tentar instalar PWA
+      const installed = await installPWA();
+      
+      if (installed) {
+        alert('App instalado com sucesso! Verifique sua tela inicial.');
+      } else {
+        // Mostrar instruções manuais de instalação
+        const userAgent = navigator.userAgent;
+        let instructions = '';
+        
+        if (userAgent.includes('Chrome') && !userAgent.includes('Edg')) {
+          instructions = 'No Chrome: Menu (⋮) → "Instalar Qisa" ou "Adicionar à tela inicial"';
+        } else if (userAgent.includes('Firefox')) {
+          instructions = 'No Firefox: Menu (☰) → "Instalar aplicativo" ou "Adicionar à tela inicial"';
+        } else if (userAgent.includes('Safari')) {
+          instructions = 'No Safari: Botão Compartilhar → "Adicionar à Tela de Início"';
+        } else if (userAgent.includes('Edg')) {
+          instructions = 'No Edge: Menu (...) → "Aplicativos" → "Instalar este site como um aplicativo"';
+        } else {
+          instructions = 'Procure por opções como "Instalar app" ou "Adicionar à tela inicial" no menu do seu navegador.';
+        }
+        
+        alert(`Para instalar o app:\n\n${instructions}`);
+      }
     } catch (error) {
       console.error('Erro ao instalar PWA:', error);
+      alert('Erro ao instalar o app. Tente usar o menu do navegador para adicionar à tela inicial.');
     } finally {
       setIsInstallingPWA(false);
     }
@@ -215,19 +245,17 @@ export default function Home() {
                   </Button>
                 </Link>
                 
-                {/* PWA Install Button */}
-                {isPWASupportedBrowser && !isPWAInstalled && (
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    onClick={handleInstallPWA}
-                    disabled={isInstallingPWA}
-                    className="inline-flex items-center justify-center px-6 py-3 border-2 border-primary/30 text-primary hover:bg-primary/10 font-semibold rounded-xl transition-all duration-300 hover:scale-105"
-                  >
-                    <Smartphone className="mr-2 w-5 h-5" />
-                    {isInstallingPWA ? 'Instalando...' : 'Instalar App'}
-                  </Button>
-                )}
+                {/* PWA Install Button - Sempre visível para debug */}
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={handleInstallPWA}
+                  disabled={isInstallingPWA}
+                  className="inline-flex items-center justify-center px-6 py-3 border-2 border-primary/30 text-primary hover:bg-primary/10 font-semibold rounded-xl transition-all duration-300 hover:scale-105"
+                >
+                  <Download className="mr-2 w-5 h-5" />
+                  {isInstallingPWA ? 'Instalando...' : 'Baixar App'}
+                </Button>
                 
                 <div className="space-y-2">
                   <p className="text-sm text-muted-enhanced animate-fade-in">
@@ -239,16 +267,9 @@ export default function Home() {
                       💡 O chat funciona sem login! Faça login para salvar seu histórico.
                     </p>
                   )}
-                  {isPWASupportedBrowser && !isPWAInstalled && (
-                    <p className="text-xs text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg px-3 py-2">
-                      📱 Instale como app para acesso rápido e uso offline!
-                    </p>
-                  )}
-                  {isPWAInstalled && (
-                    <p className="text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg px-3 py-2">
-                      ✨ App instalado! Acesse através do ícone na sua tela inicial.
-                    </p>
-                  )}
+                  <p className="text-xs text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg px-3 py-2">
+                    📱 Clique em "Baixar App" para instalar como aplicativo!
+                  </p>
                 </div>
               </div>
             </FadeInUp>
