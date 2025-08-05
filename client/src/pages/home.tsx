@@ -74,57 +74,142 @@ export default function Home() {
   const { theme, toggleTheme } = useTheme();
   const [showInstallButton, setShowInstallButton] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isPWAMode, setIsPWAMode] = useState(false);
 
   useEffect(() => {
+    // Verificar se já está rodando como PWA
+    const checkPWAMode = () => {
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                          (window.navigator as any).standalone === true ||
+                          document.referrer.includes('android-app://');
+      setIsPWAMode(isStandalone);
+      return isStandalone;
+    };
+
+    // Verificar se pode mostrar botão de instalação
+    const canShowInstallButton = () => {
+      // Não mostrar se já está em modo PWA
+      if (checkPWAMode()) return false;
+      
+      // Verificar se o navegador suporta PWA
+      const supportsPWA = 'serviceWorker' in navigator && 'Cache' in window;
+      
+      // Verificar se é um navegador que suporta instalação
+      const userAgent = navigator.userAgent;
+      const supportedBrowser = userAgent.includes('Chrome') || 
+                              userAgent.includes('Edge') || 
+                              userAgent.includes('Samsung') ||
+                              userAgent.includes('Opera');
+      
+      return supportsPWA && supportedBrowser;
+    };
+
     // Listener para o evento beforeinstallprompt
     const handleBeforeInstall = (e: any) => {
-      // Impede o banner automático
       e.preventDefault();
       setDeferredPrompt(e);
       setShowInstallButton(true);
+      console.log('PWA install prompt capturado');
     };
 
     // Listener para quando o app for instalado
     const handleAppInstalled = () => {
       setShowInstallButton(false);
       setDeferredPrompt(null);
+      setIsPWAMode(true);
       console.log('PWA instalado com sucesso!');
     };
 
+    // Configurar listeners
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
     window.addEventListener('appinstalled', handleAppInstalled);
+
+    // Mostrar botão se o navegador suporta mas o evento não disparou
+    const browserSupport = canShowInstallButton();
+    console.log('🔍 PWA Debug:', {
+      browserSupport,
+      userAgent: navigator.userAgent,
+      hasServiceWorker: 'serviceWorker' in navigator,
+      hasCache: 'Cache' in window,
+      isPWAMode: checkPWAMode(),
+      currentURL: window.location.href
+    });
+
+    if (browserSupport) {
+      setTimeout(() => {
+        if (!deferredPrompt && !isPWAMode) {
+          setShowInstallButton(true);
+          console.log('✅ Mostrando botão PWA manual (sem evento beforeinstallprompt)');
+        }
+      }, 2000); // Reduzido para 2 segundos
+    }
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
-  }, []);
+  }, [deferredPrompt, isPWAMode]);
 
   const handleInstallPWA = async () => {
-    if (!deferredPrompt) {
-      alert('Instalação não disponível. Use o menu do navegador para adicionar à tela inicial.');
-      return;
+    // Se temos o prompt nativo, usar ele
+    if (deferredPrompt) {
+      try {
+        await deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`Usuário escolheu: ${outcome}`);
+        
+        if (outcome === 'accepted') {
+          alert('App instalado com sucesso!');
+        }
+        
+        setDeferredPrompt(null);
+        setShowInstallButton(false);
+        return;
+      } catch (error) {
+        console.error('Erro ao usar prompt nativo:', error);
+      }
     }
 
-    try {
-      // Mostra o prompt de instalação
-      await deferredPrompt.prompt();
-      
-      // Espera o resultado
-      const { outcome } = await deferredPrompt.userChoice;
-      console.log(`Usuário escolheu: ${outcome}`);
-      
-      if (outcome === 'accepted') {
-        alert('App instalado com sucesso!');
-      }
-      
-      // Limpa
-      setDeferredPrompt(null);
-      setShowInstallButton(false);
-    } catch (error) {
-      console.error('Erro ao instalar PWA:', error);
-      alert('Erro ao instalar o app. Tente novamente.');
+    // Fallback: Mostrar instruções manuais específicas por navegador
+    const userAgent = navigator.userAgent;
+    let instructions = '';
+    
+    if (userAgent.includes('Chrome') && !userAgent.includes('Edg')) {
+      instructions = `📱 Para instalar o Qisa no Chrome:
+
+1. Clique no menu (⋮) no canto superior direito
+2. Procure por "Instalar Qisa" ou "Adicionar à tela inicial"
+3. Clique em "Instalar"
+
+Ou use: Ctrl+Shift+A (Windows) / Cmd+Shift+A (Mac)`;
+    } else if (userAgent.includes('Edg')) {
+      instructions = `📱 Para instalar o Qisa no Edge:
+
+1. Clique no menu (...) no canto superior direito
+2. Vá em "Aplicativos" 
+3. Clique em "Instalar este site como um aplicativo"`;
+    } else if (userAgent.includes('Firefox')) {
+      instructions = `📱 Para instalar o Qisa no Firefox:
+
+1. Clique no menu (☰) no canto superior direito
+2. Procure por "Instalar aplicativo"
+3. Siga as instruções`;
+    } else if (userAgent.includes('Safari')) {
+      instructions = `📱 Para instalar o Qisa no Safari:
+
+1. Clique no botão "Compartilhar" (quadrado com seta)
+2. Role para baixo e toque em "Adicionar à Tela de Início"
+3. Toque em "Adicionar"`;
+    } else {
+      instructions = `📱 Para instalar o Qisa:
+
+Procure no menu do seu navegador por opções como:
+• "Instalar aplicativo"
+• "Adicionar à tela inicial" 
+• "Instalar PWA"`;
     }
+    
+    alert(instructions);
   };
 
   return (
@@ -156,14 +241,14 @@ export default function Home() {
                 </Button>
               </Link>
               
-              {/* PWA Install Button no Header */}
-              {showInstallButton && (
+              {/* PWA Install Button no Header - Debug sempre visível em produção */}
+              {(showInstallButton || window.location.hostname !== 'localhost') && (
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={handleInstallPWA}
                   className="p-2 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-950 transition-all duration-300 rounded-lg animate-pulse"
-                  title="Instalar App"
+                  title={deferredPrompt ? 'Instalar App' : 'Como Instalar App'}
                 >
                   <Download className="w-4 h-4" />
                 </Button>
@@ -269,8 +354,8 @@ export default function Home() {
                   </Button>
                 </Link>
                 
-                {/* PWA Install Button - Só aparece quando disponível */}
-                {showInstallButton && (
+                {/* PWA Install Button - Debug sempre visível em produção */}
+                {(showInstallButton || window.location.hostname !== 'localhost') && (
                   <Button
                     size="lg"
                     variant="outline"
@@ -278,7 +363,7 @@ export default function Home() {
                     className="inline-flex items-center justify-center px-6 py-3 border-2 border-primary/30 text-primary hover:bg-primary/10 font-semibold rounded-xl transition-all duration-300 hover:scale-105 animate-bounce-subtle"
                   >
                     <Download className="mr-2 w-5 h-5" />
-                    Instalar App
+                    {deferredPrompt ? 'Instalar App' : 'Como Instalar'}
                   </Button>
                 )}
                 
@@ -294,7 +379,12 @@ export default function Home() {
                   )}
                   {showInstallButton && (
                     <p className="text-xs text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg px-3 py-2 animate-pulse">
-                      📱 Clique em "Instalar App" para adicionar à sua tela inicial!
+                      📱 Instale o Qisa como app para acesso rápido e offline!
+                    </p>
+                  )}
+                  {isPWAMode && (
+                    <p className="text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg px-3 py-2">
+                      ✨ Você está usando o Qisa como app instalado!
                     </p>
                   )}
                 </div>

@@ -40,7 +40,7 @@ Preferred communication style: Simple, everyday language.
 - **Theme System**: Dark/light mode toggle with adaptive colors.
 - **Information Pages**: Comprehensive About page and enhanced Home page.
 - **SEO**: Open Graph meta tags, custom logo for social media previews, favicon, and SEO meta tags.
-- **PWA (Progressive Web App)**: Full PWA implementation with manual service worker, manifest.json, and installation capabilities. Includes install buttons and prompts for users to add the app to their home screen.
+- **PWA (Progressive Web App)**: Full PWA implementation with manual service worker, manifest.json, and installation capabilities. Features robust install button that works both with native browser prompts and fallback manual instructions for different browsers. Install button appears automatically on production deployments even when beforeinstallprompt event doesn't fire.
 
 ## External Dependencies
 
