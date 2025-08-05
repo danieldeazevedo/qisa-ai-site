@@ -1,5 +1,4 @@
 // PWA Registration and Utilities
-import { Workbox } from 'workbox-window';
 
 export interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
@@ -14,26 +13,34 @@ export interface BeforeInstallPromptEvent extends Event {
 export async function registerServiceWorker(): Promise<void> {
   if ('serviceWorker' in navigator) {
     try {
-      // Use Workbox for better Service Worker management
-      const wb = new Workbox('/sw.js');
+      // Registrar Service Worker nativo
+      const registration = await navigator.serviceWorker.register('/sw.js', {
+        scope: '/'
+      });
+
+      console.log('Service Worker registrado com sucesso:', registration.scope);
 
       // Listener para atualizações do Service Worker
-      wb.addEventListener('waiting', (event) => {
-        // Mostrar notificação para o usuário sobre atualização disponível
-        if (confirm('Nova versão disponível! Deseja atualizar agora?')) {
-          wb.messageSkipWaiting();
-          window.location.reload();
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing;
+        if (newWorker) {
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              // Nova versão disponível
+              if (confirm('Nova versão disponível! Deseja atualizar agora?')) {
+                newWorker.postMessage({ action: 'skipWaiting' });
+                window.location.reload();
+              }
+            }
+          });
         }
       });
 
       // Listener para quando o Service Worker assumir controle
-      wb.addEventListener('controlling', () => {
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
         window.location.reload();
       });
 
-      // Registrar o Service Worker
-      await wb.register();
-      console.log('Service Worker registrado com sucesso');
     } catch (error) {
       console.log('Falha ao registrar Service Worker:', error);
     }

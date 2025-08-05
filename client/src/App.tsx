@@ -14,8 +14,8 @@ import Profile from "@/pages/profile";
 import Admin from "@/pages/admin";
 import MaintenancePage from "@/pages/maintenance";
 import NotFound from "@/pages/not-found";
-import { PWAInstallButton } from "@/components/PWAInstallButton";
-import { NetworkStatus } from "@/components/NetworkStatus";
+// import { PWAInstallButton } from "@/components/PWAInstallButton";
+// import { NetworkStatus } from "@/components/NetworkStatus";
 
 function Router() {
   const { isMaintenanceMode, maintenanceMessage, isAdmin } = useMaintenance();
@@ -53,8 +53,6 @@ function App() {
       <TooltipProvider>
         <Toaster />
         <Router />
-        <PWAInstallButton />
-        <NetworkStatus />
       </TooltipProvider>
     </QueryClientProvider>
   );
