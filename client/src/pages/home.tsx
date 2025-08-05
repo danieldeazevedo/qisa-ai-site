@@ -72,47 +72,58 @@ function FadeInUp({ children, delay = 0, className = "" }: { children: React.Rea
 export default function Home() {
   const { user, loading, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const { isPWAInstalled, isPWASupportedBrowser } = usePWAStatus();
-  const [isInstallingPWA, setIsInstallingPWA] = useState(false);
+  const [showInstallButton, setShowInstallButton] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    // Listener para o evento beforeinstallprompt
+    const handleBeforeInstall = (e: any) => {
+      // Impede o banner automático
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallButton(true);
+    };
+
+    // Listener para quando o app for instalado
+    const handleAppInstalled = () => {
+      setShowInstallButton(false);
+      setDeferredPrompt(null);
+      console.log('PWA instalado com sucesso!');
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
 
   const handleInstallPWA = async () => {
-    setIsInstallingPWA(true);
-    try {
-      // Verificar se já está instalado
-      if (isPWA()) {
-        alert('O app já está instalado! Verifique sua tela inicial.');
-        return;
-      }
+    if (!deferredPrompt) {
+      alert('Instalação não disponível. Use o menu do navegador para adicionar à tela inicial.');
+      return;
+    }
 
-      // Tentar instalar PWA
-      const installed = await installPWA();
+    try {
+      // Mostra o prompt de instalação
+      await deferredPrompt.prompt();
       
-      if (installed) {
-        alert('App instalado com sucesso! Verifique sua tela inicial.');
-      } else {
-        // Mostrar instruções manuais de instalação
-        const userAgent = navigator.userAgent;
-        let instructions = '';
-        
-        if (userAgent.includes('Chrome') && !userAgent.includes('Edg')) {
-          instructions = 'No Chrome: Menu (⋮) → "Instalar Qisa" ou "Adicionar à tela inicial"';
-        } else if (userAgent.includes('Firefox')) {
-          instructions = 'No Firefox: Menu (☰) → "Instalar aplicativo" ou "Adicionar à tela inicial"';
-        } else if (userAgent.includes('Safari')) {
-          instructions = 'No Safari: Botão Compartilhar → "Adicionar à Tela de Início"';
-        } else if (userAgent.includes('Edg')) {
-          instructions = 'No Edge: Menu (...) → "Aplicativos" → "Instalar este site como um aplicativo"';
-        } else {
-          instructions = 'Procure por opções como "Instalar app" ou "Adicionar à tela inicial" no menu do seu navegador.';
-        }
-        
-        alert(`Para instalar o app:\n\n${instructions}`);
+      // Espera o resultado
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log(`Usuário escolheu: ${outcome}`);
+      
+      if (outcome === 'accepted') {
+        alert('App instalado com sucesso!');
       }
+      
+      // Limpa
+      setDeferredPrompt(null);
+      setShowInstallButton(false);
     } catch (error) {
       console.error('Erro ao instalar PWA:', error);
-      alert('Erro ao instalar o app. Tente usar o menu do navegador para adicionar à tela inicial.');
-    } finally {
-      setIsInstallingPWA(false);
+      alert('Erro ao instalar o app. Tente novamente.');
     }
   };
 
@@ -145,6 +156,19 @@ export default function Home() {
                 </Button>
               </Link>
               
+              {/* PWA Install Button no Header */}
+              {showInstallButton && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleInstallPWA}
+                  className="p-2 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-950 transition-all duration-300 rounded-lg animate-pulse"
+                  title="Instalar App"
+                >
+                  <Download className="w-4 h-4" />
+                </Button>
+              )}
+
               {/* Theme Toggle */}
               <Button
                 variant="ghost"
@@ -245,17 +269,18 @@ export default function Home() {
                   </Button>
                 </Link>
                 
-                {/* PWA Install Button - Sempre visível para debug */}
-                <Button
-                  size="lg"
-                  variant="outline"
-                  onClick={handleInstallPWA}
-                  disabled={isInstallingPWA}
-                  className="inline-flex items-center justify-center px-6 py-3 border-2 border-primary/30 text-primary hover:bg-primary/10 font-semibold rounded-xl transition-all duration-300 hover:scale-105"
-                >
-                  <Download className="mr-2 w-5 h-5" />
-                  {isInstallingPWA ? 'Instalando...' : 'Baixar App'}
-                </Button>
+                {/* PWA Install Button - Só aparece quando disponível */}
+                {showInstallButton && (
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    onClick={handleInstallPWA}
+                    className="inline-flex items-center justify-center px-6 py-3 border-2 border-primary/30 text-primary hover:bg-primary/10 font-semibold rounded-xl transition-all duration-300 hover:scale-105 animate-bounce-subtle"
+                  >
+                    <Download className="mr-2 w-5 h-5" />
+                    Instalar App
+                  </Button>
+                )}
                 
                 <div className="space-y-2">
                   <p className="text-sm text-muted-enhanced animate-fade-in">
@@ -267,9 +292,11 @@ export default function Home() {
                       💡 O chat funciona sem login! Faça login para salvar seu histórico.
                     </p>
                   )}
-                  <p className="text-xs text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg px-3 py-2">
-                    📱 Clique em "Baixar App" para instalar como aplicativo!
-                  </p>
+                  {showInstallButton && (
+                    <p className="text-xs text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg px-3 py-2 animate-pulse">
+                      📱 Clique em "Instalar App" para adicionar à sua tela inicial!
+                    </p>
+                  )}
                 </div>
               </div>
             </FadeInUp>
