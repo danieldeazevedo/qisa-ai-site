@@ -14,7 +14,10 @@ export default function AnimatedBackground({
   };
 
   return (
-    <div className={`fixed inset-0 -z-10 overflow-hidden ${className}`}>
+    <div className={`fixed inset-0 -z-10 overflow-hidden ${className}`} style={{
+      background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(147, 51, 234, 0.12) 50%, rgba(236, 72, 153, 0.15) 100%)',
+      transition: 'none'
+    }}>
       {/* Base gradient background with dynamic movement */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-100/80 via-purple-100/60 to-pink-100/80 dark:from-blue-900/40 dark:via-purple-900/30 dark:to-pink-900/40 animate-gradient-wave"></div>
       <div className="absolute inset-0 bg-gradient-to-tl from-cyan-50/60 via-indigo-50/40 to-rose-50/60 dark:from-cyan-900/30 dark:via-indigo-900/20 dark:to-rose-900/30 animate-gradient-shift"></div>

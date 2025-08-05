@@ -66,6 +66,32 @@
 html, body {
   background-color: var(--background);
   color: var(--foreground);
+  /* Force immediate application of theme */
+  transition: none !important;
+}
+
+/* Prevent flash of unstyled content */
+html {
+  background-color: hsl(0, 0%, 100%);
+}
+
+html.dark {
+  background-color: hsl(240, 10%, 3.9%);
+}
+
+/* Fix gradient text for Qisa logo */
+.bg-gradient-to-r.from-primary.to-secondary.bg-clip-text.text-transparent {
+  background: linear-gradient(to right, hsl(252, 91%, 63%), hsl(262, 83%, 66%)) !important;
+  background-clip: text !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
+}
+
+/* Ensure gradients load immediately */
+.bg-gradient-to-r,
+.bg-gradient-to-br {
+  transition: none !important;
 }
 
 /* Force dark mode styles when dark class is present */
