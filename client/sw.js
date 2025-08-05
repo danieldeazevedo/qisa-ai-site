@@ -7,7 +7,7 @@ const CACHE_STRATEGY = {
   // Recursos estáticos (HTML, CSS, JS, imagens)
   static: [
     '/',
-    '/manifest.json',
+    '/manifest.webmanifest',
     '/icon-192x192.png',
     '/icon-512x512.png',
     '/apple-touch-icon.png'
