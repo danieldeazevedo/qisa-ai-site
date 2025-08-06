@@ -1,13 +1,6 @@
 // PWA Registration and Utilities
 
-export interface BeforeInstallPromptEvent extends Event {
-  readonly platforms: string[];
-  readonly userChoice: Promise<{
-    outcome: 'accepted' | 'dismissed';
-    platform: string;
-  }>;
-  prompt(): Promise<void>;
-}
+
 
 // Service Worker Registration
 export async function registerServiceWorker(): Promise<void> {
@@ -47,73 +40,9 @@ export async function registerServiceWorker(): Promise<void> {
   }
 }
 
-// PWA Install Prompt
-let deferredPrompt: BeforeInstallPromptEvent | null = null;
 
-export function setupPWAInstall(): void {
-  // Capturar o evento beforeinstallprompt
-  window.addEventListener('beforeinstallprompt', (e: Event) => {
-    e.preventDefault();
-    deferredPrompt = e as BeforeInstallPromptEvent;
-    
-    // Mostrar botão de instalação customizado
-    const installButton = document.getElementById('pwa-install-button');
-    if (installButton) {
-      installButton.style.display = 'block';
-    }
-  });
 
-  // Listener para quando o app for instalado
-  window.addEventListener('appinstalled', () => {
-    console.log('PWA instalado com sucesso');
-    deferredPrompt = null;
-    
-    // Esconder botão de instalação
-    const installButton = document.getElementById('pwa-install-button');
-    if (installButton) {
-      installButton.style.display = 'none';
-    }
-  });
-}
 
-export async function installPWA(): Promise<boolean> {
-  if (!deferredPrompt) {
-    return false;
-  }
-
-  try {
-    // Mostrar prompt de instalação
-    await deferredPrompt.prompt();
-    
-    // Aguardar escolha do usuário
-    const { outcome } = await deferredPrompt.userChoice;
-    
-    if (outcome === 'accepted') {
-      console.log('Usuário aceitou instalar o PWA');
-      return true;
-    } else {
-      console.log('Usuário rejeitou instalar o PWA');
-      return false;
-    }
-  } catch (error) {
-    console.error('Erro ao tentar instalar PWA:', error);
-    return false;
-  } finally {
-    deferredPrompt = null;
-  }
-}
-
-// Verificar se o app está sendo executado como PWA
-export function isPWA(): boolean {
-  return window.matchMedia('(display-mode: standalone)').matches ||
-         (window.navigator as any).standalone === true ||
-         document.referrer.includes('android-app://');
-}
-
-// Verificar se o navegador suporta PWA
-export function isPWASupported(): boolean {
-  return 'serviceWorker' in navigator && 'Cache' in window;
-}
 
 // Utilitário para notificações push
 export async function requestNotificationPermission(): Promise<NotificationPermission> {
@@ -292,9 +221,6 @@ async function syncOfflineData(): Promise<void> {
 export async function initializePWA(): Promise<void> {
   // Registrar Service Worker
   await registerServiceWorker();
-  
-  // Configurar instalação PWA
-  setupPWAInstall();
   
   // Configurar listeners de rede
   setupNetworkListener();
